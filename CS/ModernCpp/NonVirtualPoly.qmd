@@ -1,0 +1,52 @@
+---
+title: C++ 中的（非虚）多态
+order: 3
+date: 2024-5-24
+date-modified: last-modified
+description: "TODO"
+---
+
+## 什么是多态
+
+多态 (Polymorphic) 即“多种形态”，这可以理解为：
+
+-   用一个标识符来表示多个不同的类型，我们称这个标识符为**多态变量**。
+
+-   为不同类型的实体提供一个统一的接口，称为**多态调用**。
+
+多态，是一种基于类型的分发器。
+
+## 多态的（非虚）实现方法
+
+### std::any
+
+``` cpp
+struct A {
+    int a{};
+    string msg;
+    void outA() const { cout << msg << endl; }
+};
+
+struct B {
+    double t{};
+    string msg;
+    void outB() const { cout << msg << endl; }
+};
+
+static const type_info& AType{typeid(A)};
+static const type_info& BType{typeid(B)};
+
+int main()
+{
+    vector<any> vec;
+    vec.emplace_back(A{1, "I'm A!"});
+    vec.emplace_back(B{2.0, "I'm B!"});
+    for(auto&& i : vec) {
+        if(i.type() == AType)
+            any_cast<A>(i).outA();
+        else if(i.type() == BType)
+            any_cast<B>(i).outB();
+    }
+    return 0;
+}
+```

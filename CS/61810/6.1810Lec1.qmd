@@ -1,0 +1,233 @@
+---
+title: "Lec1 Introduction and Examples"
+order: 1
+lang: cn
+date: 2024-2-15
+date-modified: last-modified
+description: "操作系统的介绍和例子。"
+---
+
+## 课前准备
+
+> 阅读 xv6 book 第一章。
+
+第一章讲操作系统接口。开篇说了 xv6 的宏观结构：一个内核，若干个进程，每个进程就是一个正在运行的程序。进程需要调用内核的服务（service），这就是一次系统调用（system call）。内核提供的所有的系统调用或者服务组成了这个操作系统的接口。xv6 的服务是 Unix 内核的一个子集，包括：
+
+> ...processes, memory, file descriptors, pipes, and a file system...
+>
+> 进程、内存、文件描述符、管道和一个文件系统
+
+书中的表 1.2 详细列出了系统调用的函数声明。
+
+### 进程和内存
+
+一个 xv6 的进程由 user-space 内存（指令、数据、栈）和内核私有的每个进程状态组成。xv6 的**分时共享**进程在各个等待执行的进程之间（transparently?）切换可用的 CPU。一个进程没有被执行时，xv6 储存进程的 CPU 寄存器并在下次执行时恢复。内核与每个进程由一个 PID（process identifier）联系在一起。
+
+一个进程可能通过 `fork` 创建一个子进程，`fork` 给了跟调用进程的内存完全一致的拷贝。`fork` 在父进程和子进程均会返回。在父进程中返回新进程的 PID，在子进程中返回 0。
+
+书上举了个例子：
+
+``` c
+int pid = fork();
+if(pid > 0){
+    printf("parent: child=%d\n", pid);
+    pid = wait((int *) 0);
+    printf("child %d is done\n", pid);
+} else if(pid == 0){
+    printf("child: exiting\n");
+    exit(0);
+} else {
+    printf("fork error\n");
+}
+```
+
+接下来讨论了这个程序的输出，主要是想说明：
+
+1.  fork 之后，父进程和子进程的执行顺序不是确定的。
+2.  子进程的内存是对父进程内存的拷贝，因此修改各自进程中的变量并不会影响另一个。
+
+`exec` 系统调用用一个从文件读取的内存布局替换调用进程的内存。这个文件用特定格式描述了内存的布局方式，xv6 使用 ELF 格式（第三章细讲），这种文件通常是通过编译源代码得到的。当 `exec` 成功时，它不会返回到调用进程，而是从 ELF header 中定义的进入点开始执行从文件中加载的命令。`exec` 有两个参数：包含可执行程序的文件名和字符串数组。例子：
+
+``` c
+char *argv[3];
+
+argv[0] = "echo";
+argv[1] = "hello";
+argv[2] = 0;
+exec("/bin/echo", argv);
+printf("exec error\n");
+```
+
+用 `/bin/echo` 程序执行 `echo hello` 指令，通常程序会忽略 `argv[0]` 因为它用来标注程序的名字。
+
+接下来讲了 xv6 源码这部分的应用，具体细节可以看书。主要过程是：在 shell 中，用户输入的命令被 `getcmd` 接收，然后它会调用 `fork`，子进程交给 `runcmd` 来解析命令，父进程 `wait`。`runcmd` 调用 `exec` 运行这个命令，`exec` 成功时将参数交给对应的程序，之后对应的程序会调用 `exit`，返回到父进程的 `wait`。
+
+xv6 分配 user-space 的内存基本上都是隐式的，比如 `fork` 和 `exec`。如果运行时需要更多内存可以通过 `sbrk(n)` 来得到 $n$ 字节内存。
+
+### I/O 和文件描述符
+
+文件描述符是代表内核管理对象的一个小整数，进程向对象中读写。进程在打开文件、文件夹、设备，或者创建管道和复制已存在的描述符时都会得到一个文件描述符。文件描述符接口抽象了不同的数据获取来源，并将它们都看作字节流。
+
+xv6 内核将文件描述符用作每个进程表中的下标。依惯例，进程从 file descriptor 0（标准输入）中读入，向 file descriptor 1（标准输出）写出，向 file descriptor 2（标准错误）写错误信息。由此，shell 需确保总有至少三个文件描述符打开，即控制台的三个文件描述符。
+
+接下来介绍了 I/O 操作：
+
+1.  `read(fd, buf, n)`：从 `fd` 读最多 `n` 个字节，拷贝到 `buf`，返回实际读入的字节数。
+2.  `write(fd, buf, n)`：从 `buf` 向 `fd` 写 `n` 个字节，只有发生错误时会写少于 `n` 个字节。
+
+读写操作都是累积的，会从上一次操作的地方开始读写。
+
+这是一个应用的例子：
+
+``` c
+char buf[512];
+int n;
+
+for(;;) {
+    n = read(0, buf, sizeof buf);
+    if(n == 0)
+        break;
+    if(n < 0){
+        fprintf(2, "read error\n");
+        exit(1);
+    }
+    if(write(1, buf, n) != n){
+        fprintf(2, "write error\n");
+        exit(1);
+    }
+}
+```
+
+`close` 用来释放一个文件描述符，供下次分配时重用。
+
+这样的设计和 `fork` 结合起来可以轻松地完成 I/O 重定向：在子进程时为文件描述符分配新的来源，这样父子进程间就可以互不干扰，书上有具体的例子，同时还说了 `open` 的用法和具体参数。这样就回答了为什么 `fork` 和 `exec` 不能结合为一个函数，就是通过解耦来减少多余的修改。
+
+文件描述符本质是指向文件特定位置的指针，所以用 `dup` 复制的时候并没有改变它指向的内容，`fork` 中产生的复制也是同理。这意味着，父子进程共同读写同一个文件，它们的操作也是累积的。
+
+``` bash
+ls existing-file non-existing-file > tmp1 2>&1
+```
+
+这条命令中的 `2>&1` 给了一个复制了 file descriptor 1 的拷贝 file descriptor 2，这意味着 `non-existing-file` 的错误信息被重定向到了标准输出中，这些信息全部输出到 `tmp1` 文件里。
+
+### 管道
+
+一个管道是暴露给进程的一个小缓存，配备了一对读写文件描述符。向管道一端写数据，另一端就可以读数据，这样进程间便可以通信了。
+
+下面是一个运行 `wc` 程序的例子，这个程序的标准输入连接了管道的读入端：
+
+``` c
+int p[2];
+char *argv[2];
+
+argv[0] = "wc";
+argv[1] = 0;
+
+pipe(p);
+if(fork() == 0) {
+    close(0);
+    dup(p[0]);
+    close(p[0]);
+    close(p[1]);
+    exec("/bin/wc", argv);
+} else {
+    close(p[0]);
+    write(p[1], "hello world\n", 12);
+    close(p[1]);
+}
+```
+
+程序调用了 `pipe`，它创建了一个新的管道。在 `fork` 之后，父子进程均拥有指向管道的文件描述符。注意到，子进程关掉了 file descriptor 0，并拷贝了 `p[0]`，此时标准输入将从管道进行读取。
+
+从管道进行 `read` 时，如果已经没有数据可读，`read` 会等待新的数据写入管道或所有指向管道写入端的文件描述符全部关闭；后者情况下 `read` 会返回 0，如同读到了文件末尾一样。因此子进程要关闭所有的写入端文件描述符是非常重要的：如果 `wc` 的一个文件描述符指向了管道的写入端，`read` 会永远阻塞。
+
+xv6 对指令 `grep fork sh.c | wc -l` 的[实现](https://github.com/mit-pdos/xv6-riscv/blob/riscv/user/sh.c#L101)和上面说到的差不多。子进程会创建一个管道连接左端和右端，同时运行左边和右边的命令，等待它们执行完毕，这样的进程调用形成了一个二叉树结构。
+
+管道相较于创建临时文件的好处：自动垃圾回收、可以传任意长的字节流[^1]、并行读写。
+
+[^1]: 当然，不要把所有的数据全存下来。
+
+### 文件系统
+
+目录：绝对路径（从 `root` 开始）、相对路径（从当前路径开始）。`chdir` 修改当前路径。
+
+`mkdir` 创建新文件夹，`open` 带上 `O_CREATE` 参数创建新文件，`mknod` 创建新设备文件：
+
+``` c
+mkdir("/dir");
+fd = open("/dir/file", O_CREATE|O_WRONLY);
+close(fd);
+mknod("/console", 1, 1);
+```
+
+`mknod` 第二第三个参数是主要和次要设备编号，唯一确定一个内核服务。当进程之后要打开设备文件时，内核会将 `read` 和 `write` 系统调用转交内核设备实现而不是文件系统。
+
+文件名和文件本身是有区别的：相同的底层文件（称为 inode）可以拥有多个名字（称为 links）。每个 link 由都包含一个目录的 entry，它由文件名和对 inode 的引用组成。inode 储存文件的元数据，`fstat` 可以获取一个文件描述符指向的 inode，这个元数据由一个 `struct stat` 组成：
+
+``` c
+#define T_DIR 1 // Directory
+#define T_FILE 2 // File
+#define T_DEVICE 3 // Device
+
+struct stat {
+    int dev; // File system’s disk device
+    uint ino; // Inode number
+    short type; // Type of file
+    short nlink; // Number of links to file
+    uint64 size; // Size of file in bytes
+};
+```
+
+`link` 系统调用可以给文件创建新名字：
+
+``` c
+open("a", O_CREATE|O_WRONLY);
+link("a", "b");
+```
+
+`unlink` 可以删除一个名字，如果 link 数（`nlink`）变为零，文件的 inode 和硬盘中储存其内容的空间就会被释放掉。因此
+
+``` c
+fd = open("/tmp/xyz", O_CREATE|O_RDWR);
+unlink("/tmp/xyz");
+```
+
+是一个惯用手段来创建一个在进程关闭 `fd` 或结束时被清理的临时 inode。
+
+> Unix provides file utilities callable from the shell as user-level programs, for example `mkdir`, `ln`, and `rm`.
+
+上面这一段没看明白，只稍微看懂了后面讲 `cd` 是内建在 shell 中的，因为 fork 后只会改变子进程的当前工作目录，不会影响父进程（shell）的当前工作目录。
+
+### Real World
+
+这节讲了 Unix 的历史和设计哲学，这里就不赘述了。
+
+### 习题
+
+> Write a program that uses UNIX system calls to "ping-pong" a byte between two processes over a pair of pipes, one for each direction. Measure the program's performance, in exchanges per second.
+
+参见 Lab util。
+
+## Lecture
+
+感觉看了书基本上课就不用怎么听了……课大致还是按照书的内容讲的，并且把我之前看书的很多疑问解除了。不过不确定到底看书和听课到底哪个在先效果更好，书上的内容毫无疑问是一本道，虽然已将重点突出，但仍有陷入细节之可能。这里只记录一些对我来说有帮助的内容，重复的题材直接跳过。
+
+### Why hard?
+
+操作系统设计的困难之处在于平衡一系列矛盾的需求：
+
+1.  高效和易用。越高效意味着越接近底层，但易用又需要尽可能与硬件隔离。
+2.  强大的服务和简单的接口。操作系统有强大的功能，同时又不能存在数量庞大、复杂且难以理解的接口。
+3.  灵活与安全。灵活意味着给程序员更多的自由，同时又要对自由有所限制，以保证系统的安全。
+
+### 关于文件描述符
+
+文件描述符本质上对应了内核中的一个表单数据。内核维护了每个运行进程的状态，为每一个运行进程保存一个表单，表单的 key 是文件描述符。这个表单让内核知道，每个文件描述符对应的实际内容是什么。关键的是，每个进程都有自己独立的文件描述符空间。所以如果有两个不同的进程，它们都打开一个文件，它们或许可以得到相同数字的文件描述符，但是因为内核为每个进程都维护了一个独立的文件描述符空间，这里相同数字的文件描述符可能会对应到不同的文件。
+
+### 编译器如何处理系统调用？
+
+当执行到 `open` 或 `write` 之类系统调用时，RISC-V 会使用 `ecall` 将控制权转交给内核。内核会检查进程内存和寄存器，确定相应的参数。
+
+### forkexec 的优化
+
+在调用 `exec` 执行指令时，`exec` 会直接替换相应的内存拷贝，不会返回继续执行进程下面的指令。为了避免 shell 进程直接被杀掉，惯常做法是 `fork` 并在子进程中 `exec`。实际上这里有点浪费，因为之后的执行丢弃了拷贝了整个内存的内容，这在大型程序中的影响会比较明显。课程后面会实现一些优化，比如 copy-on-write fork。使用懒拷贝，可以避免 forkexec 中实际的拷贝。

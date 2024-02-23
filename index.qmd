@@ -1,0 +1,17 @@
+---
+title: "Thought \"Temp\" Container"
+# listing:
+#   contents:
+#     - "*.qmd"
+#     - "!index.qmd"
+#     - "!about.qmd"
+#     - "!CS.qmd"
+#     - "!_*/"
+#     - "!_*.qmd"
+#   sort: "date desc"
+#   type: table
+#   table-hover: true
+#   fields: [date, title, description, reading-time]
+---
+
+这个网站用来记录我学习的知识和思考的东西。

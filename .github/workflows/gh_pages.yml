@@ -1,0 +1,24 @@
+name: Generate Websites
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+      - name: Render Quarto Document
+        uses: quarto-dev/quarto-actions/render@v2
+      - name: Publish Quarto Document
+        uses: quarto-dev/quarto-actions/publish@v2

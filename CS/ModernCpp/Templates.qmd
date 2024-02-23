@@ -1,0 +1,223 @@
+---
+title: 模板与泛型编程
+order: 2
+date: 2024-5-24
+date-modified: last-modified
+description: "TODO"
+---
+
+非常基础的内容会以很少的笔墨稍微提及，我们会迅速聚焦到重要主题上。
+
+## 函数模板
+
+假设你需要为很多不同类型的对象写一个 swap 方法，考虑到所有类型的逻辑都相差无几，我们可以使用模板来创建：
+
+``` cpp
+template<typename T>
+void swap(T &a, T &b) {
+    T temp {a};
+    a = b;
+    b = temp;
+}
+```
+
+尖括号包裹的为模板形参，每个 `typename` 后都跟着一个类型的占位符。在编译时，函数模板会将形参替换并实例化为不同类型的 `swap` 函数。当然 `typename` 也可以换成 `class`，两个词是等价的。当然，参数里也可以写非类型参数。
+
+``` cpp
+template<typename T, size_t N> // non-type parameter
+```
+
+## 特化 v.s. 实例化
+
+-   特化：将特定组合的实参替换模板形参的过程。
+
+-   实例化：从模板定义中生成函数定义的过程称为实例化。
+
+    因此，每一次实例化都是由特化引发的。
+
+```{mermaid}
+%%| fig-align: center
+graph BT
+    spec["特化"]:::expr
+    inst["实例化（隐式特化）"]
+    exp_spec["显式特化"]
+    imp_inst["隐式实例化"]
+    exp_inst["显式实例化"]
+    classDef expr fill:#FFDAB9,stroke:#333,stroke-width:2px;
+    
+    exp_inst --> inst
+    inst --> spec
+    exp_spec --> spec
+    imp_inst --> inst
+```
+
+默认情况下，模板实例化都是隐式实例化，由编译器自动执行。除非你想进行显式实例化，此时编译器会就地实例化你写的函数：
+
+``` cpp
+template void swap<string>(string &a, string &b);
+// 使用模板参数推导
+template void swap(int &a, int &b);
+```
+
+显式特化则是（注意并没有实例化）：
+
+``` cpp
+template<> void swap<string>(string &a, string &b);
+```
+
+## （函数）模板实参推导
+
+**模板实参推导**是编译器基于函数实参类型决定函数模板实参类型的过程。
+
+``` cpp
+template<typename T> void f(ParameterType t);  f(SomeExpression);
+```
+
+通过给定的 `f` 和 `SomeExpression`，编译需要决定 `ParameterType` 和 `T`，注意到它们两个不一定相同，如 `PararmeterType` 取 `const string&` 时，`T` 取 `string`。
+
+最简单的情况是显式指定模板实参 `f<SomeTemplateArgument>(SomeExpression);`，此时推导是平凡的：
+
++----------------------------+-----------------------------------+
+| ``` cpp                    | ``` cpp                           |
+| template<class T>          | template<class T>                 |
+| void f(T t);               | void f(T const& t);               |
+| // T is double             | // T is double                    |
+| // ParameterType is double | // ParameterType is double const& |
+| double d = 2.78;           | double d = 2.78;                  |
+| f<double>(d);              | f<double>(d);                     |
+| ```                        | ```                               |
++----------------------------+-----------------------------------+
+
+否则，编译器将同时根据 `SomeExpression` 和 `ParameterType` 来决定，有下表：
+
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+|                          | Type of `ParameterType` |           |             |             |           |           |             |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+| Type of `SomeExpression` | T                       | T const\* | T const&    | T const&&   | T\*       | T&        | T&&         |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+| int const                | int                     | \-        | int         | \-          | \-        | int       | int         |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+| int const\*              | int const\*             | int       | int const\* | int const\* | int const | \-        | int const\* |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+| int const&               | int                     | \-        | int         | \-          | \-        | int const | int const&  |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+| int const&&              | int                     | \-        | int         | int         | int const | int const | int const   |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+| int                      | int                     | \-        | int         | \-          | \-        | int       | int         |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+| int\*                    | int\*                   | int       | int\*       | int\*       | int       | int\*     | int\*       |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+| int&                     | int                     | \-        | int         | \-          | \-        | \-        | int&        |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+| int&&                    | int                     | \-        | int         | int         | int       | int       | int         |
++--------------------------+-------------------------+-----------+-------------+-------------+-----------+-----------+-------------+
+
+编译器会将二者相互作用的结果直接替换 `T`。
+
+注意到，这里面发生了引用折叠，我们在移动语义一章中做了介绍。
+
+### 返回值推导
+
+如果返回值依赖模板参数，可以使用 `auto` 来让编译器推导，或使用 `common_type_t` 等 type_traits 来推导。
+
+## 类模板
+
+假设我们想定义一个栈的模板类（注意这里面的模板形参 `T` 的影响范围）：
+
+``` cpp
+template<class T> // The scope of template parameter T begins here...
+class Stack{
+    vector<T> m_data;
+public:
+    bool is_empty() const;
+    T const& top() const;
+    void pop();
+    void push(T const& t);
+    Stack push_all_from(Stack const& other);
+}; // ...and ends here.
+
+template<class T>
+Stack<T> Stack<T>::/* Class scope begins here... */push_all_from(Stack const& other)
+{
+    Stack tmp(*this);
+    m_data.insert(m_data.end(), other.begin(), other.end());
+    return tmp;
+} // ...and ends here.
+```
+
+### 待决名
+
+由于我们用 vector 的尾元素模拟栈顶，因此迭代器应当反向。我们现在需要在类模板中定义类型别名，比如
+
+``` cpp
+using const_iterator = vector<T>::const_reverse_iterator;
+```
+
+但编译器会报错：`error: missing typename prior to dependent type name...`。这是因为 `vector<T>` 是依赖于模板形参 `T` 的，那么类中别名 `const_iterator` 也被传递依赖于 `T`。为了修复，我们需要向编译器“保证”它确实是一个类型名，并一定存在。
+
+``` cpp
+using const_iterator = typename vector<T>::const_reverse_iterator;
+```
+
+此时我们可以定义 `begin()` 和 `end()`：
+
+``` cpp
+template<class T>
+class Stack{
+    ...
+public:
+    using const_iterator = typename vector<T>::const_reverse_iterator;
+    const_iterator begin() const {
+        return m_data.crbegin();
+    }
+    const_iterator end() const;
+    ...
+};
+
+// 注意在类作用域外的函数定义，typename 也是必须的
+template<class T>
+typename Stack<T>::const_iterator Stack<T>::end() const {
+    return m_data.crend();
+}
+// 当然，可以通过尾置类型返回直接交给编译器推导
+template<class T>
+auto Stack<T>::end() const -> const_iterator {
+    return m_data.crend();
+}
+```
+
+类模板中的静态变量在 C++17 之后可以直接通过 `inline static ...` 在模板中定义。
+
+### 模板全特化
+
+``` cpp
+template<>
+class stack<int> {
+    vector<int> m_data;
+public:
+    bool is_empty() const;
+    int top() const;
+    void pop();
+    void push(int t);
+    void push_from( string const& s);
+};
+
+void Stack<int>::push_from(string const& s) {
+    m_data.insert(m_data.end(), s.begin(), s.end());
+}
+```
+
+全特化的类外函数定义没有 `template` 标识符，意味着它不是 inline 的。
+
+### 模板偏特化
+
+//TODO
+
+## Concepts
+
+//TODO
+
+## 参考资料
+
+1.  [Back to Basics: Templates (part 2 of 2) - Bob Steagall - CppCon 2021](https://www.youtube.com/watch?v=2Y9XbltAfXs)
+2.  [cppreference](http://cppreference.com)

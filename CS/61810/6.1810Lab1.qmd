@@ -1,0 +1,88 @@
+---
+title: "Lab1 util: Xv6 and Unix utilities"
+order: 2
+lang: cn
+date: 2024-2-24
+date-modified: 2024-3-1
+description: "实验一，实现若干小程序。"
+---
+
+整个 lab 总计耗时大概在 7 个小时（不算开始配置环境的时间），还得继续努力。
+
+## Boot xv6 (easy)
+
+搞了半天，令人感慨。主要原因是 qemu 怎么升级都到不了 5.1+，刚开始以为是源的问题，折腾了半天，无果。后面把 Ubuntu 从 20.04 升到 22.04[^1]，终于好了。后面查了查，似乎想在低版本 Ubuntu 使用比较高版本的软件需要配置 PPA 源。
+
+[^1]: 后面为了搞 CS144 的 lab，又升级到 24.04 了，真折腾。
+
+## sleep (easy)
+
+> Implement a user-level `sleep` program for xv6, along the lines of the UNIX sleep command. Your `sleep` should pause for a user-specified number of ticks. A tick is a notion of time defined by the xv6 kernel, namely the time between two interrupts from the timer chip. Your solution should be in the file `user/sleep.c`.
+
+根据提示进行即可。
+
+## pingpong (easy)
+
+> Write a user-level program that uses xv6 system calls to ''ping-pong'' a byte between two processes over a pair of pipes, one for each direction. The parent should send a byte to the child; the child should print "\<pid\>: received ping", where \<pid\> is its process ID, write the byte on the pipe to the parent, and exit; the parent should read the byte from the child, print "\<pid\>: received pong", and exit. Your solution should be in the file `user/pingpong.c`.
+
+根据提示进行即可。
+
+## primes (moderate)/(hard)
+
+> Write a concurrent prime sieve program for xv6 using pipes and the design illustrated in the picture halfway down [this page](http://swtch.com/~rsc/thread/) and the surrounding text. This idea is due to Doug McIlroy, inventor of Unix pipes. Your solution should be in the file `user/primes.c`.
+
+这道题确实有点难度。开始时，我是在父进程中计算筛法，子进程用来继续 fork。但是子进程不能等父进程，我希望可以将一轮筛完后再进行下一轮，所以最终在子进程中计算。下一个问题是，如果不关掉写端，读端在没数据时就会堵塞。所以你必须关掉写端，或者知道确切要读入多少个数字。解决办法要么用两个管道，要么用数组，然后把总数也塞进管道里。我选择了后者，但是似乎这样背离了题目的初衷。后面去吃饭的路上突然明白了，只需要给最后塞个 -1 标志结束不就完美解决了？
+
+<details>
+
+<summary>Code</summary>
+
+``` c
+int main(int argc, char *argv[])
+{
+    int p[2], n = -1;
+    pipe(p);
+    for(int i = 2; i <= 35; ++i)
+        write(p[1], &i, sizeof(int));
+    write(p[1], &n, sizeof(int));
+
+    for(;;) {
+        if(fork() == 0) {
+            read(p[0], &n, sizeof(int));
+            if(n == -1) exit(1);
+            fprintf(1, "prime %d\n", n);
+            int m;
+            while(read(p[0], &m, sizeof(int))) {
+                if(m == -1) break;
+                if(m % n != 0) write(p[1], &m, sizeof(int));
+            }
+            m = -1;
+            write(p[1], &m, sizeof(int));
+            break;
+        } else {
+            int end;
+            wait(&end);
+            if(end) break;
+        }
+    }
+    exit(0);
+}
+```
+
+</details>
+
+## find (moderate)
+
+> Write a simple version of the UNIX find program for xv6: find all the files in a directory tree with a specific name. Your solution should be in the file `user/find.c`.
+
+对于文件夹类型的 `fd`，现在只需要知道 `kernel/fs.h` 里的那句注释
+
+> Directory is a file containing a sequence of `dirent` structures.
+
+就足以通过这道题，仿照 `user/ls.h` 里的做法进行读取即可。
+
+## xargs (moderate)
+
+> Write a simple version of the UNIX xargs program for xv6: its arguments describe a command to run, it reads lines from the standard input, and it runs the command for each line, appending the line to the command's arguments. Your solution should be in the file `user/xargs.c`.
+
+我感觉这道应该算 easy。只需要调整一下参数顺序就行了。

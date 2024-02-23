@@ -1,0 +1,60 @@
+project:
+  type: website
+  output-dir: docs
+  
+website:
+  title: "Thought Container"
+  favicon: RI.png
+  reader-mode: true
+  navbar:
+    left:
+      - file: index.qmd
+        text: "Home"
+      - file: CS/CS.qmd
+        text: "CS"
+      - about.qmd
+
+  sidebar:
+    - title: "CS"
+      collapse-level: 2
+      contents:
+        - section: Computer Science
+          file: CS/CS.qmd
+          contents:
+            - section: 步入现当代 C++
+              file: CS/MoveToModernCpp.qmd
+              contents: "CS/ModernCpp/*.qmd"
+            - section: 6.1810 Operating System Engineering 笔记
+              contents: "CS/61810/*.qmd"
+            - section: CS144 Introduction to Computer Networking 笔记
+              contents: "CS/CS144/*.qmd"
+            - section: 三维重建
+              contents: "CS/3d-reconstruction/*.qmd"
+  
+  page-footer:
+      center: |
+        [![](https://creativecommons.org/wp-content/themes/vocabulary-theme/vocabulary/svg/cc/icons/cc-icons.svg#cc-logo){fig-alt="CC" width=25px}![](https://creativecommons.org/wp-content/themes/vocabulary-theme/vocabulary/svg/cc/icons/cc-icons.svg#cc-by){fig-alt="CC" width=25px}![](https://creativecommons.org/wp-content/themes/vocabulary-theme/vocabulary/svg/cc/icons/cc-icons.svg#cc-sa){fig-alt="CC" width=25px}](https://creativecommons.org/licenses/by-sa/4.0/)
+
+format:
+  html:
+    theme:
+      - cosmo
+      - custom.scss
+    css: styles.css
+    pagetitle: "{{< meta title >}}"
+    toc: true
+    toc-expand: 2
+    link-external-newwindow: true
+    date-format: iso
+    reference-location: margin
+    citation-location: margin
+    number-sections: true
+    number-depth: 3
+    grid:
+      sidebar-width: 250px
+      body-width: 900px
+      margin-width: 300px
+    code-tools:
+      source: true
+      toggle: false
+      caption: none

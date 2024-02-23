@@ -1,0 +1,51 @@
+---
+title: 移动语义 (Move Semantics)
+order: 1
+date: 2024-5-24
+date-modified: last-modified
+description: "TODO"
+---
+
+## 完美转发
+
+### 值类别 (Value Categories)
+
+C++ 中的每一个表达式都有一个**类型** (type)，同时，它还属于一种**值类别**。二者是相互独立的两个概念。随着移动语义引入到 C++11 之中，值类别被重新进行了定义，以区别表达式的两种独立的性质：
+
+-   拥有身份 (identity)：可以确定表达式是否与另一表达式指代同一实体，例如通过比较它们所标识的对象或函数的（直接或间接获得的）地址；
+
+-   可被移动：实现了移动语义的函数能够绑定于这个表达式。
+
+```{mermaid}
+%%| fig-align: center
+graph TB
+    expression["表达式"]:::expr
+    glvalue["泛左值 (glvalue)"]
+    rvalue["右值 (rvalue)"]
+    lvalue["左值 (lvalue)"]
+    xvalue["亡值 (xvalue)"]
+    prvalue["纯右值 (prvalue)"]
+
+    classDef expr fill:#FFDAB9,stroke:#333,stroke-width:2px;
+
+    expression --> glvalue
+    expression --> rvalue
+    glvalue --> lvalue
+    glvalue --> xvalue
+    rvalue --> xvalue
+    rvalue --> prvalue
+```
+
+泛左值是一个求值可确定某个对象或函数的标识的表达式。它：
+
+1.  在内存中存储；
+2.  有名字（直接或间接）；
+3.  有可以取址的地址；
+4.  非常量泛左值可以被赋值。
+
+纯右值是计算某个运算符的操作数或初始化某个对象的表达式，它：
+
+1.  没有名字；
+2.  没有存储。
+
+亡值是代表它的资源能够被重新使用的对象或位域的泛左值。`std::move(v)` 就是将左值 `v` 转化为亡值，表明马上这个值我不再关心（因为它的资源被移走了）。左值是非亡值的泛左值。
