@@ -1,0 +1,52 @@
+project:
+  type: website
+  output-dir: docs
+  
+website:
+  title: "demo"
+  favicon: RI.png
+  reader-mode: true
+  navbar:
+    left:
+      - file: index.qmd
+        text: "Home"
+      - file: CS/CS.qmd
+        text: "CS"
+      - about.qmd
+
+  sidebar:
+    - title: "CS"
+      collapse-level: 3
+      contents:
+        - section: Computer Science
+          file: CS/CS.qmd
+          contents:
+            - section: 6.S081 Operating System Engineering 笔记
+              contents: "CS/OS/*.qmd"
+  
+  page-footer:
+      center: |
+        [![](https://creativecommons.org/wp-content/themes/vocabulary-theme/vocabulary/svg/cc/icons/cc-icons.svg#cc-logo){fig-alt="CC" width=25px}![](https://creativecommons.org/wp-content/themes/vocabulary-theme/vocabulary/svg/cc/icons/cc-icons.svg#cc-by){fig-alt="CC" width=25px}![](https://creativecommons.org/wp-content/themes/vocabulary-theme/vocabulary/svg/cc/icons/cc-icons.svg#cc-sa){fig-alt="CC" width=25px}](https://creativecommons.org/licenses/by-sa/4.0/)
+
+format:
+  html:
+    theme:
+      - cosmo
+      - custom.scss
+    css: styles.css
+    toc: true
+    toc-expand: 2
+    link-external-newwindow: true
+    date-format: iso
+    reference-location: margin
+    citation-location: margin
+    number-sections: true
+    number-depth: 3
+    grid:
+      sidebar-width: 250px
+      body-width: 900px
+      margin-width: 300px
+    code-tools:
+      source: true
+      toggle: false
+      caption: none

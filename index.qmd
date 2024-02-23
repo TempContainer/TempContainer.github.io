@@ -1,0 +1,17 @@
+---
+title: "demo"
+listing:
+  contents:
+    - "*.qmd"
+    - "!index.qmd"
+    - "!about.qmd"
+    - "!CS.qmd"
+  sort: "date"
+  type: table
+  table-hover: true
+  fields: [date, title, description, reading-time]
+---
+
+This is a Quarto website.
+
+To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
