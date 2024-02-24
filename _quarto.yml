@@ -43,9 +43,9 @@ format:
     number-sections: true
     number-depth: 3
     grid:
-      sidebar-width: 250px
-      body-width: 900px
-      margin-width: 300px
+      sidebar-width: .17rem
+      body-width: .62rem
+      margin-width: .21rem
     code-tools:
       source: true
       toggle: false
