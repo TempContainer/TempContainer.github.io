@@ -227,7 +227,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../CS/61810/6.1810Lec3.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Operating System Organization</span></a>
+ <span class="menu-text">Lec3 Operating System Organization</span></a>
   </div>
 </li>
       </ul>
@@ -251,23 +251,6 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="../../CS/CS144/CS144Unit2.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Unit 2: The Transport Layer</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-          <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false">
- <span class="menu-text">三维重建</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../CS/3d-reconstruction/sfm-revisited.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Structure-from-Motion Revisited 阅读笔记</span></a>
   </div>
 </li>
       </ul>
@@ -340,7 +323,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">2024-03-09</p>
+      <p class="date-modified">2024-03-10</p>
     </div>
   </div>
     
@@ -475,6 +458,7 @@ window.Quarto = {
 <section id="滑动窗口" class="level3" data-number="6.2">
 <h3 data-number="6.2" class="anchored" data-anchor-id="滑动窗口"><span class="header-section-number">6.2</span> 滑动窗口</h3>
 <p>Stop and Wait 方式效率太低。滑动窗口允许多个包同时在网络上传输，这些包组成了一个“窗口”，当接收到 ACK 消息时，移动这个窗口。具体可以参考《<a href="https://fasionchan.com/network/tcp/sliding-window/">滑动窗口，TCP的流量控制机制</a>》。</p>
+<p>根据收发窗口的大小，会发生 go-back-N 或 selective repeat 两种情况。</p>
 
 
 <!-- -->
@@ -1060,7 +1044,9 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a><span class="fu">### 滑动窗口</span></span>
 <span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>Stop and Wait 方式效率太低。滑动窗口允许多个包同时在网络上传输，这些包组成了一个“窗口”，当接收到 ACK 消息时，移动这个窗口。具体可以参考《<span class="co">[</span><span class="ot">滑动窗口，TCP的流量控制机制</span><span class="co">](https://fasionchan.com/network/tcp/sliding-window/)</span>》。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>Stop and Wait 方式效率太低。滑动窗口允许多个包同时在网络上传输，这些包组成了一个“窗口”，当接收到 ACK 消息时，移动这个窗口。具体可以参考《<span class="co">[</span><span class="ot">滑动窗口，TCP的流量控制机制</span><span class="co">](https://fasionchan.com/network/tcp/sliding-window/)</span>》。</span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>根据收发窗口的大小，会发生 go-back-N 或 selective repeat 两种情况。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
