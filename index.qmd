@@ -1,17 +1,15 @@
 ---
-title: "demo"
+title: "Thought \"Temp\" Container"
 listing:
   contents:
     - "*.qmd"
     - "!index.qmd"
     - "!about.qmd"
     - "!CS.qmd"
-  sort: "date"
+  sort: "date desc"
   type: table
   table-hover: true
   fields: [date, title, description, reading-time]
 ---
 
-This is a Quarto website.
-
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+这个网站用来记录我学习的知识和思考的东西。

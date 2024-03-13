@@ -3,7 +3,7 @@ project:
   output-dir: docs
   
 website:
-  title: "demo"
+  title: "Thought Container"
   favicon: RI.png
   reader-mode: true
   navbar:
@@ -16,13 +16,17 @@ website:
 
   sidebar:
     - title: "CS"
-      collapse-level: 3
+      collapse-level: 2
       contents:
         - section: Computer Science
           file: CS/CS.qmd
           contents:
-            - section: 6.S081 Operating System Engineering 笔记
-              contents: "CS/OS/*.qmd"
+            - section: 6.1810 Operating System Engineering 笔记
+              contents: "CS/61810/*.qmd"
+            - section: CS144 Introduction to Computer Networking 笔记
+              contents: "CS/CS144/*.qmd"
+            # - section: 三维重建
+            #   contents: "CS/3d-reconstruction/*.qmd"
   
   page-footer:
       center: |
@@ -34,6 +38,7 @@ format:
       - cosmo
       - custom.scss
     css: styles.css
+    pagetitle: "{{< meta title >}}"
     toc: true
     toc-expand: 2
     link-external-newwindow: true
