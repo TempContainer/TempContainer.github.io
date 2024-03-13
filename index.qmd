@@ -6,6 +6,8 @@ listing:
     - "!index.qmd"
     - "!about.qmd"
     - "!CS.qmd"
+    - "!_*/"
+    - "!_*.qmd"
   sort: "date desc"
   type: table
   table-hover: true
