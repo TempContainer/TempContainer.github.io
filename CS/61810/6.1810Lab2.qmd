@@ -1,0 +1,47 @@
+---
+title: "Lab2 system calls: system calls"
+order: 4
+date: 2024-3-13
+date-modified: last-modified
+description: "实现几个系统调用。"
+---
+
+## Using gdb (easy)
+
+按照提示来。
+
+> Looking at the backtrace output, which function called `syscall`?
+
+通过 `bt` 命令，知道 `kernel/trap.c` 的 `usertrap()` 调用了 `syscall` 。
+
+> What is the value of `p->trapframe->a7` and what does that value represent? (Hint: look `user/initcode.S`, the first user program xv6 starts.)
+
+值为 `SYS_exec` ，代表 `exec` 在函数指针数组中的下标。
+
+> What was the previous mode that the CPU was in?
+
+我猜在 user mode。
+
+> Write down the assembly instruction the kernel is panicing at. Which register corresponds to the variable `num`?
+
+通过搜索 `sepc` 数字（我这里是 800020b6），看到命令为 `lw a3,0(zero)` 。所以 `num` 对应寄存器 `a3` 。
+
+> Why does the kernel crash? Hint: look at figure 3-3 in the text; is address 0 mapped in the kernel address space? Is that confirmed by the value in `scause` above? (See description of `scause` in [RISC-V privileged instructions](#0))
+
+从书上的图看出地址 0 在内核空间是没有定义的，因此无法加载这页的内存。`scause` 代码查询手册得知代表“load page fault”，这印证了上面的想法。
+
+> What is the name of the binary that was running when the kernel paniced? What is its process id (`pid`)?
+
+`initcode` 。pid 为 1。
+
+## System call tracing (moderate)
+
+> In this assignment you will add a system call tracing feature that may help you when debugging later labs. You'll create a new `trace` system call that will control tracing. It should take one argument, an integer "mask", whose bits specify which system calls to trace. For example, to trace the fork system call, a program calls `trace(1 << SYS_fork)`, where `SYS_fork` is a syscall number from `kernel/syscall.h`. You have to modify the xv6 kernel to print out a line when each system call is about to return, if the system call's number is set in the mask. The line should contain the process id, the name of the system call and the return value; you don't need to print the system call arguments. The `trace` system call should enable tracing for the process that calls it and any children that it subsequently forks, but should not affect other processes.
+
+跟着提示来就行。注意到新的变量 `proc->trace_mask` 应该初始化的，但是由于整个结构体是定义在全局空间内的，不初始化也不会影响结果。
+
+## Sysinfo (moderate)
+
+> In this assignment you will add a system call, `sysinfo`, that collects information about the running system. The system call takes one argument: a pointer to a `struct sysinfo` (see `kernel/sysinfo.h`). The kernel should fill out the fields of this struct: the `freemem` field should be set to the number of bytes of free memory, and the `nproc` field should be set to the number of processes whose state is not UNUSED. We provide a test program `sysinfotest`; you pass this assignment if it prints "sysinfotest: OK".
+
+按照提示来就行。只需注意一点，工程将需要用到的内核函数统一声明在 `defs.h` 中，符合 monolithic 的思想。因此你新定义的函数也需要加进 `defs.h` 。
