@@ -4,123 +4,160 @@
     "href": "index.html",
     "title": "Thought “Temp” Container",
     "section": "",
-    "text": "这个网站用来记录我学习的知识和思考的东西。\n\n\n\n\n\n\n\n\n   \n     \n     \n       Order By\n       Default\n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n         \n          Title\n        \n     \n  \n    \n      \n      \n    \n\n\n\n\n\nDate\n\n\nTitle\n\n\nDescription\n\n\nReading Time\n\n\n\n\n\n\n2024-03-13\n\n\nLab2 system calls: system calls\n\n\n实现几个系统调用。\n\n\n2 min\n\n\n\n\n2024-03-09\n\n\nLec3 Operating System Organization\n\n\n操作系统设计\n\n\n1 min\n\n\n\n\n2024-03-09\n\n\nUnit 2: The Transport Layer\n\n\nTCP、UDP 等模型\n\n\n3 min\n\n\n\n\n2024-02-24\n\n\nLab1 util: Xv6 and Unix utilities\n\n\n实验一，实现若干小程序。\n\n\n4 min\n\n\n\n\n2024-02-24\n\n\nUnit1: The Internet and IP\n\n\n四层网络模型\n\n\n1 min\n\n\n\n\n2024-02-15\n\n\nLec1 Introduction and Examples\n\n\n操作系统的介绍和例子。\n\n\n3 min\n\n\n\n\n\nNo matching items"
+    "text": "这个网站用来记录我学习的知识和思考的东西。\n\n\n\n\n\n\n\n\n   \n     \n     \n       Order By\n       Default\n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n         \n          Title\n        \n     \n  \n    \n      \n      \n    \n\n\n\n\n\nDate\n\n\nTitle\n\n\nDescription\n\n\nReading Time\n\n\n\n\n\n\n2024-03-20\n\n\nLec7 Page Faults\n\n\nCOW fork, lazy allocation, demand page, mmap\n\n\n1 min\n\n\n\n\n2024-03-20\n\n\nUnit3: Packet Switching\n\n\n分组交换\n\n\n1 min\n\n\n\n\n2024-03-19\n\n\nLec6 System Call Entry/Exit\n\n\ntrap 处理，trampoline 和 trapframe。\n\n\n2 min\n\n\n\n\n2024-03-14\n\n\nLec4 Page Tables\n\n\n介绍页表与内存结构。\n\n\n2 min\n\n\n\n\n2024-03-13\n\n\nLab2 system calls: system calls\n\n\n实现几个系统调用。\n\n\n2 min\n\n\n\n\n2024-03-09\n\n\nLec3 Operating System Organization\n\n\n操作系统设计\n\n\n1 min\n\n\n\n\n2024-03-09\n\n\nUnit2: The Transport Layer\n\n\nTCP、UDP 等模型\n\n\n3 min\n\n\n\n\n2024-02-24\n\n\nLab1 util: Xv6 and Unix utilities\n\n\n实验一，实现若干小程序。\n\n\n4 min\n\n\n\n\n2024-02-24\n\n\nUnit1: The Internet and IP\n\n\n四层网络模型\n\n\n1 min\n\n\n\n\n2024-02-15\n\n\nLec1 Introduction and Examples\n\n\n操作系统的介绍和例子。\n\n\n3 min\n\n\n\n\n\nNo matching items"
   },
   {
-    "objectID": "CS/CS144/CS144Unit1.html",
-    "href": "CS/CS144/CS144Unit1.html",
-    "title": "Unit1: The Internet and IP",
+    "objectID": "CS/CS144/CS144Unit2.html",
+    "href": "CS/CS144/CS144Unit2.html",
+    "title": "Unit2: The Transport Layer",
     "section": "",
-    "text": "应用层：双向可靠字节流。使用应用特定的传输协议：比如万维网的 HTTP（Hypertext Transfer Protocol）。\n传输层：确保正确、顺序等等的 TCP（Transmission Control Protocol）、没有确保的 UDP（User Datagram Protocol）。\n网络层：传递数据报（datagram），使用 IP（唯一选择）。\n数据链路层。",
+    "text": "TCP 提供两个应用进程之间顺序、可靠的字节流传输。\n\n\n见上一节。在主机 A 和 B 建立联系时，A 会生成一个 ISN（Initial Sequence Number）随 SYN 一同传递给 B，同理，B 也会随 SYN+ACK 一同传输自己的 ISN。ISN 可以一定程度上保证 TCP 在全因特网范围内 ID 的唯一性。\n\n\n\n建立完连接后，A 将字节流中的数据放入 TCP 段（TCP Segment）中，交给 IP 层进一步封装，之后交给 B。B 提取 TCP 段并重建字节流，传递给应用层。\n\n\n\nA 向 B 传输 FIN 消息，表示结束（finish）。B 返回 ACK 消息并不再从 A 读取数据，但是 B 仍可以向 A 传输数据。当 B 结束传输数据时，向 A 发送 FIN 消息，A 回复 ACK 消息。此时，连接完全关闭。\n\n\n\n\n字节流：可靠的字节传输服务。\n可靠传输：\n\nACK 信息来确认数据传输正确。\n校验和（Checksums）检测损坏数据。\n序列号检测丢失数据。\n流量控制（flow-control）来防止接收方过载。\n\n按顺序：从 A 发送的数据以相同的顺序倍被 B 的应用层接收。如果 B 接收的 TCP 段是无序的，TCP 层会重新排出正确的顺序。\n拥塞控制（congestion control）：TCP 试图将网络上的所有 TCP 连接的负载均衡。后面会细讲。\n\n\n\n\n可以参考这篇文章：TCP 报文段格式。\n\n\n\n\n\n\n\n\nID 的唯一性由五个属性保证：TCP 段的源端口和目的端口、IP 段的源地址（IPSA）和目的地址（IPDA），以及协议 ID（即 Protocol ID = “TCP”）。主机 A 对每个新连接会增加源端口的编号，同时生成 ISN 来尽量保证唯一性。",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit1: The Internet and IP"
+      "Unit2: The Transport Layer"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit1.html#the-4-layer-internet-model",
-    "href": "CS/CS144/CS144Unit1.html#the-4-layer-internet-model",
-    "title": "Unit1: The Internet and IP",
+    "objectID": "CS/CS144/CS144Unit2.html#tcp-服务模型",
+    "href": "CS/CS144/CS144Unit2.html#tcp-服务模型",
+    "title": "Unit2: The Transport Layer",
     "section": "",
-    "text": "应用层：双向可靠字节流。使用应用特定的传输协议：比如万维网的 HTTP（Hypertext Transfer Protocol）。\n传输层：确保正确、顺序等等的 TCP（Transmission Control Protocol）、没有确保的 UDP（User Datagram Protocol）。\n网络层：传递数据报（datagram），使用 IP（唯一选择）。\n数据链路层。",
+    "text": "TCP 提供两个应用进程之间顺序、可靠的字节流传输。\n\n\n见上一节。在主机 A 和 B 建立联系时，A 会生成一个 ISN（Initial Sequence Number）随 SYN 一同传递给 B，同理，B 也会随 SYN+ACK 一同传输自己的 ISN。ISN 可以一定程度上保证 TCP 在全因特网范围内 ID 的唯一性。\n\n\n\n建立完连接后，A 将字节流中的数据放入 TCP 段（TCP Segment）中，交给 IP 层进一步封装，之后交给 B。B 提取 TCP 段并重建字节流，传递给应用层。\n\n\n\nA 向 B 传输 FIN 消息，表示结束（finish）。B 返回 ACK 消息并不再从 A 读取数据，但是 B 仍可以向 A 传输数据。当 B 结束传输数据时，向 A 发送 FIN 消息，A 回复 ACK 消息。此时，连接完全关闭。\n\n\n\n\n字节流：可靠的字节传输服务。\n可靠传输：\n\nACK 信息来确认数据传输正确。\n校验和（Checksums）检测损坏数据。\n序列号检测丢失数据。\n流量控制（flow-control）来防止接收方过载。\n\n按顺序：从 A 发送的数据以相同的顺序倍被 B 的应用层接收。如果 B 接收的 TCP 段是无序的，TCP 层会重新排出正确的顺序。\n拥塞控制（congestion control）：TCP 试图将网络上的所有 TCP 连接的负载均衡。后面会细讲。\n\n\n\n\n可以参考这篇文章：TCP 报文段格式。\n\n\n\n\n\n\n\n\nID 的唯一性由五个属性保证：TCP 段的源端口和目的端口、IP 段的源地址（IPSA）和目的地址（IPDA），以及协议 ID（即 Protocol ID = “TCP”）。主机 A 对每个新连接会增加源端口的编号，同时生成 ISN 来尽量保证唯一性。",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit1: The Internet and IP"
+      "Unit2: The Transport Layer"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit1.html#ip-服务",
-    "href": "CS/CS144/CS144Unit1.html#ip-服务",
-    "title": "Unit1: The Internet and IP",
-    "section": "2 IP 服务",
-    "text": "2 IP 服务\nIP 服务模型的特点：\n\n数据报。当请求 IP 传送数据，它会创建一个数据报并将信息放入。数据报是一个独立路由的包（packet），其 header 记录了它的源（IPSA）和目标地（IPDA）。数据报 hop-by-hop1 地在路由器之间传输，知道目的 IP 地址。每个路由器都有个 forwarding table 来标记下一处目的地。\n不可靠。IP 不对数据传输做任何保证。\nBest effort。IP 只会在必要时才丢弃数据报。\n无连接（connectionless）。IP 不会为每个数据流2维护独立状态信息（no per-flow state）。\n\n1 hop 指数据包经过路由器或节点转移到其他网络的过程。2 数据流是一堆数据报的集合，它们同属于一个端到端的连接，比如 TCP connection。端到端原则：尽可能在终端主机实现特性。",
+    "objectID": "CS/CS144/CS144Unit2.html#udp-服务模型",
+    "href": "CS/CS144/CS144Unit2.html#udp-服务模型",
+    "title": "Unit2: The Transport Layer",
+    "section": "2 UDP 服务模型",
+    "text": "2 UDP 服务模型\nUDP 提供更简单的传输服务。\n\n2.1 UDP 的特点\n\n无连接：不保证连接建立。\n数据报：包会以任何顺序传输。\nSelf-contained datagrams\n不可靠传输：\n\n没有确认消息。\n没有检测丢失或顺序错乱的机制。\n没有流量控制。\n\n\n\n\n2.2 UDP 段格式\n\n\n\n\n\n设计 UDP 的意图是为了更快的传输速率，或者应用层自己对数据传输的可靠性做规定，方便扩展。",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit1: The Internet and IP"
+      "Unit2: The Transport Layer"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit1.html#tcp-字节流",
-    "href": "CS/CS144/CS144Unit1.html#tcp-字节流",
-    "title": "Unit1: The Internet and IP",
-    "section": "3 TCP 字节流",
-    "text": "3 TCP 字节流\n客户端如何通过网络与服务端建立联系？三次握手（3-way handshake）：\n\n客户端发送同步信息（SYN）；\n服务端发送同步和确认消息（SYN/ACK）；\n客户端发送确认消息（ACK）。\n\n传输层负责发送数据的应用。从网络层来看，向相同电脑上的不同应用发送包是无法区分的。因此向其他应用建立 TCP 流，我们需要两个地址：IP 地址和 TCP 端口。",
+    "objectID": "CS/CS144/CS144Unit2.html#icmpinternet-control-message-protocol服务模型",
+    "href": "CS/CS144/CS144Unit2.html#icmpinternet-control-message-protocol服务模型",
+    "title": "Unit2: The Transport Layer",
+    "section": "3 ICMP（Internet Control Message Protocol）服务模型",
+    "text": "3 ICMP（Internet Control Message Protocol）服务模型\nICMP 给终端主机和路由器提供网络层的信息，比如错误和诊断信息。ICMP 也属于传输层。ping 和 traceroute 指令就是使用 ICMP 的例子。\nIP 数据报在终端主机间逐跳（hop-by-hop）传递，每个路由器都会生成 forwarding table 来指示数据报的下一个目的地。当出现错误时，比如 forwarding table 上没有对应的 IP 地址，路由器会生成一个 ICMP 包传回主机，表明 “Destination Network Unreachable”。同样，ICMP 也有对应的格式，这里略过。\n\n3.1 ICMP 的特点\n\n报告消息：self-contained 的报告错误的消息。\n不可靠。不会重新发送。",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit1: The Internet and IP"
+      "Unit2: The Transport Layer"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit1.html#包交换packet-switching",
-    "href": "CS/CS144/CS144Unit1.html#包交换packet-switching",
-    "title": "Unit1: The Internet and IP",
-    "section": "4 包交换（Packet Switching）",
-    "text": "4 包交换（Packet Switching）\n包交换：将一个数据报分为独立的包，对每个送达的包，选择送出的连接。如果连接没有被占用，就发送。否则保持。\n包交换不必要跟踪每个包，所有包都是 self-contained 的（参考 IP 服务的无连接特性）。",
+    "objectID": "CS/CS144/CS144Unit2.html#end-to-end-principle",
+    "href": "CS/CS144/CS144Unit2.html#end-to-end-principle",
+    "title": "Unit2: The Transport Layer",
+    "section": "4 End-to-End Principle",
+    "text": "4 End-to-End Principle\n端到端原则：\n\nThe function in question can completely and correctly be implemented only with the knowledge and help of the application standing at the end points of the communication system. Therefore, providing that questioned function as a feature of the communication system itself is not possible. (Sometimes an incomplete version of the function provided by the communication system may be useful as a performance enhancement.) We call this line of reasoning … “the end-to-end argument.1\n问题中涉及的功能只有在通信系统末端的应用程序的知识和帮助下才能完全且正确地实现。因此，将该功能作为通信系统本身的特性提供是不可能的。（有时，由通信系统提供的该功能的不完整版本可能对性能有所提升。）我们称这种推理为……“端到端论证”。\n1 Saltzer, Reed, and Clark, End-to-end Arguments in System Design, 1984\n强端到端：\n\nThe network’s job is to transmit datagrams as efficiently and flexibly as possible. Everything else should be done at the fringes …2\n2 [RFC 1958]",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit1: The Internet and IP"
+      "Unit2: The Transport Layer"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit1.html#封装",
-    "href": "CS/CS144/CS144Unit1.html#封装",
-    "title": "Unit1: The Internet and IP",
-    "section": "5 封装",
-    "text": "5 封装\n一层层嵌套的结构，底层的结构不需要知道自己的 payload 到底是什么。\n\n封装的思想可以让我们实现更复杂的应用场景：VPN。\n\n\n\n\n\nTLS（Transport Layer Security） 协议加密了通信数据。",
+    "objectID": "CS/CS144/CS144Unit2.html#错误检测checksumcrc-和-mac",
+    "href": "CS/CS144/CS144Unit2.html#错误检测checksumcrc-和-mac",
+    "title": "Unit2: The Transport Layer",
+    "section": "5 错误检测：Checksum，CRC 和 MAC",
+    "text": "5 错误检测：Checksum，CRC 和 MAC\n\nChecksum 把包中每个 16 位的数据加在一起（IP，TCP）\n\n软件计算快速、低开销\n不是很健壮\n\n循环冗余校验（CRC，Cyclic Redundancy Check）计算模一个多项式的余数（以太网）\n\n比 Checksum 开销更大，但是在今天的硬件上非常容易实现\n保证检测出任意 2 位错误、任意 \\(\\le c\\) 位的突发错误、任意奇数位错误。\n\n消息认证码（MAC，Message Authentication Code）安全传输数据（传输层安全协议（TLS，Transport Layer Security））\n\n检测恶意修改。\n任意两条消息有 \\(2^{-n}\\) 的概率有相同的 MAC。",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit1: The Internet and IP"
+      "Unit2: The Transport Layer"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit1.html#byte-order",
-    "href": "CS/CS144/CS144Unit1.html#byte-order",
-    "title": "Unit1: The Internet and IP",
-    "section": "6 Byte Order",
-    "text": "6 Byte Order\n传输数据也有 little endian 和 big endian 的问题，有专门的库会进行大小端的转换，这里略过。",
+    "objectID": "CS/CS144/CS144Unit2.html#流量控制",
+    "href": "CS/CS144/CS144Unit2.html#流量控制",
+    "title": "Unit2: The Transport Layer",
+    "section": "6 流量控制",
+    "text": "6 流量控制\n\n6.1 Stop and Wait\n如果接收方的吞吐量小于传送方，则需要流量控制。最简单的方式就是 Stop and Wait，即发送方每次只传送一个包，直到收到了 ACK 消息再发送下一个；否则在等待一段时间后认定超时，重新发送这个包。这种方法可能存在问题，这里略过。\n\n\n6.2 滑动窗口\nStop and Wait 方式效率太低。滑动窗口允许多个包同时在网络上传输，这些包组成了一个“窗口”，当接收到 ACK 消息时，移动这个窗口。具体可以参考《滑动窗口，TCP的流量控制机制》。\n根据收发窗口的大小，会发生 go-back-N 或 selective repeat 两种情况。",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit1: The Internet and IP"
+      "Unit2: The Transport Layer"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit1.html#ipv4",
-    "href": "CS/CS144/CS144Unit1.html#ipv4",
-    "title": "Unit1: The Internet and IP",
-    "section": "7 IPv4",
-    "text": "7 IPv4\nIPv4 是一个 32bit 的地址，通常写为四个 8bit 数排列，用点分隔，比如 a.b.c.d。\n子网掩码（netmask）用来标识 IP 地址哪些位置是主机所在网络地址，也表示成 IP 地址的形式。比如 255.128.0.0 表示一个 9bit 掩码。两个 IP 地址如果与其掩码相与后相等，则这两个 IP 地址在同一个网络下。\nIP 地址由 CIDR（Classless Inter-Domain Routing）管理。CIDR 表示法：如 198.51.100.0/22 表示从 198.51.100.0 到 198.51.103.255 的 \\(2^{32-22}=1024\\) 个 IP 地址。斜线后面的数字表示掩码的位数，掩码后的位置可以自由分配。\n在每个路由器的 forwarding table 中，一个 IP 地址可能会与多个地址匹配。比如 171.33.0.1 可以和 0.0.0.0/03 与 171.33.0.0/16 匹配，此时我们选取具有最长公共前缀的匹配。\n3 称为 default route，可以与所有 IP 地址匹配。",
+    "objectID": "CS/CS.html",
+    "href": "CS/CS.html",
+    "title": "导航页",
+    "section": "",
+    "text": "这是导航页，可以写介绍性文字。",
     "crumbs": [
       "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit1: The Internet and IP"
+      "Computer Science"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit1.html#地址解析协议arpaddress-resolution-protocol",
-    "href": "CS/CS144/CS144Unit1.html#地址解析协议arpaddress-resolution-protocol",
-    "title": "Unit1: The Internet and IP",
-    "section": "8 地址解析协议（ARP，Address Resolution Protocol）",
-    "text": "8 地址解析协议（ARP，Address Resolution Protocol）\nARP 是一个通过解析网络层地址来找寻数据链路层地址的网络传输协议。数据最终由网卡硬件传输，每个网卡都有独立的 MAC（Media Access Control Address） 地址（如 00:13:72:4c:d9:6a）。由于历史原因，网络层和链路层的地址是耦合在一起的。在发送一个包时，不仅需要 IP 地址，还需要对应的链路层地址。ARP 维护一个 IP 与链路层地址对应的缓存，当要发送一个包时，如果缓存上没有对应的数据，ARP 会发送一个广播请求，接收请求的对应主机会回复自己的 MAC 地址，当得到回应时 ARP 更新对应的缓存并发送数据。缓存会在保留一段时间后自动丢弃。",
+    "objectID": "CS/61810/6.1810Lec6.html",
+    "href": "CS/61810/6.1810Lec6.html",
+    "title": "Lec6 System Call Entry/Exit",
+    "section": "",
+    "text": "Read Chapter 4, except 4.6 and kernel/riscv.h, kernel/trampoline.S, and kernel/trap.c.\n\n有三种事件会使 CPU 暂停普通指令的执行并强制转换到处理该事件的特殊代码：系统调用、异常（exception）、设备中断（interrupt）。我们使用 trap 作为这些情况的通用术语。处理 trap 后需要恢复代码，并且要有无事发生的感觉，这需要 trap 是透明的（到这里终于明白第一章所说的在进程间透明地切换是什么意思了）。trap 在内核中处理是自然的，这样保证了隔离性。\nxv6 的 trap 处理分四个阶段：RISC-V CPU 采取硬件措施、汇编指令为内核 C 代码准备、C 函数决定如何处置 trap、进入系统调用或硬件中断的常规处理流程。三种不同情况对应三种处理代码，其中处理 trap 的内核代码（汇编或 C）称为 handler；第一个handler 的指令通常用汇编程序（而不是 C）编写，有时称为 vector 。\n\n\n每个 RISC-V CPU 都有一组控制寄存器，内核写入这些控制寄存器来告诉 CPU 如何处理 trap，并且内核可以读取这些寄存器来找出已发生的 trap。以下是最重要的寄存器的概述：\n\nstvec（Supervisor Trap Vector Base Address Register）：内核将其 trap 处理程序的地址写入此处；RISC-V 跳转到 stvec 中的地址来处理 trap。\nsepc（Supervisor Exception Program Counter）：当 trap 发生时，RISC-V 将 pc 保存在这里（因为 pc 随后会被 stvec 中的值覆盖）。sret （从 trap 返回）指令将 sepc 复制到 pc 。内核可以写 sepc 来控制 sret 的去向。\nscause：trap 的原因，用一个数字表示。\nsscratch（Supervisor Scratch Register）：trap handler 用这个来避免用户寄存器在保存之前被覆写。\nsstatus：这个寄存器的 SIE 位控制设备中断是否启用。如果内核清除了 SIE，RISC-V 将推迟设备中断，直到 SIE 重新设置。SPP 位指示 trap 是来自用户模式还是监督模式，并控制 sret 返回的模式。\n\n以上寄存器只能在监督模式下使用，对于机器模式下处理的 trap，有一组类似的控制寄存器；xv6 仅将它们用于定时器中断的特殊情况。当需要强制 trap 时，RISC-V 硬件会对所有 trap 类型（定时器中断除外）执行以下操作：\n\n如果是设备中断，并且 sstatus SIE 位清零，则不要执行以下任何操作。\n通过清除 sstatus 中的 SIE 位来禁用中断。\n将 pc 复制到 sepc。\n将当前模式（用户或管理员）保存在 sstatus 的 SPP 位中。\n调整为监督模式。\n把 stvec 复制到 pc。\n在新的 pc 下开始执行。\n\n剩下的未决事务，如切换内核页表与堆栈等，为保持灵活性，交给内核软件处理。\n\n\n\n读到下一节的时候，越发感觉语焉不详，所以这次调整一下，先看 lecture，剩下的回来处理。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit1: The Internet and IP"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec6 System Call Entry/Exit"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec6.html#课前准备",
+    "href": "CS/61810/6.1810Lec6.html#课前准备",
+    "title": "Lec6 System Call Entry/Exit",
+    "section": "",
+    "text": "Read Chapter 4, except 4.6 and kernel/riscv.h, kernel/trampoline.S, and kernel/trap.c.\n\n有三种事件会使 CPU 暂停普通指令的执行并强制转换到处理该事件的特殊代码：系统调用、异常（exception）、设备中断（interrupt）。我们使用 trap 作为这些情况的通用术语。处理 trap 后需要恢复代码，并且要有无事发生的感觉，这需要 trap 是透明的（到这里终于明白第一章所说的在进程间透明地切换是什么意思了）。trap 在内核中处理是自然的，这样保证了隔离性。\nxv6 的 trap 处理分四个阶段：RISC-V CPU 采取硬件措施、汇编指令为内核 C 代码准备、C 函数决定如何处置 trap、进入系统调用或硬件中断的常规处理流程。三种不同情况对应三种处理代码，其中处理 trap 的内核代码（汇编或 C）称为 handler；第一个handler 的指令通常用汇编程序（而不是 C）编写，有时称为 vector 。\n\n\n每个 RISC-V CPU 都有一组控制寄存器，内核写入这些控制寄存器来告诉 CPU 如何处理 trap，并且内核可以读取这些寄存器来找出已发生的 trap。以下是最重要的寄存器的概述：\n\nstvec（Supervisor Trap Vector Base Address Register）：内核将其 trap 处理程序的地址写入此处；RISC-V 跳转到 stvec 中的地址来处理 trap。\nsepc（Supervisor Exception Program Counter）：当 trap 发生时，RISC-V 将 pc 保存在这里（因为 pc 随后会被 stvec 中的值覆盖）。sret （从 trap 返回）指令将 sepc 复制到 pc 。内核可以写 sepc 来控制 sret 的去向。\nscause：trap 的原因，用一个数字表示。\nsscratch（Supervisor Scratch Register）：trap handler 用这个来避免用户寄存器在保存之前被覆写。\nsstatus：这个寄存器的 SIE 位控制设备中断是否启用。如果内核清除了 SIE，RISC-V 将推迟设备中断，直到 SIE 重新设置。SPP 位指示 trap 是来自用户模式还是监督模式，并控制 sret 返回的模式。\n\n以上寄存器只能在监督模式下使用，对于机器模式下处理的 trap，有一组类似的控制寄存器；xv6 仅将它们用于定时器中断的特殊情况。当需要强制 trap 时，RISC-V 硬件会对所有 trap 类型（定时器中断除外）执行以下操作：\n\n如果是设备中断，并且 sstatus SIE 位清零，则不要执行以下任何操作。\n通过清除 sstatus 中的 SIE 位来禁用中断。\n将 pc 复制到 sepc。\n将当前模式（用户或管理员）保存在 sstatus 的 SPP 位中。\n调整为监督模式。\n把 stvec 复制到 pc。\n在新的 pc 下开始执行。\n\n剩下的未决事务，如切换内核页表与堆栈等，为保持灵活性，交给内核软件处理。\n\n\n\n读到下一节的时候，越发感觉语焉不详，所以这次调整一下，先看 lecture，剩下的回来处理。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec6 System Call Entry/Exit"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec6.html#lecture",
+    "href": "CS/61810/6.1810Lec6.html#lecture",
+    "title": "Lec6 System Call Entry/Exit",
+    "section": "2 Lecture",
+    "text": "2 Lecture\n以 write 系统调用为例，追踪内核的执行进程。\nwrite 通过 ecall 执行系统调用，ecall 切换到监督模式的内核中。在这个过程中，内核中执行的第一个指令是一个由汇编语言写的函数，叫做 uservec。之后，在这个函数中，代码跳转到了由 C 实现的 usertrap 中。在这个函数中执行了一个 syscall 的函数，这个函数会在一个表单中，根据传入的代表系统调用的数字进行查找，并在内核中执行具体实现了系统调用功能的函数。对于我们来说，这个函数就是 sys_write。sys_write 会将要显示数据输出到 console 上，当它完成了之后，它会返回给 syscall 函数。在syscall 函数中，会调用一个函数叫做 usertrapret，这个函数完成了部分方便在 C 代码中实现的返回到用户空间的工作。除此之外，最终还有一些工作只能在汇编语言中完成。这部分工作通过汇编语言实现，并且存在于 userret 函数中。最终，在这个汇编函数中会调用机器指令返回到用户空间，并且恢复 ecall 之后的用户程序的执行。\n用户空间的 trampoline page 负责执行最初的处理，但是此时已在监督模式下的内核中，因为 ecall 并没有切换页表。更详细地，ecall 只做了三件事（其实就是上面“RISC-V trap 机制”一节提到的过程）。但我们实际离执行内核中的C代码还差的很远。接下来：\n\n我们需要保存 32 个用户寄存器的内容，这样当我们想要恢复用户代码执行时，我们才能恢复这些寄存器的内容。\n因为现在我们还在用户地址空间，我们需要切换到内核地址空间。\n我们需要创建或者找到一个内核栈，并将 sp 寄存器的内容指向它。\n我们还需要跳转到内核中 C 代码的某些合理的位置。\n\n首先解决第一个问题，每个用户页表都有一块 trapframe 页，里面有对应 32 个寄存器的空槽位，我们可以将寄存器储存进去。同时借助 sscratch 寄存器，可以先将 a0 寄存器转移走，从而借助 a0 作为桥梁将寄存器全部储存完毕。sscratch 中有 trapframe 页的地址，这是在上一次从内核返回到用户空间的 usertrapret 函数中设置的。同理，trapframe 也有来自上一次返回设置好的内核栈 sp 寄存器、表示 CPU 核的标号的 tp 寄存器、usertrap 函数的指针、内核页表的指针，分别对应了后三步的解决方法。\n在 usertrap 中，首先将 stvec 指向了 kernelvec ，这是处理内核中出现的中断和异常的函数（而非现在的从用户空间来的 trap）。后面打开了对应的 sstauts 的 SIE 位。并调用了对应的 sys_write 函数。返回后，进入 usertrapret 。\nusertrapret 主要是为返回用户空间之前做恢复，包括设置一系列上面所说的 trapframe 中存贮的关于内核的数据，这是一个对称的过程。usertrapret 里也关闭了中断。最后跳转回 userret 函数。\nuserret 函数仍然位于 trampoline 页，因为映射了用户与内核间地址空间的恒等映射，因此在这里完成最后的交接工作，包括所有 32 个寄存器以及 sret 指令（程序切换回用户模式、sepc 拷贝到 pc、重新打开中断）。此时一次系统调用完满结束。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec6 System Call Entry/Exit"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec6.html#课前准备re",
+    "href": "CS/61810/6.1810Lec6.html#课前准备re",
+    "title": "Lec6 System Call Entry/Exit",
+    "section": "3 课前准备：RE",
+    "text": "3 课前准备：RE\n\n3.1 用户空间的 trap\nlecture 正好对应了整个这一节，看完 lecture 后这里就很清楚了。\n\n\n3.2 内核空间的 trap\n由于发生 trap 时已经处于内核中，kernelvec 会直接将 32 个寄存器压进栈里，并待稍后恢复。之后跳转到 kerneltrap 里，kerneltrap 会为设备中断和异常分别实现不同的处理。如果是异常，则是致命错误，直接 panic。对于设备中断和 yield 在 Chapter 7 有更详细的描述。\n\n\n3.3 Real World\n如果将内核内存映射到每个进程的用户页表中（带有适当的 PTE 权限标志），则可以消除特殊 trampoline 页面的需求。这也会消除从用户空间陷入内核时进行页表切换的需求。这反过来将允许内核中的系统调用实现利用当前进程的用户内存映射，从而使内核代码可以直接引用用户指针。许多操作系统已经利用了这些想法来提高效率。但是 xv6 避免了这些想法，以减少内核由于意外使用用户指针而导致安全漏洞的机会，并减少确保用户和内核虚拟地址不重叠所需的一些复杂性。\n产品级操作系统实现了 copy-on-write fork、延迟分配 (lazy allocation)、按需分页 (demand paging)、页面置换到磁盘 (paging to disk)、内存映射文件 (memory-mapped files) 等功能。此外，产品级操作系统会尽量利用所有物理内存用于应用程序或缓存。相比之下，xv6 在这方面相对简单：你希望你的操作系统利用你支付的物理内存，但 xv6 没有这样做。此外，如果 xv6 内存不足，它会向正在运行的应用返回错误或终止它，而不是逐出另一个应用的页。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec6 System Call Entry/Exit"
     ]
   },
   {
@@ -352,105 +389,263 @@
     ]
   },
   {
-    "objectID": "CS/CS.html",
-    "href": "CS/CS.html",
-    "title": "导航页",
+    "objectID": "CS/61810/6.1810Lec4.html",
+    "href": "CS/61810/6.1810Lec4.html",
+    "title": "Lec4 Page Tables",
     "section": "",
-    "text": "这是导航页，可以写介绍性文字。",
+    "text": "Read Chapter 3 and kernel/memlayout.h.\n\n\n\nRISC-V 指令操纵虚拟地址，机器的 RAM 操纵物理地址。页表将虚拟地址映射到物理地址。\nxv6 运行在 Sv39 RISC-V 上，即 64 位中的低 39 位被用于虚拟地址。在 Sv39 配置中，一个页表是由 \\(2^{27}\\) 的页表项（page table entries，PTE）组成的。每个 PTE 由 physical page number（PPN）与一些标志位组成，共 44 位。每个 PTE 低 39 位中的高 27 位用做指向页表中的 PTE 的下标。一个 56 位的物理地址的高 44 位由 PTE 的 PPN 提供，低 12 位拷贝自对应虚拟地址的低 12 位。如下图。Sv39 并未将 64 位地址全部用满，这样做是出于当时对技术的预测。后面还有 Sv48 提供更多的内存空间。\n\n\n\n\n\n上面只是一个简单表示，不是故事的全部。在实际的 Sv39 结构中，如下图，页表实际由一个三层深的完全 512 叉树组成。根结点是一个 512 项的页，每个 PTE 指向下一层一个 512 项的页，这个页的每个 PTE 又指向下一层一个 512 项的 PTE。这个结构对应了虚拟地址用于定位的 27 位，均分为三部分，每个部分分配给一层。这种分层结构的好处是在多数情况下只有一小部分虚拟地址被使用时，操作系统无需为其他的分支分配页。\n\n\n\n\n\n在实际执行读取/储存指令时，CPU 必须从内存加载三个 PTE，这可能有拖慢速度的隐患。为此 RISC-V CPU 将页表缓存在页表缓存（Translation Look-aside Buffer，TLB）中。\n每个 PTE 的 flag 的含义：PTE_V 表示 PTE 是否存在；PTE_R 控制是否允许被读取；PTE_W 控制是否允许被写入，PTE_X 控制是否 CPU 要将该页的内容解释为指令并执行它们；PTE_U 控制是否允许用户模式下的指令访问该页，默认只能在监督模式下访问。\nstap 寄存器给 CPU 提供了根页表页的基址。每个 CPU 都有各自的 satp 寄存器。\n由于页目录位于物理内存中，因此内核可以通过使用标准存储指令写入 PTE 的虚拟地址来对页目录中的 PTE 内容进行编程。\n关于术语的一些注释。与物理内存和虚拟地址不同，虚拟内存不是物理对象， 而是指内核提供的用于管理物理内存和虚拟地址的抽象和机制的集合。\n\n\n\n\n\n\n\n\n内核地址从 0x80000000（KERNBASE）开始，至少延续到 0x88000000（PHYSTOP）。这段地址采取直接映射，即虚拟地址和物理地址相同。有些地址不遵循直接映射，比如 trampoline 和内核栈分页。trampoline 在虚拟地址的顶端，有趣的是，对应这段内容的物理地址被映射了两次，一次在顶端，一次是直接映射。内核栈分页是每个进程拥有的内核栈的地址，每个分页上有 guard page，这个 page 的 PTE_V 是没有设置的，因此栈溢出会导致引起异常。这样的设计可以防止栈溢出覆盖其他内核栈的数据。\n内核将 trampoline 和内核内容授予 PTE_R 和 PTE_X 权限。其他页授予 PTE_R 和 PTE_W 权限。guard pages 的映射无效。\n书上讲了如何分配地址空间的代码和流程，这里略过。\n\n\n\nxv6 用内核结束到 PHYSTOP 的空间为运行时分配内存。它使用一个链表来追踪空闲空间。后面讲了这部分的代码。\n个人觉得有意思的点是，内核在释放空间时是将内容全部填为垃圾值而非零，这样可以让悬空指针因为读取到无用内容从而尽早被发现。\n\n\n\n每个进程有一个页表，当 xv6 切换进程时，同时切换页表。下图是一个用户地址空间的细节。从 0 到 MAXVA，原则上允许进程寻址 256GB 内存。\n\n\n\n\n\n用户的栈被下方的 guard page 保护，当栈溢出时，会引起分页错误异常。当进程申请更多用户内存时，xv6 先使用 kalloc 分配物理页，然后将那些地址的 PTE 加入进程页表。\n我们在这里看到一些使用页表的很好的例子。首先，不同进程的页表将用户地址转换为不同的物理内存页，从而每个进程都拥有私有的用户内存。其次，每个进程将其内存视为具有从零开始的连续虚拟地址，而进程的物理内存可以是不连续的。第三，内核用 trampoline 代码映射一个页面到用户地址空间的顶部（没有 PTE_U 权限），因此单页物理内存显示在所有地址空间中，但只能由内核使用。\n\n\n\nexec 从二进制或可执行文件中读取数据并替换进程的地址空间。它读取二进制文件的 ELF 标头。一个 ELF 二进制由 ELF 标头和一系列程序段标头组成。xv6 的程序有两段程序段标头：一个是指令，另一个是数据。\n首先 xv6 会快速检查一个文件是否是 ELF 二进制文件。它通常由四个字节的 “magic number” 0x7F, 'E', 'L', 'F' 组成，在程序里设为 ELF_MAGIC 。\n（后面的内容不是很有关联的感觉，就先不写了）\n\n\n\nxv6 的简化是通过内核使用虚拟地址和物理地址之间的直接映射，并假设在地址 0x8000000 处存在物理 RAM。但真实硬件将 RAM 和设备放置在不可预测的物理地址处。更严格的内核设计利用页表将任意硬件物理内存布局转换为可预测的内核虚拟地址布局。\nRISC-V 支持物理地址级别的保护，但 xv6 没有使用该功能。\n在具有大量内存的计算机上，使用 RISC-V 对“super pages”的支持可能很有意义。较大的页面对于具有大量 RAM 的机器来说是有意义的，并且可以减少页表操作的开销。\nxv6 缺少可以为小对象提供内存的类似 malloc 的分配器，因此较难使用需要动态分配的复杂数据结构。更复杂的内核可能会分配许多不同大小的小块，而不是（在 xv6 中）仅 4096 字节块；真正的内核分配器需要处理小分配和大分配。内存分配是一个长期的热门话题，基本问题是有效利用有限的内存并为未知的未来请求做好准备。如今，人们更关心速度而不是空间效率。",
     "crumbs": [
       "CS",
-      "Computer Science"
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec4 Page Tables"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit2.html",
-    "href": "CS/CS144/CS144Unit2.html",
-    "title": "Unit 2: The Transport Layer",
+    "objectID": "CS/61810/6.1810Lec4.html#课前准备",
+    "href": "CS/61810/6.1810Lec4.html#课前准备",
+    "title": "Lec4 Page Tables",
     "section": "",
-    "text": "TCP 提供两个应用进程之间顺序、可靠的字节流传输。\n\n\n见上一节。在主机 A 和 B 建立联系时，A 会生成一个 ISN（Initial Sequence Number）随 SYN 一同传递给 B，同理，B 也会随 SYN+ACK 一同传输自己的 ISN。ISN 可以一定程度上保证 TCP 在全因特网范围内 ID 的唯一性。\n\n\n\n建立完连接后，A 将字节流中的数据放入 TCP 段（TCP Segment）中，交给 IP 层进一步封装，之后交给 B。B 提取 TCP 段并重建字节流，传递给应用层。\n\n\n\nA 向 B 传输 FIN 消息，表示结束（finish）。B 返回 ACK 消息并不再从 A 读取数据，但是 B 仍可以向 A 传输数据。当 B 结束传输数据时，向 A 发送 FIN 消息，A 回复 ACK 消息。此时，连接完全关闭。\n\n\n\n\n字节流：可靠的字节传输服务。\n可靠传输：\n\nACK 信息来确认数据传输正确。\n校验和（Checksums）检测损坏数据。\n序列号检测丢失数据。\n流量控制（flow-control）来防止接收方过载。\n\n按顺序：从 A 发送的数据以相同的顺序倍被 B 的应用层接收。如果 B 接收的 TCP 段是无序的，TCP 层会重新排出正确的顺序。\n拥塞控制（congestion control）：TCP 试图将网络上的所有 TCP 连接的负载均衡。后面会细讲。\n\n\n\n\n可以参考这篇文章：TCP 报文段格式。\n\n\n\n\n\n\n\n\nID 的唯一性由五个属性保证：TCP 段的源端口和目的端口、IP 段的源地址（IPSA）和目的地址（IPDA），以及协议 ID（即 Protocol ID = “TCP”）。主机 A 对每个新连接会增加源端口的编号，同时生成 ISN 来尽量保证唯一性。",
+    "text": "Read Chapter 3 and kernel/memlayout.h.\n\n\n\nRISC-V 指令操纵虚拟地址，机器的 RAM 操纵物理地址。页表将虚拟地址映射到物理地址。\nxv6 运行在 Sv39 RISC-V 上，即 64 位中的低 39 位被用于虚拟地址。在 Sv39 配置中，一个页表是由 \\(2^{27}\\) 的页表项（page table entries，PTE）组成的。每个 PTE 由 physical page number（PPN）与一些标志位组成，共 44 位。每个 PTE 低 39 位中的高 27 位用做指向页表中的 PTE 的下标。一个 56 位的物理地址的高 44 位由 PTE 的 PPN 提供，低 12 位拷贝自对应虚拟地址的低 12 位。如下图。Sv39 并未将 64 位地址全部用满，这样做是出于当时对技术的预测。后面还有 Sv48 提供更多的内存空间。\n\n\n\n\n\n上面只是一个简单表示，不是故事的全部。在实际的 Sv39 结构中，如下图，页表实际由一个三层深的完全 512 叉树组成。根结点是一个 512 项的页，每个 PTE 指向下一层一个 512 项的页，这个页的每个 PTE 又指向下一层一个 512 项的 PTE。这个结构对应了虚拟地址用于定位的 27 位，均分为三部分，每个部分分配给一层。这种分层结构的好处是在多数情况下只有一小部分虚拟地址被使用时，操作系统无需为其他的分支分配页。\n\n\n\n\n\n在实际执行读取/储存指令时，CPU 必须从内存加载三个 PTE，这可能有拖慢速度的隐患。为此 RISC-V CPU 将页表缓存在页表缓存（Translation Look-aside Buffer，TLB）中。\n每个 PTE 的 flag 的含义：PTE_V 表示 PTE 是否存在；PTE_R 控制是否允许被读取；PTE_W 控制是否允许被写入，PTE_X 控制是否 CPU 要将该页的内容解释为指令并执行它们；PTE_U 控制是否允许用户模式下的指令访问该页，默认只能在监督模式下访问。\nstap 寄存器给 CPU 提供了根页表页的基址。每个 CPU 都有各自的 satp 寄存器。\n由于页目录位于物理内存中，因此内核可以通过使用标准存储指令写入 PTE 的虚拟地址来对页目录中的 PTE 内容进行编程。\n关于术语的一些注释。与物理内存和虚拟地址不同，虚拟内存不是物理对象， 而是指内核提供的用于管理物理内存和虚拟地址的抽象和机制的集合。\n\n\n\n\n\n\n\n\n内核地址从 0x80000000（KERNBASE）开始，至少延续到 0x88000000（PHYSTOP）。这段地址采取直接映射，即虚拟地址和物理地址相同。有些地址不遵循直接映射，比如 trampoline 和内核栈分页。trampoline 在虚拟地址的顶端，有趣的是，对应这段内容的物理地址被映射了两次，一次在顶端，一次是直接映射。内核栈分页是每个进程拥有的内核栈的地址，每个分页上有 guard page，这个 page 的 PTE_V 是没有设置的，因此栈溢出会导致引起异常。这样的设计可以防止栈溢出覆盖其他内核栈的数据。\n内核将 trampoline 和内核内容授予 PTE_R 和 PTE_X 权限。其他页授予 PTE_R 和 PTE_W 权限。guard pages 的映射无效。\n书上讲了如何分配地址空间的代码和流程，这里略过。\n\n\n\nxv6 用内核结束到 PHYSTOP 的空间为运行时分配内存。它使用一个链表来追踪空闲空间。后面讲了这部分的代码。\n个人觉得有意思的点是，内核在释放空间时是将内容全部填为垃圾值而非零，这样可以让悬空指针因为读取到无用内容从而尽早被发现。\n\n\n\n每个进程有一个页表，当 xv6 切换进程时，同时切换页表。下图是一个用户地址空间的细节。从 0 到 MAXVA，原则上允许进程寻址 256GB 内存。\n\n\n\n\n\n用户的栈被下方的 guard page 保护，当栈溢出时，会引起分页错误异常。当进程申请更多用户内存时，xv6 先使用 kalloc 分配物理页，然后将那些地址的 PTE 加入进程页表。\n我们在这里看到一些使用页表的很好的例子。首先，不同进程的页表将用户地址转换为不同的物理内存页，从而每个进程都拥有私有的用户内存。其次，每个进程将其内存视为具有从零开始的连续虚拟地址，而进程的物理内存可以是不连续的。第三，内核用 trampoline 代码映射一个页面到用户地址空间的顶部（没有 PTE_U 权限），因此单页物理内存显示在所有地址空间中，但只能由内核使用。\n\n\n\nexec 从二进制或可执行文件中读取数据并替换进程的地址空间。它读取二进制文件的 ELF 标头。一个 ELF 二进制由 ELF 标头和一系列程序段标头组成。xv6 的程序有两段程序段标头：一个是指令，另一个是数据。\n首先 xv6 会快速检查一个文件是否是 ELF 二进制文件。它通常由四个字节的 “magic number” 0x7F, 'E', 'L', 'F' 组成，在程序里设为 ELF_MAGIC 。\n（后面的内容不是很有关联的感觉，就先不写了）\n\n\n\nxv6 的简化是通过内核使用虚拟地址和物理地址之间的直接映射，并假设在地址 0x8000000 处存在物理 RAM。但真实硬件将 RAM 和设备放置在不可预测的物理地址处。更严格的内核设计利用页表将任意硬件物理内存布局转换为可预测的内核虚拟地址布局。\nRISC-V 支持物理地址级别的保护，但 xv6 没有使用该功能。\n在具有大量内存的计算机上，使用 RISC-V 对“super pages”的支持可能很有意义。较大的页面对于具有大量 RAM 的机器来说是有意义的，并且可以减少页表操作的开销。\nxv6 缺少可以为小对象提供内存的类似 malloc 的分配器，因此较难使用需要动态分配的复杂数据结构。更复杂的内核可能会分配许多不同大小的小块，而不是（在 xv6 中）仅 4096 字节块；真正的内核分配器需要处理小分配和大分配。内存分配是一个长期的热门话题，基本问题是有效利用有限的内存并为未知的未来请求做好准备。如今，人们更关心速度而不是空间效率。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit 2: The Transport Layer"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec4 Page Tables"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit2.html#tcp-服务模型",
-    "href": "CS/CS144/CS144Unit2.html#tcp-服务模型",
-    "title": "Unit 2: The Transport Layer",
+    "objectID": "CS/61810/6.1810Lec4.html#lecture",
+    "href": "CS/61810/6.1810Lec4.html#lecture",
+    "title": "Lec4 Page Tables",
+    "section": "2 Lecture",
+    "text": "2 Lecture\nlecture 上讲的内容很有用，把我看书时的困惑解答了不少，但整体内容与书上是一致的，主要是完善了细节并且澄清了容易误解的地方。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec4 Page Tables"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec7.html",
+    "href": "CS/61810/6.1810Lec7.html",
+    "title": "Lec7 Page Faults",
     "section": "",
-    "text": "TCP 提供两个应用进程之间顺序、可靠的字节流传输。\n\n\n见上一节。在主机 A 和 B 建立联系时，A 会生成一个 ISN（Initial Sequence Number）随 SYN 一同传递给 B，同理，B 也会随 SYN+ACK 一同传输自己的 ISN。ISN 可以一定程度上保证 TCP 在全因特网范围内 ID 的唯一性。\n\n\n\n建立完连接后，A 将字节流中的数据放入 TCP 段（TCP Segment）中，交给 IP 层进一步封装，之后交给 B。B 提取 TCP 段并重建字节流，传递给应用层。\n\n\n\nA 向 B 传输 FIN 消息，表示结束（finish）。B 返回 ACK 消息并不再从 A 读取数据，但是 B 仍可以向 A 传输数据。当 B 结束传输数据时，向 A 发送 FIN 消息，A 回复 ACK 消息。此时，连接完全关闭。\n\n\n\n\n字节流：可靠的字节传输服务。\n可靠传输：\n\nACK 信息来确认数据传输正确。\n校验和（Checksums）检测损坏数据。\n序列号检测丢失数据。\n流量控制（flow-control）来防止接收方过载。\n\n按顺序：从 A 发送的数据以相同的顺序倍被 B 的应用层接收。如果 B 接收的 TCP 段是无序的，TCP 层会重新排出正确的顺序。\n拥塞控制（congestion control）：TCP 试图将网络上的所有 TCP 连接的负载均衡。后面会细讲。\n\n\n\n\n可以参考这篇文章：TCP 报文段格式。\n\n\n\n\n\n\n\n\nID 的唯一性由五个属性保证：TCP 段的源端口和目的端口、IP 段的源地址（IPSA）和目的地址（IPDA），以及协议 ID（即 Protocol ID = “TCP”）。主机 A 对每个新连接会增加源端口的编号，同时生成 ISN 来尽量保证唯一性。",
+    "text": "Read Section 4.6.\n\n任务最少的一集。\nxv6 应对异常的方式比较无聊：如果是应用空间的异常，直接杀掉出错的进程；如果是内核里的异常，内核会 panic。真正的操作系统会有更有趣的方式应对异常。\n一个示例是应用 page faults 实现的 copy-on-write (COW) fork。常规的 fork 会为子进程开辟相同的物理空间并将父进程的内容拷贝进去，如果能让父子进程共用一片内存将是非常高效的。但直接的实现方法是不可行的，因为这会导致父子进程会相互干扰对方的执行，因为它们共用了一个堆栈。\n先来了解一下什么是 page-fault exception。当虚拟地址在页表中没有映射，或者对应的 PTE 标志位不符合当前操作所需的许可，就会引发 page-fault exception。RISC-V 区分三种 page fault：\n\nload page fault：当 load 类指令无法翻译其虚拟地址；\nstore page fault：当 store 类指令无法翻译其虚拟地址；\ninstruction page fault：当 pc 无法翻译；\n\nscause 寄存器会标示 page fault 的类型，stval 寄存器存有无法翻译的地址。\nCOW fork 的基本思想是父子进程在刚开始享有同一片物理内存，但是是只读的（PTE_W 未设置）。当任何一方要向某一页写入数据时，RISC-V CPU 会引发一个 page-fault exception。内核的 trap handler 会分配一个页的物理内存并复制引发异常的页的内容，并修改对应的 PTE 标识。此时恢复并重新执行刚才出错的命令，由于这次有了写权限，命令照常执行。COW fork 需要一个记事簿1（book-keeping）来帮助决定哪个页面可以被释放，因为每个页都有可能被很多进程共享。\n1 其实就是引用计数。另一个广泛应用的是 lazy allocation。当进程通过 sbrk 申请更多空间时，内核注意到了空间的扩张，但并未真正分配内存。当新地址上出现了 page fault，内核才会真正分配内存并在页表上建立映射。\n另一个广泛使用的是 demand page。在 exec 中，xv6 加载应用程序的所有文本和数据都 eagerly2 存入内存。由于应用程序可能很大并且从磁盘读取数据的成本很高，这种启动成本可能会引起用户的注意：当用户从 shell 启动大型应用程序，可能需要很长时间才能看到响应。现代内核为用户地址空间创建页表，但标记页面 PTE 无效。发生 page fault 时，内核从磁盘读取页面内容并将其映射到用户地址空间。\n2 与 lazy 相对。计算机上运行的程序可能需要比计算机 RAM 更多的内存。为了优雅地应对，操作系统可能会实现 paging on disk。这个想法是只将一小部分用户页存储在 RAM 中，并将其余部分存储在磁盘的 paging area 中。内核将与存储在 paging area（因此不在 RAM 中）的内存相对应的 PTE 标记为无效。如果应用程序尝试使用已 paged out 到磁盘的页面之一，则应用程序将引发 page fault，并且必须将页面 paged in：内核 trap handler 将分配物理 RAM 页面，从磁盘写入 RAM，并修改相关 PTE 指向 RAM。\n如果一个页面需要被 paged in，但是没有空闲的物理内存怎么办？在这种情况下，内核必须首先释放一个物理页面，将其 paged out 或者逐出（evicting）到磁盘上的 paging area，并将指向该物理页面的 PTE 标记为无效。逐出操作是昂贵的，因此分页的性能最佳时是它不频繁发生。即，应用程序只使用其内存页面的子集，并且这些子集的并集能够适应内存。这种特性通常被称为具有良好的局部性。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit 2: The Transport Layer"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec7 Page Faults"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit2.html#udp-服务模型",
-    "href": "CS/CS144/CS144Unit2.html#udp-服务模型",
-    "title": "Unit 2: The Transport Layer",
-    "section": "2 UDP 服务模型",
-    "text": "2 UDP 服务模型\nUDP 提供更简单的传输服务。\n\n2.1 UDP 的特点\n\n无连接：不保证连接建立。\n数据报：包会以任何顺序传输。\nSelf-contained datagrams\n不可靠传输：\n\n没有确认消息。\n没有检测丢失或顺序错乱的机制。\n没有流量控制。\n\n\n\n\n2.2 UDP 段格式\n\n\n\n\n\n设计 UDP 的意图是为了更快的传输速率，或者应用层自己对数据传输的可靠性做规定，方便扩展。",
+    "objectID": "CS/61810/6.1810Lec7.html#课前准备",
+    "href": "CS/61810/6.1810Lec7.html#课前准备",
+    "title": "Lec7 Page Faults",
+    "section": "",
+    "text": "Read Section 4.6.\n\n任务最少的一集。\nxv6 应对异常的方式比较无聊：如果是应用空间的异常，直接杀掉出错的进程；如果是内核里的异常，内核会 panic。真正的操作系统会有更有趣的方式应对异常。\n一个示例是应用 page faults 实现的 copy-on-write (COW) fork。常规的 fork 会为子进程开辟相同的物理空间并将父进程的内容拷贝进去，如果能让父子进程共用一片内存将是非常高效的。但直接的实现方法是不可行的，因为这会导致父子进程会相互干扰对方的执行，因为它们共用了一个堆栈。\n先来了解一下什么是 page-fault exception。当虚拟地址在页表中没有映射，或者对应的 PTE 标志位不符合当前操作所需的许可，就会引发 page-fault exception。RISC-V 区分三种 page fault：\n\nload page fault：当 load 类指令无法翻译其虚拟地址；\nstore page fault：当 store 类指令无法翻译其虚拟地址；\ninstruction page fault：当 pc 无法翻译；\n\nscause 寄存器会标示 page fault 的类型，stval 寄存器存有无法翻译的地址。\nCOW fork 的基本思想是父子进程在刚开始享有同一片物理内存，但是是只读的（PTE_W 未设置）。当任何一方要向某一页写入数据时，RISC-V CPU 会引发一个 page-fault exception。内核的 trap handler 会分配一个页的物理内存并复制引发异常的页的内容，并修改对应的 PTE 标识。此时恢复并重新执行刚才出错的命令，由于这次有了写权限，命令照常执行。COW fork 需要一个记事簿1（book-keeping）来帮助决定哪个页面可以被释放，因为每个页都有可能被很多进程共享。\n1 其实就是引用计数。另一个广泛应用的是 lazy allocation。当进程通过 sbrk 申请更多空间时，内核注意到了空间的扩张，但并未真正分配内存。当新地址上出现了 page fault，内核才会真正分配内存并在页表上建立映射。\n另一个广泛使用的是 demand page。在 exec 中，xv6 加载应用程序的所有文本和数据都 eagerly2 存入内存。由于应用程序可能很大并且从磁盘读取数据的成本很高，这种启动成本可能会引起用户的注意：当用户从 shell 启动大型应用程序，可能需要很长时间才能看到响应。现代内核为用户地址空间创建页表，但标记页面 PTE 无效。发生 page fault 时，内核从磁盘读取页面内容并将其映射到用户地址空间。\n2 与 lazy 相对。计算机上运行的程序可能需要比计算机 RAM 更多的内存。为了优雅地应对，操作系统可能会实现 paging on disk。这个想法是只将一小部分用户页存储在 RAM 中，并将其余部分存储在磁盘的 paging area 中。内核将与存储在 paging area（因此不在 RAM 中）的内存相对应的 PTE 标记为无效。如果应用程序尝试使用已 paged out 到磁盘的页面之一，则应用程序将引发 page fault，并且必须将页面 paged in：内核 trap handler 将分配物理 RAM 页面，从磁盘写入 RAM，并修改相关 PTE 指向 RAM。\n如果一个页面需要被 paged in，但是没有空闲的物理内存怎么办？在这种情况下，内核必须首先释放一个物理页面，将其 paged out 或者逐出（evicting）到磁盘上的 paging area，并将指向该物理页面的 PTE 标记为无效。逐出操作是昂贵的，因此分页的性能最佳时是它不频繁发生。即，应用程序只使用其内存页面的子集，并且这些子集的并集能够适应内存。这种特性通常被称为具有良好的局部性。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit 2: The Transport Layer"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec7 Page Faults"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit2.html#icmpinternet-control-message-protocol服务模型",
-    "href": "CS/CS144/CS144Unit2.html#icmpinternet-control-message-protocol服务模型",
-    "title": "Unit 2: The Transport Layer",
-    "section": "3 ICMP（Internet Control Message Protocol）服务模型",
-    "text": "3 ICMP（Internet Control Message Protocol）服务模型\nICMP 给终端主机和路由器提供网络层的信息，比如错误和诊断信息。ICMP 也属于传输层。ping 和 traceroute 指令就是使用 ICMP 的例子。\nIP 数据报在终端主机间逐跳（hop-by-hop）传递，每个路由器都会生成 forwarding table 来指示数据报的下一个目的地。当出现错误时，比如 forwarding table 上没有对应的 IP 地址，路由器会生成一个 ICMP 包传回主机，表明 “Destination Network Unreachable”。同样，ICMP 也有对应的格式，这里略过。\n\n3.1 ICMP 的特点\n\n报告消息：self-contained 的报告错误的消息。\n不可靠。不会重新发送。",
+    "objectID": "CS/61810/6.1810Lec7.html#lecture",
+    "href": "CS/61810/6.1810Lec7.html#lecture",
+    "title": "Lec7 Page Faults",
+    "section": "2 Lecture",
+    "text": "2 Lecture\n\n2.1 Memory Mapped Files\n将完整或者部分文件加载到内存中，这样就可以通过内存地址相关的 load 或者 store 指令来操纵文件。为了支持这个功能，现代的操作系统会提供一个叫做 mmap 的系统调用，比如会长成这样：\nmmap(va, len, protection, flags, fd, offset);\n这里的语义就是，从文件描述符对应的文件的偏移量的位置开始，映射长度为 len 的内容到虚拟内存地址 va，同时我们需要加上一些保护，比如只读或者读写。flags 表示该文件是否可以在多个进程之间共享。\n假设文件内容是读写并且内核实现 mmap 的方式是 eager 方式（不过大部分系统都不会这么做），内核会从文件的 offset 位置开始，将数据拷贝到内存，设置好 PTE 指向物理内存的位置。之后应用程序就可以使用 load 或者 store 指令来修改内存中对应的文件内容。当完成操作之后，会有一个对应的 unmap 系统调用，来表明应用程序已经完成了对文件的操作，在 unmap 时间点，我们需要将 dirty block 写回到文件中。我们可以很容易的找到哪些 block 是 dirty 的，因为它们在 PTE 中的 dirty bit 为 1。\n当然，在任何聪明的内存管理机制中，所有的这些都是以 lazy 的方式实现。你不会立即将文件内容拷贝到内存中，而是先记录一下这个 PTE 属于这个文件描述符。相应的信息通常在 VMA (Virtual Memory Area) 结构体中保存。在 VMA 中我们会记录文件描述符，偏移量等等，这些信息用来表示对应的内存虚拟地址的实际内容在哪，这样当我们得到一个位于 VMA 地址范围的 page fault时，内核可以从磁盘中读数据，并加载到内存中。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit 2: The Transport Layer"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec7 Page Faults"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit2.html#end-to-end-principle",
-    "href": "CS/CS144/CS144Unit2.html#end-to-end-principle",
-    "title": "Unit 2: The Transport Layer",
-    "section": "4 End-to-End Principle",
-    "text": "4 End-to-End Principle\n端到端原则：\n\nThe function in question can completely and correctly be implemented only with the knowledge and help of the application standing at the end points of the communication system. Therefore, providing that questioned function as a feature of the communication system itself is not possible. (Sometimes an incomplete version of the function provided by the communication system may be useful as a performance enhancement.) We call this line of reasoning … “the end-to-end argument.1\n问题中涉及的功能只有在通信系统末端的应用程序的知识和帮助下才能完全且正确地实现。因此，将该功能作为通信系统本身的特性提供是不可能的。（有时，由通信系统提供的该功能的不完整版本可能对性能有所提升。）我们称这种推理为……“端到端论证”。\n1 Saltzer, Reed, and Clark, End-to-end Arguments in System Design, 1984\n强端到端：\n\nThe network’s job is to transmit datagrams as efficiently and flexibly as possible. Everything else should be done at the fringes …2\n2 [RFC 1958]",
+    "objectID": "CS/CS144/CS144Unit1.html",
+    "href": "CS/CS144/CS144Unit1.html",
+    "title": "Unit1: The Internet and IP",
+    "section": "",
+    "text": "应用层：双向可靠字节流。使用应用特定的传输协议：比如万维网的 HTTP（Hypertext Transfer Protocol）。\n传输层：确保正确、顺序等等的 TCP（Transmission Control Protocol）、没有确保的 UDP（User Datagram Protocol）。\n网络层：传递数据报（datagram），使用 IP（唯一选择）。\n数据链路层。",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit 2: The Transport Layer"
+      "Unit1: The Internet and IP"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit2.html#错误检测checksumcrc-和-mac",
-    "href": "CS/CS144/CS144Unit2.html#错误检测checksumcrc-和-mac",
-    "title": "Unit 2: The Transport Layer",
-    "section": "5 错误检测：Checksum，CRC 和 MAC",
-    "text": "5 错误检测：Checksum，CRC 和 MAC\n\nChecksum 把包中每个 16 位的数据加在一起（IP，TCP）\n\n软件计算快速、低开销\n不是很健壮\n\n循环冗余校验（CRC，Cyclic Redundancy Check）计算模一个多项式的余数（以太网）\n\n比 Checksum 开销更大，但是在今天的硬件上非常容易实现\n保证检测出任意 2 位错误、任意 \\(\\le c\\) 位的突发错误、任意奇数位错误。\n\n消息认证码（MAC，Message Authentication Code）安全传输数据（传输层安全协议（TLS，Transport Layer Security））\n\n检测恶意修改。\n任意两条消息有 \\(2^{-n}\\) 的概率有相同的 MAC。",
+    "objectID": "CS/CS144/CS144Unit1.html#the-4-layer-internet-model",
+    "href": "CS/CS144/CS144Unit1.html#the-4-layer-internet-model",
+    "title": "Unit1: The Internet and IP",
+    "section": "",
+    "text": "应用层：双向可靠字节流。使用应用特定的传输协议：比如万维网的 HTTP（Hypertext Transfer Protocol）。\n传输层：确保正确、顺序等等的 TCP（Transmission Control Protocol）、没有确保的 UDP（User Datagram Protocol）。\n网络层：传递数据报（datagram），使用 IP（唯一选择）。\n数据链路层。",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit 2: The Transport Layer"
+      "Unit1: The Internet and IP"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit2.html#流量控制",
-    "href": "CS/CS144/CS144Unit2.html#流量控制",
-    "title": "Unit 2: The Transport Layer",
-    "section": "6 流量控制",
-    "text": "6 流量控制\n\n6.1 Stop and Wait\n如果接收方的吞吐量小于传送方，则需要流量控制。最简单的方式就是 Stop and Wait，即发送方每次只传送一个包，直到收到了 ACK 消息再发送下一个；否则在等待一段时间后认定超时，重新发送这个包。这种方法可能存在问题，这里略过。\n\n\n6.2 滑动窗口\nStop and Wait 方式效率太低。滑动窗口允许多个包同时在网络上传输，这些包组成了一个“窗口”，当接收到 ACK 消息时，移动这个窗口。具体可以参考《滑动窗口，TCP的流量控制机制》。\n根据收发窗口的大小，会发生 go-back-N 或 selective repeat 两种情况。",
+    "objectID": "CS/CS144/CS144Unit1.html#ip-服务",
+    "href": "CS/CS144/CS144Unit1.html#ip-服务",
+    "title": "Unit1: The Internet and IP",
+    "section": "2 IP 服务",
+    "text": "2 IP 服务\nIP 服务模型的特点：\n\n数据报。当请求 IP 传送数据，它会创建一个数据报并将信息放入。数据报是一个独立路由的包（packet），其 header 记录了它的源（IPSA）和目标地（IPDA）。数据报 hop-by-hop1 地在路由器之间传输，知道目的 IP 地址。每个路由器都有个 forwarding table 来标记下一处目的地。\n不可靠。IP 不对数据传输做任何保证。\nBest effort。IP 只会在必要时才丢弃数据报。\n无连接（connectionless）。IP 不会为每个数据流2维护独立状态信息（no per-flow state）。\n\n1 hop 指数据包经过路由器或节点转移到其他网络的过程。2 数据流是一堆数据报的集合，它们同属于一个端到端的连接，比如 TCP connection。端到端原则：尽可能在终端主机实现特性。",
     "crumbs": [
       "CS",
       "Computer Science",
       "CS144 Introduction to Computer Networking 笔记",
-      "Unit 2: The Transport Layer"
+      "Unit1: The Internet and IP"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit1.html#tcp-字节流",
+    "href": "CS/CS144/CS144Unit1.html#tcp-字节流",
+    "title": "Unit1: The Internet and IP",
+    "section": "3 TCP 字节流",
+    "text": "3 TCP 字节流\n客户端如何通过网络与服务端建立联系？三次握手（3-way handshake）：\n\n客户端发送同步信息（SYN）；\n服务端发送同步和确认消息（SYN/ACK）；\n客户端发送确认消息（ACK）。\n\n传输层负责发送数据的应用。从网络层来看，向相同电脑上的不同应用发送包是无法区分的。因此向其他应用建立 TCP 流，我们需要两个地址：IP 地址和 TCP 端口。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit1: The Internet and IP"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit1.html#包交换packet-switching",
+    "href": "CS/CS144/CS144Unit1.html#包交换packet-switching",
+    "title": "Unit1: The Internet and IP",
+    "section": "4 包交换（Packet Switching）",
+    "text": "4 包交换（Packet Switching）\n包交换：将一个数据报分为独立的包，对每个送达的包，选择送出的连接。如果连接没有被占用，就发送。否则保持。\n包交换不必要跟踪每个包，所有包都是 self-contained 的（参考 IP 服务的无连接特性）。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit1: The Internet and IP"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit1.html#封装",
+    "href": "CS/CS144/CS144Unit1.html#封装",
+    "title": "Unit1: The Internet and IP",
+    "section": "5 封装",
+    "text": "5 封装\n一层层嵌套的结构，底层的结构不需要知道自己的 payload 到底是什么。\n\n封装的思想可以让我们实现更复杂的应用场景：VPN。\n\n\n\n\n\nTLS（Transport Layer Security） 协议加密了通信数据。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit1: The Internet and IP"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit1.html#byte-order",
+    "href": "CS/CS144/CS144Unit1.html#byte-order",
+    "title": "Unit1: The Internet and IP",
+    "section": "6 Byte Order",
+    "text": "6 Byte Order\n传输数据也有 little endian 和 big endian 的问题，有专门的库会进行大小端的转换，这里略过。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit1: The Internet and IP"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit1.html#ipv4",
+    "href": "CS/CS144/CS144Unit1.html#ipv4",
+    "title": "Unit1: The Internet and IP",
+    "section": "7 IPv4",
+    "text": "7 IPv4\nIPv4 是一个 32bit 的地址，通常写为四个 8bit 数排列，用点分隔，比如 a.b.c.d。\n子网掩码（netmask）用来标识 IP 地址哪些位置是主机所在网络地址，也表示成 IP 地址的形式。比如 255.128.0.0 表示一个 9bit 掩码。两个 IP 地址如果与其掩码相与后相等，则这两个 IP 地址在同一个网络下。\nIP 地址由 CIDR（Classless Inter-Domain Routing）管理。CIDR 表示法：如 198.51.100.0/22 表示从 198.51.100.0 到 198.51.103.255 的 \\(2^{32-22}=1024\\) 个 IP 地址。斜线后面的数字表示掩码的位数，掩码后的位置可以自由分配。\n在每个路由器的 forwarding table 中，一个 IP 地址可能会与多个地址匹配。比如 171.33.0.1 可以和 0.0.0.0/03 与 171.33.0.0/16 匹配，此时我们选取具有最长公共前缀的匹配。\n3 称为 default route，可以与所有 IP 地址匹配。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit1: The Internet and IP"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit1.html#地址解析协议arpaddress-resolution-protocol",
+    "href": "CS/CS144/CS144Unit1.html#地址解析协议arpaddress-resolution-protocol",
+    "title": "Unit1: The Internet and IP",
+    "section": "8 地址解析协议（ARP，Address Resolution Protocol）",
+    "text": "8 地址解析协议（ARP，Address Resolution Protocol）\nARP 是一个通过解析网络层地址来找寻数据链路层地址的网络传输协议。数据最终由网卡硬件传输，每个网卡都有独立的 MAC（Media Access Control Address） 地址（如 00:13:72:4c:d9:6a）。由于历史原因，网络层和链路层的地址是耦合在一起的。在发送一个包时，不仅需要 IP 地址，还需要对应的链路层地址。ARP 维护一个 IP 与链路层地址对应的缓存，当要发送一个包时，如果缓存上没有对应的数据，ARP 会发送一个广播请求，接收请求的对应主机会回复自己的 MAC 地址，当得到回应时 ARP 更新对应的缓存并发送数据。缓存会在保留一段时间后自动丢弃。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit1: The Internet and IP"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit3.html",
+    "href": "CS/CS144/CS144Unit3.html",
+    "title": "Unit3: Packet Switching",
+    "section": "",
+    "text": "数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit3.html#what-is-packet-switching",
+    "href": "CS/CS144/CS144Unit3.html#what-is-packet-switching",
+    "title": "Unit3: Packet Switching",
+    "section": "",
+    "text": "数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit3.html#end-to-end-delay",
+    "href": "CS/CS144/CS144Unit3.html#end-to-end-delay",
+    "title": "Unit3: Packet Switching",
+    "section": "2 End-to-End delay",
+    "text": "2 End-to-End delay\n\n2.1 传播延迟（Progagation Delay）\n传播延迟是指信息的一个比特在链路上传输所需的时间，取决于链路的长度和比特传输的速度。在大多数情况下，比特的传播速度接近光速。传播延迟与链路的数据速率无关，而仅取决于比特的传播速度和电缆的长度。\n\n\n2.2 Packetization Delay\npacketization delay 是指从将数据包的第一个比特放入链路到最后一个比特放入链路之间的时间。packetization delay 取决于我们能够将比特放入链路的速度，也就是数据速率。数据包化延迟只与数据包的长度和数据速率有关，而与链路的长度或比特传播速度无关。\n\n\n2.3 端到端延迟\n将一个长为 \\(p\\) 的包从源主机到目的主机，中间经过若干条线路，每条线路的长度为 \\(l_i\\)，数据速率为 \\(r_i\\)，则端到端延迟为\n\\[ t = \\sum_i \\left(\\frac{p}{r_i} + \\frac{l_i}{c}\\right) \\]其中 \\(c\\) 是数据在传播介质（光纤等）中的速度，接近光速。\n这不是故事全部，当多个包同时抵达路由器，它们通过 packet buffer 暂存在一起并以 FCFS（First-Come-First-Served）的顺序送出。因此，我们需要加入每条线路上的排队延迟（Queueing Delay）\\(Q_i\\)，即\n\\[ t = \\sum_i \\left(\\frac{p}{r_i} + \\frac{l_i}{c} + Q_i(t)\\right) \\]排队延迟是不可预测的，取决于网络中其他用户发送的流量，是端到端延迟的唯一随机变量。\n\n\n2.4 Playback Buffers\n这个东西就是平常在网站上看视频时的灰色进度条，表示已经接收到且提前缓冲好但还未播放的数据。这部分比较简单，略过。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit3.html#how-a-packet-switch-works",
+    "href": "CS/CS144/CS144Unit3.html#how-a-packet-switch-works",
+    "title": "Unit3: Packet Switching",
+    "section": "3 How a packet switch works",
+    "text": "3 How a packet switch works\n\n3.1 Output Queued Packet Switch\n下图是一个交换机或路由器内的布局。\n\n\n\n\n\nPacket Queue 用于在拥塞时缓存将要发出去的包，不同颜色的包表示不同的转发端口。当有两个包要从相同的端口转发，其中一个会先在队列中等待。如果所有的 \\(n\\) 个端口都要从相同的端口转发出去，会导致效率的急剧降低。\n\n\n3.2 Input Queued Packet Switch\n\n\n\n\n\ninput queued 将缓存放在了输入端口。相应地，input queued 会产生 Head of Line(HOL) Blocking 问题：当当前队列最前端的数据过大时，将它 switch 出去要花费更多的时间，导致队列后面其他端口的包因为堵塞无法发出。这对效率是一个很大的影响（大概会缩减至 \\(2-\\sqrt{2}\\approx 58\\%\\) ）。解决方法是引入 Virtual Output Queues，对于每个 input queue，把将要发送到同一个端口的包再分到一个 virtual queue 中，这样不同发出端口的包不会相互影响。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit3.html#strict-priorities-and-guaranteed-flow-rates",
+    "href": "CS/CS144/CS144Unit3.html#strict-priorities-and-guaranteed-flow-rates",
+    "title": "Unit3: Packet Switching",
+    "section": "4 Strict Priorities and Guaranteed Flow Rates",
+    "text": "4 Strict Priorities and Guaranteed Flow Rates\n如果有很多流经过队列，它们将按照 FIFO 顺序离开。谁发送的最多，谁的速率就最高。如果流量真的很大，那么一小部分流量可能会被完全挤出。这样鼓励了不良行为——对于一个流来说，最好的做法是尝试通过尽可能快的发送来挤出所有其他流。\n一个方法是引入严格优先级 (Strict Priorities)。一个高优先级队列一个低优先级队列，只有当高优先级队列的处理完了才能到低优先级。但如果高优先级的流完全占据了数量上的优势，低优先级的会被饿死1。\n1 这个描述真的太资本主义了，乐。更通用的做法是，引入带权优先级 (Weighted Priorities)。考虑 \\(n\\) 个优先级队列，每个队列都有一个权重 \\(w_i\\)。我们分若干轮处理所有的包。对于每一轮的每个队列，我们为这个队列处理 \\(w_i\\) bit 的数据（当然在实际中不能）。当第 \\(i\\) 个队列的第 \\(k\\) 个包到达时，我们算出它将在第几轮为完全送出，记为 \\(F_k\\)，有\n\\[\nF_k = \\max\\{F_{k-1}, \\mathrm{now}\\}+\\frac{L_k}{w_i}\n\\]\n\\(\\rm now\\) 是当前的轮数，因为可能会有队列为空的情况。\\(L_k\\) 是包的长度。此时，我们遍历每个队列的 Head of Line，选择最小的 \\(F\\) ，即结束轮数，来服务对应的包。注意，上面所说的按每个 bit 处理的方法只是为了得到最终的结论，实际上还是以每个包为单位来处理的。从长期来看，以上方法的结果可以趋近于 bit-by-bit 处理的结果。\n以上方法称为加权公平排队 (Weighted Fair Queueing, WFQ) 或分组通用处理器共享 (Packetized Generalized Processor Sharing, PGPS)。\n接下来我们用上面的方法做到真正可保证的 \\(Q_i(t)\\)，因为 WFQ 给了我们每个队列效率的上界 \\(B/R\\) ，我们只需要处理一次性数据涌入过多导致 buffer 溢出的情况。\n首先，对于一个队列，如果在任意一个时间段 \\([t,t+T]\\)，它的到达量 \\(A(t)\\) 均满足 \\(A(t+T)-A(t)\\le B+RT\\)，其中 \\(B\\) 为 buffer 的大小，那么我们可以保证队列不会溢出。我们称这种情况是 \\(A(t)\\) 满足 \\((\\sigma,\\rho)\\) regulation，此时 \\(\\sigma = B, \\rho = R\\)。\n因此，我们可以保证在 \\(B\\ge \\sigma, R\\ge \\rho\\) 的情况下，延迟 \\(Q(t)\\le B/R\\)。\n如果流使用了 leaky-bucket (实现 \\((\\sigma, \\rho)\\) constraint)，路由使用了 WFQ，那么端到端延迟就可以保证。RSVP (Resource Reservation Protocol) 就是实现了端到端保证的协议 [IETF RFC 2205]。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
     ]
   }
 ]
