@@ -1,0 +1,26 @@
+---
+title: "Colmap 源码阅读"
+order: 1
+date: 2024-3-28
+date-modified: last-modified
+description: "如题。"
+---
+
+## 前置准备
+
+### 基本流程
+
+#### 建立工程
+
+`File > New Project`
+
+```         
+/path/to/project/...
++── images
+│   +── image1.jpg
+│   +── image2.jpg
+│   +── ...
+│   +── imageN.jpg
++── database.db
++── project.ini
+```

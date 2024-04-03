@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-03-20">
-<meta name="description" content="分组交换">
+<meta name="dcterms.date" content="2024-03-23">
+<meta name="description" content="TODO">
 
-<title>Unit3: Packet Switching</title>
+<title>Lec9 Device Drivers</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -104,35 +104,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
@@ -182,7 +153,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Lab.html">CS144 Introduction to Computer Networking 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Unit3.html">Unit3: Packet Switching</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec1.html">6.1810 Operating System Engineering 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec9.html">Lec9 Device Drivers</a></li></ol></nav>
         <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -205,13 +176,13 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
  <span class="menu-text">6.1810 Operating System Engineering 笔记</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 ">  
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../CS/61810/6.1810Lec1.html" class="sidebar-item-text sidebar-link">
@@ -256,7 +227,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../CS/61810/6.1810Lec9.html" class="sidebar-item-text sidebar-link">
+  <a href="../../CS/61810/6.1810Lec9.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Lec9 Device Drivers</span></a>
   </div>
 </li>
@@ -264,13 +235,13 @@ window.Quarto = {
   </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
  <span class="menu-text">CS144 Introduction to Computer Networking 笔记</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 show">  
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../CS/CS144/CS144Lab.html" class="sidebar-item-text sidebar-link">
@@ -291,7 +262,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../CS/CS144/CS144Unit3.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../CS/CS144/CS144Unit3.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Unit3: Packet Switching</span></a>
   </div>
 </li>
@@ -332,34 +303,28 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-is-packet-switching" id="toc-what-is-packet-switching" class="nav-link active" data-scroll-target="#what-is-packet-switching"><span class="header-section-number">1</span> What is Packet Switching?</a></li>
-  <li><a href="#end-to-end-delay" id="toc-end-to-end-delay" class="nav-link" data-scroll-target="#end-to-end-delay"><span class="header-section-number">2</span> End-to-End delay</a>
+  <li><a href="#课前准备" id="toc-课前准备" class="nav-link active" data-scroll-target="#课前准备"><span class="header-section-number">1</span> 课前准备</a>
   <ul class="collapse">
-  <li><a href="#传播延迟progagation-delay" id="toc-传播延迟progagation-delay" class="nav-link" data-scroll-target="#传播延迟progagation-delay"><span class="header-section-number">2.1</span> 传播延迟（Progagation Delay）</a></li>
-  <li><a href="#packetization-delay" id="toc-packetization-delay" class="nav-link" data-scroll-target="#packetization-delay"><span class="header-section-number">2.2</span> Packetization Delay</a></li>
-  <li><a href="#端到端延迟" id="toc-端到端延迟" class="nav-link" data-scroll-target="#端到端延迟"><span class="header-section-number">2.3</span> 端到端延迟</a></li>
-  <li><a href="#playback-buffers" id="toc-playback-buffers" class="nav-link" data-scroll-target="#playback-buffers"><span class="header-section-number">2.4</span> Playback Buffers</a></li>
+  <li><a href="#code控制台输入" id="toc-code控制台输入" class="nav-link" data-scroll-target="#code控制台输入"><span class="header-section-number">1.1</span> Code：控制台输入</a></li>
+  <li><a href="#code控制台输出" id="toc-code控制台输出" class="nav-link" data-scroll-target="#code控制台输出"><span class="header-section-number">1.2</span> Code：控制台输出</a></li>
+  <li><a href="#计时器中断" id="toc-计时器中断" class="nav-link" data-scroll-target="#计时器中断"><span class="header-section-number">1.3</span> 计时器中断</a></li>
+  <li><a href="#real-world" id="toc-real-world" class="nav-link" data-scroll-target="#real-world"><span class="header-section-number">1.4</span> Real World</a></li>
   </ul></li>
-  <li><a href="#how-a-packet-switch-works" id="toc-how-a-packet-switch-works" class="nav-link" data-scroll-target="#how-a-packet-switch-works"><span class="header-section-number">3</span> How a packet switch works</a>
-  <ul class="collapse">
-  <li><a href="#output-queued-packet-switch" id="toc-output-queued-packet-switch" class="nav-link" data-scroll-target="#output-queued-packet-switch"><span class="header-section-number">3.1</span> Output Queued Packet Switch</a></li>
-  <li><a href="#input-queued-packet-switch" id="toc-input-queued-packet-switch" class="nav-link" data-scroll-target="#input-queued-packet-switch"><span class="header-section-number">3.2</span> Input Queued Packet Switch</a></li>
-  </ul></li>
-  <li><a href="#strict-priorities-and-guaranteed-flow-rates" id="toc-strict-priorities-and-guaranteed-flow-rates" class="nav-link" data-scroll-target="#strict-priorities-and-guaranteed-flow-rates"><span class="header-section-number">4</span> Strict Priorities and Guaranteed Flow Rates</a></li>
+  <li><a href="#lecture" id="toc-lecture" class="nav-link" data-scroll-target="#lecture"><span class="header-section-number">2</span> Lecture</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content page-columns page-full" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Lab.html">CS144 Introduction to Computer Networking 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Unit3.html">Unit3: Packet Switching</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec1.html">6.1810 Operating System Engineering 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec9.html">Lec9 Device Drivers</a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Unit3: Packet Switching</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
+<div class="quarto-title-block"><div><h1 class="title">Lec9 Device Drivers</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
 </div>
 
 <div>
   <div class="description">
-    分组交换
+    TODO
   </div>
 </div>
 
@@ -370,14 +335,14 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">2024-03-20</p>
+      <p class="date">2024-03-23</p>
     </div>
   </div>
   
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">2024-03-21</p>
+      <p class="date-modified">2024-04-03</p>
     </div>
   </div>
     
@@ -388,68 +353,44 @@ window.Quarto = {
 </header>
 
 
-<section id="what-is-packet-switching" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="what-is-packet-switching"><span class="header-section-number">1</span> What is Packet Switching?</h2>
-<p>数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。</p>
+<section id="课前准备" class="level2 page-columns page-full" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="课前准备"><span class="header-section-number">1</span> 课前准备</h2>
+<blockquote class="blockquote">
+<p>Read Chapter 5 and <code>kernel/kernelvec.S</code>, <code>kernel/plic.c</code>, <code>kernel/console.c</code>, <code>kernel/uart.c</code>, <code>kernel/printf.c</code> .</p>
+</blockquote>
+<p>xv6 在 <code>kernel/trap.c</code> 中的 <code>devintr</code> 处理设备中断，调用驱动的 trap handler。</p>
+<p>许多设备驱动在两个上下文中执行代码：上半部分在进程的内核线程中运行，下半部分在中断时执行。上半部分是通过系统调用（例如 <code>read</code> 和 <code>write</code>）来调用的，这些系统调用希望设备执行 I/O。该代码可能会要求硬件开始一项操作（例如，要求磁盘读取一个块）；然后代码等待操作完成。最终设备完成操作并引发中断。驱动程序的中断处理程序充当下半部分，找出已完成的操作，在适当的情况下唤醒等待进程，并告诉硬件开始处理任何等待的下一个操作。</p>
+<section id="code控制台输入" class="level3 page-columns page-full" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="code控制台输入"><span class="header-section-number">1.1</span> Code：控制台输入</h3>
+<p>控制台驱动通过 RISC-V 附属的 UART (Universal Asynchronous Receiver/Transmitter) 串口硬件接收人输入的字符。UART 硬件是由 QEMU 模拟的 16550 芯片。在真实的计算机上，16550 将管理连接到终端或其他计算机的 RS232 串行链路。运行 QEMU 时，它会连接到你的键盘和显示器。UART 硬件在软件层面为一组 memory-mapped 的控制寄存器。因此它是 RISC-V 物理地址的一部分，只不过是与设备而非 RAM 交互。在 <code>kernel/uart.c</code> 中有这些寄存器具体的介绍。比如，<code>LSR</code> 包含指示输入字符是否等待被软件读入的位，这些字符（如果有的话）可从 <code>RHR</code> 寄存器中读取。每次读取时，UART 会把它从内部的 FIFO 等待队列中删除。当队列为空时，清除 <code>LSR</code> 中的那一位。UART 的发送硬件独立于接收硬件，如果软件向 <code>THR</code> 写入字节，UART 发送那个字节。</p>
+<p>xv6 的 <code>main</code> 调用了 <code>consoleinit</code> 初始化 UART 硬件。它配置了 UART 在每接收一个字节的输入时产生一个接收中断，在每完成发送一个字节的输出时产生一个发送完成中断。</p>
+<p>shell 从 console<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> 通过 <code>init.c</code> 打开的文件描述符读取。对 <code>read</code> 的调用通过内核到达 <code>consoleread</code>。<code>consoleread</code> 等待输入通过中断到达并缓存在 <code>cons.buf</code> 中，拷贝到用户空间，并在一整行都到达时返回到用户进程。当用户未输入一个整行时，读取进程会在 <code>sleep</code> 中等待。</p>
+<div class="no-row-height column-margin column-container"><p><sup>1</sup>&nbsp;关于 shell 和 console 的区别，参见 <a href="https://superuser.com/a/144668">What is the difference between shell, console, and terminal?</a></p></div><p>当用户键入一个字符时，UART 通知 RISC-V 引发一个中断，激活 xv6 的 trap handler。trap handler 调用 <code>devintr</code>，它通过查询 <code>scause</code> 寄存器来判断中断来自外设。之后它询问 PLIC (platform-level interrupt controller) 是哪个设备的中断。如果是 UART，则调用 <code>uartintr</code>。</p>
+<p><code>uartintr</code> 读取任何从 UART 的等待输入的字符并交给 <code>consoleintr</code> 解析；<code>consoleintr</code> 将输入字符收集在 <code>cons.buf</code> 中直到一整行到达。此时将 <code>consoleread</code> 唤醒，它来执行如前所述的事务。</p>
 </section>
-<section id="end-to-end-delay" class="level2" data-number="2">
-<h2 data-number="2" class="anchored" data-anchor-id="end-to-end-delay"><span class="header-section-number">2</span> End-to-End delay</h2>
-<section id="传播延迟progagation-delay" class="level3" data-number="2.1">
-<h3 data-number="2.1" class="anchored" data-anchor-id="传播延迟progagation-delay"><span class="header-section-number">2.1</span> 传播延迟（Progagation Delay）</h3>
-<p>传播延迟是指信息的一个比特在链路上传输所需的时间，取决于链路的长度和比特传输的速度。在大多数情况下，比特的传播速度接近光速。传播延迟与链路的数据速率无关，而仅取决于比特的传播速度和电缆的长度。</p>
+<section id="code控制台输出" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="code控制台输出"><span class="header-section-number">1.2</span> Code：控制台输出</h3>
+<p>对与 console 相连的文件描述符的 <code>write</code> 系统调用最终会到达 <code>uartputc</code>。设备驱动维护一个输出缓冲区 (<code>uart_tx_buf</code>)，以便写入进程不必等待 UART 完成发送；相反，<code>uartputc</code> 将每个字符附加到缓冲区，调用 <code>uartstart</code> 启动设备传输（如果尚未传输），然后返回。 <code>uartputc</code> 等待的唯一情况是缓冲区已满。</p>
+<p>每次 UART 完成发送一个字节时，都会生成一个中断。 <code>uartintr</code> 调用 <code>uartstart</code>，它检查设备是否确实已完成发送，并将下一个缓冲的输出字符交给设备。因此，如果进程将多个字节写入 console，通常第一个字节将通过 <code>uartputc</code> 对 <code>uartstart</code> 的调用发送，其余缓冲字节将在传输完成中断到达时通过 <code>uartintr</code> 的 <code>uartstart</code> 调用发送。</p>
+<p><strong>I/O 并发</strong>：通过缓冲和中断将设备活动与进程活动解耦。即使没有进程正在等待读取输入，控制台驱动程序也可以处理输入；随后的读取将看到输入。同样，进程可以发送输出而无需等待设备。</p>
 </section>
-<section id="packetization-delay" class="level3" data-number="2.2">
-<h3 data-number="2.2" class="anchored" data-anchor-id="packetization-delay"><span class="header-section-number">2.2</span> Packetization Delay</h3>
-<p>packetization delay 是指从将数据包的第一个比特放入链路到最后一个比特放入链路之间的时间。packetization delay 取决于我们能够将比特放入链路的速度，也就是数据速率。数据包化延迟只与数据包的长度和数据速率有关，而与链路的长度或比特传播速度无关。</p>
+<section id="计时器中断" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="计时器中断"><span class="header-section-number">1.3</span> 计时器中断</h3>
+<p>xv6 使用定时器中断来维护其时钟并使其能够在计算密集型进程之间切换； <code>usertrap</code> 和 <code>kerneltrap</code> 中的 <code>yield</code> 调用会导致这种切换。定时器中断来自连接到每个 RISC-V CPU 的时钟硬件。xv6 对该时钟硬件进行编程，以定期中断每个 CPU。</p>
+<p>RISC-V 要求定时器中断在机器模式下进行，而不是在管理模式下进行。 RISC-V 机器模式执行时没有分页，并具有一组单独的控制寄存器，因此在机器模式下运行普通 xv6 内核代码是不切实际的。因此，xv6 完全独立于上面列出的 trap 机制来处理定时器中断。</p>
 </section>
-<section id="端到端延迟" class="level3" data-number="2.3">
-<h3 data-number="2.3" class="anchored" data-anchor-id="端到端延迟"><span class="header-section-number">2.3</span> 端到端延迟</h3>
-<p>将一个长为 <span class="math inline">\(p\)</span> 的包从源主机到目的主机，中间经过若干条线路，每条线路的长度为 <span class="math inline">\(l_i\)</span>，数据速率为 <span class="math inline">\(r_i\)</span>，则端到端延迟为</p>
-<p><span class="math display">\[ t = \sum_i \left(\frac{p}{r_i} + \frac{l_i}{c}\right) \]</span>其中 <span class="math inline">\(c\)</span> 是数据在传播介质（光纤等）中的速度，接近光速。</p>
-<p>这不是故事全部，当多个包同时抵达路由器，它们通过 packet buffer 暂存在一起并以 FCFS（First-Come-First-Served）的顺序送出。因此，我们需要加入每条线路上的排队延迟（Queueing Delay）<span class="math inline">\(Q_i\)</span>，即</p>
-<p><span class="math display">\[ t = \sum_i \left(\frac{p}{r_i} + \frac{l_i}{c} + Q_i(t)\right) \]</span>排队延迟是不可预测的，取决于网络中其他用户发送的流量，是端到端延迟的唯一随机变量。</p>
-</section>
-<section id="playback-buffers" class="level3" data-number="2.4">
-<h3 data-number="2.4" class="anchored" data-anchor-id="playback-buffers"><span class="header-section-number">2.4</span> Playback Buffers</h3>
-<p>这个东西就是平常在网站上看视频时的灰色进度条，表示已经接收到且提前缓冲好但还未播放的数据。这部分比较简单，略过。</p>
-</section>
-</section>
-<section id="how-a-packet-switch-works" class="level2" data-number="3">
-<h2 data-number="3" class="anchored" data-anchor-id="how-a-packet-switch-works"><span class="header-section-number">3</span> How a packet switch works</h2>
-<section id="output-queued-packet-switch" class="level3" data-number="3.1">
-<h3 data-number="3.1" class="anchored" data-anchor-id="output-queued-packet-switch"><span class="header-section-number">3.1</span> Output Queued Packet Switch</h3>
-<p>下图是一个交换机或路由器内的布局。</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/output-queued.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="700"></p>
-</figure>
-</div>
-<p>Packet Queue 用于在拥塞时缓存将要发出去的包，不同颜色的包表示不同的转发端口。当有两个包要从相同的端口转发，其中一个会先在队列中等待。如果所有的 <span class="math inline">\(n\)</span> 个端口都要从相同的端口转发出去，会导致效率的急剧降低。</p>
-</section>
-<section id="input-queued-packet-switch" class="level3" data-number="3.2">
-<h3 data-number="3.2" class="anchored" data-anchor-id="input-queued-packet-switch"><span class="header-section-number">3.2</span> Input Queued Packet Switch</h3>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/input-queued.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="700"></p>
-</figure>
-</div>
-<p>input queued 将缓存放在了输入端口。相应地，input queued 会产生 Head of Line(HOL) Blocking 问题：当当前队列最前端的数据过大时，将它 switch 出去要花费更多的时间，导致队列后面其他端口的包因为堵塞无法发出。这对效率是一个很大的影响（大概会缩减至 <span class="math inline">\(2-\sqrt{2}\approx 58\%\)</span> ）。解决方法是引入 Virtual Output Queues，对于每个 input queue，把将要发送到同一个端口的包再分到一个 virtual queue 中，这样不同发出端口的包不会相互影响。</p>
+<section id="real-world" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="real-world"><span class="header-section-number">1.4</span> Real World</h3>
+<p>xv6 允许在内核中执行以及执行用户程序时发生设备和定时器中断。定时器中断强制从定时器中断处理程序进行线程切换（调用<code>yield</code>），即使在内核中执行时也是如此。如果内核线程有时花费大量时间进行计算而不返回用户空间，那么在内核线程之间公平地对 CPU 进行时间切片的能力非常有用。然而，内核代码需要注意它可能会被挂起（由于定时器中断）并稍后在不同的 CPU 上恢复，这是 xv6 中一些复杂性的根源。如果设备和定时器中断仅在执行用户代码时发生，则内核可以变得更简单。</p>
+<p>UART 驱动程序通过读取 UART 控制寄存器一次检索一个字节的数据；这种模式称为 <strong>programmed I/O</strong>，因为软件驱动数据移动。programmed I/O 很简单，但速度太慢，无法在高数据速率下使用。需要高速移动大量数据的设备通常使用直接内存访问 (DMA)。 DMA 设备硬件直接将传入数据写入 RAM，并从 RAM 读取传出数据。现代磁盘和网络设备使用 DMA。 DMA 设备的驱动程序将在 RAM 中准备数据，然后使用对控制寄存器的单次写入来告诉设备处理准备好的数据。</p>
+<p>当设备在不可预测的时间（但不是太频繁）需要关注时，中断就有意义。但中断的 CPU 开销很高。因此，高速设备（例如网络和磁盘控制器）使用减少中断需求的技巧。一个技巧是为整批传入或传出请求引发一个中断。另一个技巧是驱动程序完全禁用中断，并定期检查设备以查看是否需要关注。这种技术称为<strong>轮询</strong> (polling)。如果设备执行操作速度非常快，则轮询是有意义的，但如果设备大部分时间处于空闲状态，则轮询会浪费 CPU 时间。一些驱动程序通过当前设备负载状态在轮询和中断之间动态切换。</p>
 </section>
 </section>
-<section id="strict-priorities-and-guaranteed-flow-rates" class="level2 page-columns page-full" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="strict-priorities-and-guaranteed-flow-rates"><span class="header-section-number">4</span> Strict Priorities and Guaranteed Flow Rates</h2>
-<p>如果有很多流经过队列，它们将按照 FIFO 顺序离开。谁发送的最多，谁的速率就最高。如果流量真的很大，那么一小部分流量可能会被完全挤出。这样鼓励了不良行为——对于一个流来说，最好的做法是尝试通过尽可能快的发送来挤出所有其他流。</p>
-<p>一个方法是引入严格优先级 (Strict Priorities)。一个高优先级队列一个低优先级队列，只有当高优先级队列的处理完了才能到低优先级。但如果高优先级的流完全占据了数量上的优势，低优先级的会被饿死<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>。</p>
-<div class="no-row-height column-margin column-container"><p><sup>1</sup>&nbsp;这个描述真的太资本主义了，乐。</p></div><p>更通用的做法是，引入带权优先级 (Weighted Priorities)。考虑 <span class="math inline">\(n\)</span> 个优先级队列，每个队列都有一个权重 <span class="math inline">\(w_i\)</span>。我们分若干轮处理所有的包。对于每一轮的每个队列，我们为这个队列处理 <span class="math inline">\(w_i\)</span> bit 的数据（当然在实际中不能）。当第 <span class="math inline">\(i\)</span> 个队列的第 <span class="math inline">\(k\)</span> 个包到达时，我们算出它将在第几轮为完全送出，记为 <span class="math inline">\(F_k\)</span>，有</p>
-<p><span class="math display">\[
-F_k = \max\{F_{k-1}, \mathrm{now}\}+\frac{L_k}{w_i}
-\]</span></p>
-<p><span class="math inline">\(\rm now\)</span> 是当前的轮数，因为可能会有队列为空的情况。<span class="math inline">\(L_k\)</span> 是包的长度。此时，我们遍历每个队列的 Head of Line，选择最小的 <span class="math inline">\(F\)</span> ，即结束轮数，来服务对应的包。注意，上面所说的按每个 bit 处理的方法只是为了得到最终的结论，实际上还是以每个包为单位来处理的。从长期来看，以上方法的结果可以趋近于 bit-by-bit 处理的结果。</p>
-<p>以上方法称为<strong>加权公平排队</strong> (Weighted Fair Queueing, WFQ) 或<strong>分组通用处理器共享</strong> (Packetized Generalized Processor Sharing, PGPS)。</p>
-<p>接下来我们用上面的方法做到真正可保证的 <span class="math inline">\(Q_i(t)\)</span>，因为 WFQ 给了我们每个队列效率的上界 <span class="math inline">\(B/R\)</span> ，我们只需要处理一次性数据涌入过多导致 buffer 溢出的情况。</p>
-<p>首先，对于一个队列，如果在任意一个时间段 <span class="math inline">\([t,t+T]\)</span>，它的到达量 <span class="math inline">\(A(t)\)</span> 均满足 <span class="math inline">\(A(t+T)-A(t)\le B+RT\)</span>，其中 <span class="math inline">\(B\)</span> 为 buffer 的大小，那么我们可以保证队列不会溢出。我们称这种情况是 <span class="math inline">\(A(t)\)</span> 满足 <span class="math inline">\((\sigma,\rho)\)</span> <strong>regulation</strong>，此时 <span class="math inline">\(\sigma = B, \rho = R\)</span>。</p>
-<p>因此，我们可以保证在 <span class="math inline">\(B\ge \sigma, R\ge \rho\)</span> 的情况下，延迟 <span class="math inline">\(Q(t)\le B/R\)</span>。</p>
-<p>如果流使用了 leaky-bucket (实现 <span class="math inline">\((\sigma, \rho)\)</span> constraint)，路由使用了 WFQ，那么端到端延迟就可以保证。RSVP (Resource Reservation Protocol) 就是实现了端到端保证的协议 [IETF RFC 2205]。</p>
+<section id="lecture" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="lecture"><span class="header-section-number">2</span> Lecture</h2>
+<p>总结一下控制台输入输出的过程。</p>
+<p>输入时，引发中断，<code>devintr</code> 处理中断，判断出时 UART 后交给 <code>uartintr</code>，它 get 到字符后交给 <code>consoleintr</code>，它将字符收集在 buffer 中，之后唤醒 <code>consoleread</code>，将数据拷贝到进程里。输出时，通过 <code>write</code> 到达 <code>uartputc</code>，加入缓冲区后通过 <code>uartstart</code> 发送，发送成功后引发中断，交给 <code>uartintr</code> 处理。</p>
+<p>总之，很复杂，需要多看代码。</p>
 
 
 <!-- -->
@@ -915,82 +856,64 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Unit3: Packet Switching"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">order:</span><span class="co"> 3</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2024-3-20</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Lec9 Device Drivers"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">order:</span><span class="co"> 9</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2024-3-23</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> last-modified</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "分组交换"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "TODO"</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## What is Packet Switching?</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## 课前准备</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Read Chapter 5 and </span><span class="in">`kernel/kernelvec.S`</span><span class="at">, </span><span class="in">`kernel/plic.c`</span><span class="at">, </span><span class="in">`kernel/console.c`</span><span class="at">, </span><span class="in">`kernel/uart.c`</span><span class="at">, </span><span class="in">`kernel/printf.c`</span><span class="at"> .</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">## End-to-End delay</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>xv6 在 <span class="in">`kernel/trap.c`</span> 中的 <span class="in">`devintr`</span> 处理设备中断，调用驱动的 trap handler。</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">### 传播延迟（Progagation Delay）</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>许多设备驱动在两个上下文中执行代码：上半部分在进程的内核线程中运行，下半部分在中断时执行。上半部分是通过系统调用（例如 <span class="in">`read`</span> 和 <span class="in">`write`</span>）来调用的，这些系统调用希望设备执行 I/O。该代码可能会要求硬件开始一项操作（例如，要求磁盘读取一个块）；然后代码等待操作完成。最终设备完成操作并引发中断。驱动程序的中断处理程序充当下半部分，找出已完成的操作，在适当的情况下唤醒等待进程，并告诉硬件开始处理任何等待的下一个操作。</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>传播延迟是指信息的一个比特在链路上传输所需的时间，取决于链路的长度和比特传输的速度。在大多数情况下，比特的传播速度接近光速。传播延迟与链路的数据速率无关，而仅取决于比特的传播速度和电缆的长度。</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">### Code：控制台输入</span></span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">### Packetization Delay</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>控制台驱动通过 RISC-V 附属的 UART (Universal Asynchronous Receiver/Transmitter) 串口硬件接收人输入的字符。UART 硬件是由 QEMU 模拟的 16550 芯片。在真实的计算机上，16550 将管理连接到终端或其他计算机的 RS232 串行链路。运行 QEMU 时，它会连接到你的键盘和显示器。UART 硬件在软件层面为一组 memory-mapped 的控制寄存器。因此它是 RISC-V 物理地址的一部分，只不过是与设备而非 RAM 交互。在 <span class="in">`kernel/uart.c`</span> 中有这些寄存器具体的介绍。比如，<span class="in">`LSR`</span> 包含指示输入字符是否等待被软件读入的位，这些字符（如果有的话）可从 <span class="in">`RHR`</span> 寄存器中读取。每次读取时，UART 会把它从内部的 FIFO 等待队列中删除。当队列为空时，清除 <span class="in">`LSR`</span> 中的那一位。UART 的发送硬件独立于接收硬件，如果软件向 <span class="in">`THR`</span> 写入字节，UART 发送那个字节。</span>
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>packetization delay 是指从将数据包的第一个比特放入链路到最后一个比特放入链路之间的时间。packetization delay 取决于我们能够将比特放入链路的速度，也就是数据速率。数据包化延迟只与数据包的长度和数据速率有关，而与链路的长度或比特传播速度无关。</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>xv6 的 <span class="in">`main`</span> 调用了 <span class="in">`consoleinit`</span> 初始化 UART 硬件。它配置了 UART 在每接收一个字节的输入时产生一个接收中断，在每完成发送一个字节的输出时产生一个发送完成中断。</span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="fu">### 端到端延迟</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>shell 从 console<span class="ot">[^1]</span> 通过 <span class="in">`init.c`</span> 打开的文件描述符读取。对 <span class="in">`read`</span> 的调用通过内核到达 <span class="in">`consoleread`</span>。<span class="in">`consoleread`</span> 等待输入通过中断到达并缓存在 <span class="in">`cons.buf`</span> 中，拷贝到用户空间，并在一整行都到达时返回到用户进程。当用户未输入一个整行时，读取进程会在 <span class="in">`sleep`</span> 中等待。</span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>将一个长为 $p$ 的包从源主机到目的主机，中间经过若干条线路，每条线路的长度为 $l_i$，数据速率为 $r_i$，则端到端延迟为</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ot">[^1]: </span>关于 shell 和 console 的区别，参见 <span class="co">[</span><span class="ot">What is the difference between shell, console, and terminal?</span><span class="co">](https://superuser.com/a/144668)</span></span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>$$ t = \sum_i \left(\frac{p}{r_i} + \frac{l_i}{c}\right) $$其中 $c$ 是数据在传播介质（光纤等）中的速度，接近光速。</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>当用户键入一个字符时，UART 通知 RISC-V 引发一个中断，激活 xv6 的 trap handler。trap handler 调用 <span class="in">`devintr`</span>，它通过查询 <span class="in">`scause`</span> 寄存器来判断中断来自外设。之后它询问 PLIC (platform-level interrupt controller) 是哪个设备的中断。如果是 UART，则调用 <span class="in">`uartintr`</span>。</span>
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>这不是故事全部，当多个包同时抵达路由器，它们通过 packet buffer 暂存在一起并以 FCFS（First-Come-First-Served）的顺序送出。因此，我们需要加入每条线路上的排队延迟（Queueing Delay）$Q_i$，即</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="in">`uartintr`</span> 读取任何从 UART 的等待输入的字符并交给 <span class="in">`consoleintr`</span> 解析；<span class="in">`consoleintr`</span> 将输入字符收集在 <span class="in">`cons.buf`</span> 中直到一整行到达。此时将 <span class="in">`consoleread`</span> 唤醒，它来执行如前所述的事务。</span>
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>$$ t = \sum_i \left(\frac{p}{r_i} + \frac{l_i}{c} + Q_i(t)\right) $$排队延迟是不可预测的，取决于网络中其他用户发送的流量，是端到端延迟的唯一随机变量。</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="fu">### Code：控制台输出</span></span>
 <span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="fu">### Playback Buffers</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>对与 console 相连的文件描述符的 <span class="in">`write`</span> 系统调用最终会到达 <span class="in">`uartputc`</span>。设备驱动维护一个输出缓冲区 (<span class="in">`uart_tx_buf`</span>)，以便写入进程不必等待 UART 完成发送；相反，<span class="in">`uartputc`</span> 将每个字符附加到缓冲区，调用 <span class="in">`uartstart`</span> 启动设备传输（如果尚未传输），然后返回。 <span class="in">`uartputc`</span> 等待的唯一情况是缓冲区已满。</span>
 <span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>这个东西就是平常在网站上看视频时的灰色进度条，表示已经接收到且提前缓冲好但还未播放的数据。这部分比较简单，略过。</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>每次 UART 完成发送一个字节时，都会生成一个中断。 <span class="in">`uartintr`</span> 调用 <span class="in">`uartstart`</span>，它检查设备是否确实已完成发送，并将下一个缓冲的输出字符交给设备。因此，如果进程将多个字节写入 console，通常第一个字节将通过 <span class="in">`uartputc`</span> 对 <span class="in">`uartstart`</span> 的调用发送，其余缓冲字节将在传输完成中断到达时通过 <span class="in">`uartintr`</span> 的 <span class="in">`uartstart`</span> 调用发送。</span>
 <span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="fu">## How a packet switch works</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>**I/O 并发**：通过缓冲和中断将设备活动与进程活动解耦。即使没有进程正在等待读取输入，控制台驱动程序也可以处理输入；随后的读取将看到输入。同样，进程可以发送输出而无需等待设备。</span>
 <span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">### Output Queued Packet Switch</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">### 计时器中断</span></span>
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>下图是一个交换机或路由器内的布局。</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>xv6 使用定时器中断来维护其时钟并使其能够在计算密集型进程之间切换； <span class="in">`usertrap`</span> 和 <span class="in">`kerneltrap`</span> 中的 <span class="in">`yield`</span> 调用会导致这种切换。定时器中断来自连接到每个 RISC-V CPU 的时钟硬件。xv6 对该时钟硬件进行编程，以定期中断每个 CPU。</span>
 <span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/output-queued.png)</span>{fig-align="center" width="700"}</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>RISC-V 要求定时器中断在机器模式下进行，而不是在管理模式下进行。 RISC-V 机器模式执行时没有分页，并具有一组单独的控制寄存器，因此在机器模式下运行普通 xv6 内核代码是不切实际的。因此，xv6 完全独立于上面列出的 trap 机制来处理定时器中断。</span>
 <span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>Packet Queue 用于在拥塞时缓存将要发出去的包，不同颜色的包表示不同的转发端口。当有两个包要从相同的端口转发，其中一个会先在队列中等待。如果所有的 $n$ 个端口都要从相同的端口转发出去，会导致效率的急剧降低。</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="fu">### Real World</span></span>
 <span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="fu">### Input Queued Packet Switch</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>xv6 允许在内核中执行以及执行用户程序时发生设备和定时器中断。定时器中断强制从定时器中断处理程序进行线程切换（调用<span class="in">`yield`</span>），即使在内核中执行时也是如此。如果内核线程有时花费大量时间进行计算而不返回用户空间，那么在内核线程之间公平地对 CPU 进行时间切片的能力非常有用。然而，内核代码需要注意它可能会被挂起（由于定时器中断）并稍后在不同的 CPU 上恢复，这是 xv6 中一些复杂性的根源。如果设备和定时器中断仅在执行用户代码时发生，则内核可以变得更简单。</span>
 <span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/input-queued.png)</span>{fig-align="center" width="700"}</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>UART 驱动程序通过读取 UART 控制寄存器一次检索一个字节的数据；这种模式称为 **programmed I/O**，因为软件驱动数据移动。programmed I/O 很简单，但速度太慢，无法在高数据速率下使用。需要高速移动大量数据的设备通常使用直接内存访问 (DMA)。 DMA 设备硬件直接将传入数据写入 RAM，并从 RAM 读取传出数据。现代磁盘和网络设备使用 DMA。 DMA 设备的驱动程序将在 RAM 中准备数据，然后使用对控制寄存器的单次写入来告诉设备处理准备好的数据。</span>
 <span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>input queued 将缓存放在了输入端口。相应地，input queued 会产生 Head of Line(HOL) Blocking 问题：当当前队列最前端的数据过大时，将它 switch 出去要花费更多的时间，导致队列后面其他端口的包因为堵塞无法发出。这对效率是一个很大的影响（大概会缩减至 $2-\sqrt{2}\approx 58\%$ ）。解决方法是引入 Virtual Output Queues，对于每个 input queue，把将要发送到同一个端口的包再分到一个 virtual queue 中，这样不同发出端口的包不会相互影响。</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>当设备在不可预测的时间（但不是太频繁）需要关注时，中断就有意义。但中断的 CPU 开销很高。因此，高速设备（例如网络和磁盘控制器）使用减少中断需求的技巧。一个技巧是为整批传入或传出请求引发一个中断。另一个技巧是驱动程序完全禁用中断，并定期检查设备以查看是否需要关注。这种技术称为**轮询** (polling)。如果设备执行操作速度非常快，则轮询是有意义的，但如果设备大部分时间处于空闲状态，则轮询会浪费 CPU 时间。一些驱动程序通过当前设备负载状态在轮询和中断之间动态切换。</span>
 <span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## Strict Priorities and Guaranteed Flow Rates</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## Lecture</span></span>
 <span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>如果有很多流经过队列，它们将按照 FIFO 顺序离开。谁发送的最多，谁的速率就最高。如果流量真的很大，那么一小部分流量可能会被完全挤出。这样鼓励了不良行为——对于一个流来说，最好的做法是尝试通过尽可能快的发送来挤出所有其他流。</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>总结一下控制台输入输出的过程。</span>
 <span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>一个方法是引入严格优先级 (Strict Priorities)。一个高优先级队列一个低优先级队列，只有当高优先级队列的处理完了才能到低优先级。但如果高优先级的流完全占据了数量上的优势，低优先级的会被饿死<span class="ot">[^1]</span>。</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>输入时，引发中断，<span class="in">`devintr`</span> 处理中断，判断出时 UART 后交给 <span class="in">`uartintr`</span>，它 get 到字符后交给 <span class="in">`consoleintr`</span>，它将字符收集在 buffer 中，之后唤醒 <span class="in">`consoleread`</span>，将数据拷贝到进程里。输出时，通过 <span class="in">`write`</span> 到达 <span class="in">`uartputc`</span>，加入缓冲区后通过 <span class="in">`uartstart`</span> 发送，发送成功后引发中断，交给 <span class="in">`uartintr`</span> 处理。</span>
 <span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="ot">[^1]: </span>这个描述真的太资本主义了，乐。</span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>更通用的做法是，引入带权优先级 (Weighted Priorities)。考虑 $n$ 个优先级队列，每个队列都有一个权重 $w_i$。我们分若干轮处理所有的包。对于每一轮的每个队列，我们为这个队列处理 $w_i$ bit 的数据（当然在实际中不能）。当第 $i$ 个队列的第 $k$ 个包到达时，我们算出它将在第几轮为完全送出，记为 $F_k$，有</span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>F_k = \max<span class="sc">\{</span>F_{k-1}, \mathrm{now}<span class="sc">\}</span>+\frac{L_k}{w_i}</span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>$\rm now$ 是当前的轮数，因为可能会有队列为空的情况。$L_k$ 是包的长度。此时，我们遍历每个队列的 Head of Line，选择最小的 $F$ ，即结束轮数，来服务对应的包。注意，上面所说的按每个 bit 处理的方法只是为了得到最终的结论，实际上还是以每个包为单位来处理的。从长期来看，以上方法的结果可以趋近于 bit-by-bit 处理的结果。</span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>以上方法称为**加权公平排队** (Weighted Fair Queueing, WFQ) 或**分组通用处理器共享** (Packetized Generalized Processor Sharing, PGPS)。</span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>接下来我们用上面的方法做到真正可保证的 $Q_i(t)$，因为 WFQ 给了我们每个队列效率的上界 $B/R$ ，我们只需要处理一次性数据涌入过多导致 buffer 溢出的情况。</span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>首先，对于一个队列，如果在任意一个时间段 $<span class="co">[</span><span class="ot">t,t+T</span><span class="co">]</span>$，它的到达量 $A(t)$ 均满足 $A(t+T)-A(t)\le B+RT$，其中 $B$ 为 buffer 的大小，那么我们可以保证队列不会溢出。我们称这种情况是 $A(t)$ 满足 $(\sigma,\rho)$ **regulation**，此时 $\sigma = B, \rho = R$。</span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>因此，我们可以保证在 $B\ge \sigma, R\ge \rho$ 的情况下，延迟 $Q(t)\le B/R$。</span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>如果流使用了 leaky-bucket (实现 $(\sigma, \rho)$ constraint)，路由使用了 WFQ，那么端到端延迟就可以保证。RSVP (Resource Reservation Protocol) 就是实现了端到端保证的协议 <span class="sc">\[</span>IETF RFC 2205<span class="sc">\]</span>。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>总之，很复杂，需要多看代码。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">

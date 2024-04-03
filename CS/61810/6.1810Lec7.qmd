@@ -1,6 +1,6 @@
 ---
 title: "Lec7 Page Faults"
-order: 6
+order: 7
 date: 2024-3-20
 date-modified: last-modified
 description: "COW fork, lazy allocation, demand page, mmap"

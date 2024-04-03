@@ -1,7 +1,6 @@
 ---
 title: "Structure-from-Motion Revisited 阅读笔记"
-order: 1
-lang: cn
+order: 2
 date: 2024-2-24
 date-modified: last-modified
 description: "TODO"

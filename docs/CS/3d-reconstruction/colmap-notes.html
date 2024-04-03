@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-03-20">
-<meta name="description" content="分组交换">
+<meta name="dcterms.date" content="2024-03-28">
+<meta name="description" content="如题。">
 
-<title>Unit3: Packet Switching</title>
+<title>Colmap 源码阅读</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -104,40 +104,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-sidebar floating nav-fixed slimcontent">
+<body class="nav-sidebar floating nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -182,7 +153,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Lab.html">CS144 Introduction to Computer Networking 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Unit3.html">Unit3: Packet Switching</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/3d-reconstruction/colmap-notes.html">三维重建</a></li><li class="breadcrumb-item"><a href="../../CS/3d-reconstruction/colmap-notes.html">Colmap 源码阅读</a></li></ol></nav>
         <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -264,13 +235,13 @@ window.Quarto = {
   </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
  <span class="menu-text">CS144 Introduction to Computer Networking 笔记</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 show">  
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../CS/CS144/CS144Lab.html" class="sidebar-item-text sidebar-link">
@@ -291,7 +262,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../CS/CS144/CS144Unit3.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../CS/CS144/CS144Unit3.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Unit3: Packet Switching</span></a>
   </div>
 </li>
@@ -299,16 +270,16 @@ window.Quarto = {
   </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true">
  <span class="menu-text">三维重建</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../CS/3d-reconstruction/colmap-notes.html" class="sidebar-item-text sidebar-link">
+  <a href="../../CS/3d-reconstruction/colmap-notes.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Colmap 源码阅读</span></a>
   </div>
 </li>
@@ -332,34 +303,24 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-is-packet-switching" id="toc-what-is-packet-switching" class="nav-link active" data-scroll-target="#what-is-packet-switching"><span class="header-section-number">1</span> What is Packet Switching?</a></li>
-  <li><a href="#end-to-end-delay" id="toc-end-to-end-delay" class="nav-link" data-scroll-target="#end-to-end-delay"><span class="header-section-number">2</span> End-to-End delay</a>
+  <li><a href="#前置准备" id="toc-前置准备" class="nav-link active" data-scroll-target="#前置准备"><span class="header-section-number">1</span> 前置准备</a>
   <ul class="collapse">
-  <li><a href="#传播延迟progagation-delay" id="toc-传播延迟progagation-delay" class="nav-link" data-scroll-target="#传播延迟progagation-delay"><span class="header-section-number">2.1</span> 传播延迟（Progagation Delay）</a></li>
-  <li><a href="#packetization-delay" id="toc-packetization-delay" class="nav-link" data-scroll-target="#packetization-delay"><span class="header-section-number">2.2</span> Packetization Delay</a></li>
-  <li><a href="#端到端延迟" id="toc-端到端延迟" class="nav-link" data-scroll-target="#端到端延迟"><span class="header-section-number">2.3</span> 端到端延迟</a></li>
-  <li><a href="#playback-buffers" id="toc-playback-buffers" class="nav-link" data-scroll-target="#playback-buffers"><span class="header-section-number">2.4</span> Playback Buffers</a></li>
+  <li><a href="#基本流程" id="toc-基本流程" class="nav-link" data-scroll-target="#基本流程"><span class="header-section-number">1.1</span> 基本流程</a></li>
   </ul></li>
-  <li><a href="#how-a-packet-switch-works" id="toc-how-a-packet-switch-works" class="nav-link" data-scroll-target="#how-a-packet-switch-works"><span class="header-section-number">3</span> How a packet switch works</a>
-  <ul class="collapse">
-  <li><a href="#output-queued-packet-switch" id="toc-output-queued-packet-switch" class="nav-link" data-scroll-target="#output-queued-packet-switch"><span class="header-section-number">3.1</span> Output Queued Packet Switch</a></li>
-  <li><a href="#input-queued-packet-switch" id="toc-input-queued-packet-switch" class="nav-link" data-scroll-target="#input-queued-packet-switch"><span class="header-section-number">3.2</span> Input Queued Packet Switch</a></li>
-  </ul></li>
-  <li><a href="#strict-priorities-and-guaranteed-flow-rates" id="toc-strict-priorities-and-guaranteed-flow-rates" class="nav-link" data-scroll-target="#strict-priorities-and-guaranteed-flow-rates"><span class="header-section-number">4</span> Strict Priorities and Guaranteed Flow Rates</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
-<main class="content page-columns page-full" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Lab.html">CS144 Introduction to Computer Networking 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Unit3.html">Unit3: Packet Switching</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/3d-reconstruction/colmap-notes.html">三维重建</a></li><li class="breadcrumb-item"><a href="../../CS/3d-reconstruction/colmap-notes.html">Colmap 源码阅读</a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Unit3: Packet Switching</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
+<div class="quarto-title-block"><div><h1 class="title">Colmap 源码阅读</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
 </div>
 
 <div>
   <div class="description">
-    分组交换
+    如题。
   </div>
 </div>
 
@@ -370,14 +331,14 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">2024-03-20</p>
+      <p class="date">2024-03-28</p>
     </div>
   </div>
   
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">2024-03-21</p>
+      <p class="date-modified">2024-04-03</p>
     </div>
   </div>
     
@@ -388,74 +349,28 @@ window.Quarto = {
 </header>
 
 
-<section id="what-is-packet-switching" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="what-is-packet-switching"><span class="header-section-number">1</span> What is Packet Switching?</h2>
-<p>数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。</p>
-</section>
-<section id="end-to-end-delay" class="level2" data-number="2">
-<h2 data-number="2" class="anchored" data-anchor-id="end-to-end-delay"><span class="header-section-number">2</span> End-to-End delay</h2>
-<section id="传播延迟progagation-delay" class="level3" data-number="2.1">
-<h3 data-number="2.1" class="anchored" data-anchor-id="传播延迟progagation-delay"><span class="header-section-number">2.1</span> 传播延迟（Progagation Delay）</h3>
-<p>传播延迟是指信息的一个比特在链路上传输所需的时间，取决于链路的长度和比特传输的速度。在大多数情况下，比特的传播速度接近光速。传播延迟与链路的数据速率无关，而仅取决于比特的传播速度和电缆的长度。</p>
-</section>
-<section id="packetization-delay" class="level3" data-number="2.2">
-<h3 data-number="2.2" class="anchored" data-anchor-id="packetization-delay"><span class="header-section-number">2.2</span> Packetization Delay</h3>
-<p>packetization delay 是指从将数据包的第一个比特放入链路到最后一个比特放入链路之间的时间。packetization delay 取决于我们能够将比特放入链路的速度，也就是数据速率。数据包化延迟只与数据包的长度和数据速率有关，而与链路的长度或比特传播速度无关。</p>
-</section>
-<section id="端到端延迟" class="level3" data-number="2.3">
-<h3 data-number="2.3" class="anchored" data-anchor-id="端到端延迟"><span class="header-section-number">2.3</span> 端到端延迟</h3>
-<p>将一个长为 <span class="math inline">\(p\)</span> 的包从源主机到目的主机，中间经过若干条线路，每条线路的长度为 <span class="math inline">\(l_i\)</span>，数据速率为 <span class="math inline">\(r_i\)</span>，则端到端延迟为</p>
-<p><span class="math display">\[ t = \sum_i \left(\frac{p}{r_i} + \frac{l_i}{c}\right) \]</span>其中 <span class="math inline">\(c\)</span> 是数据在传播介质（光纤等）中的速度，接近光速。</p>
-<p>这不是故事全部，当多个包同时抵达路由器，它们通过 packet buffer 暂存在一起并以 FCFS（First-Come-First-Served）的顺序送出。因此，我们需要加入每条线路上的排队延迟（Queueing Delay）<span class="math inline">\(Q_i\)</span>，即</p>
-<p><span class="math display">\[ t = \sum_i \left(\frac{p}{r_i} + \frac{l_i}{c} + Q_i(t)\right) \]</span>排队延迟是不可预测的，取决于网络中其他用户发送的流量，是端到端延迟的唯一随机变量。</p>
-</section>
-<section id="playback-buffers" class="level3" data-number="2.4">
-<h3 data-number="2.4" class="anchored" data-anchor-id="playback-buffers"><span class="header-section-number">2.4</span> Playback Buffers</h3>
-<p>这个东西就是平常在网站上看视频时的灰色进度条，表示已经接收到且提前缓冲好但还未播放的数据。这部分比较简单，略过。</p>
-</section>
-</section>
-<section id="how-a-packet-switch-works" class="level2" data-number="3">
-<h2 data-number="3" class="anchored" data-anchor-id="how-a-packet-switch-works"><span class="header-section-number">3</span> How a packet switch works</h2>
-<section id="output-queued-packet-switch" class="level3" data-number="3.1">
-<h3 data-number="3.1" class="anchored" data-anchor-id="output-queued-packet-switch"><span class="header-section-number">3.1</span> Output Queued Packet Switch</h3>
-<p>下图是一个交换机或路由器内的布局。</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/output-queued.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="700"></p>
-</figure>
-</div>
-<p>Packet Queue 用于在拥塞时缓存将要发出去的包，不同颜色的包表示不同的转发端口。当有两个包要从相同的端口转发，其中一个会先在队列中等待。如果所有的 <span class="math inline">\(n\)</span> 个端口都要从相同的端口转发出去，会导致效率的急剧降低。</p>
-</section>
-<section id="input-queued-packet-switch" class="level3" data-number="3.2">
-<h3 data-number="3.2" class="anchored" data-anchor-id="input-queued-packet-switch"><span class="header-section-number">3.2</span> Input Queued Packet Switch</h3>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/input-queued.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="700"></p>
-</figure>
-</div>
-<p>input queued 将缓存放在了输入端口。相应地，input queued 会产生 Head of Line(HOL) Blocking 问题：当当前队列最前端的数据过大时，将它 switch 出去要花费更多的时间，导致队列后面其他端口的包因为堵塞无法发出。这对效率是一个很大的影响（大概会缩减至 <span class="math inline">\(2-\sqrt{2}\approx 58\%\)</span> ）。解决方法是引入 Virtual Output Queues，对于每个 input queue，把将要发送到同一个端口的包再分到一个 virtual queue 中，这样不同发出端口的包不会相互影响。</p>
-</section>
-</section>
-<section id="strict-priorities-and-guaranteed-flow-rates" class="level2 page-columns page-full" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="strict-priorities-and-guaranteed-flow-rates"><span class="header-section-number">4</span> Strict Priorities and Guaranteed Flow Rates</h2>
-<p>如果有很多流经过队列，它们将按照 FIFO 顺序离开。谁发送的最多，谁的速率就最高。如果流量真的很大，那么一小部分流量可能会被完全挤出。这样鼓励了不良行为——对于一个流来说，最好的做法是尝试通过尽可能快的发送来挤出所有其他流。</p>
-<p>一个方法是引入严格优先级 (Strict Priorities)。一个高优先级队列一个低优先级队列，只有当高优先级队列的处理完了才能到低优先级。但如果高优先级的流完全占据了数量上的优势，低优先级的会被饿死<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>。</p>
-<div class="no-row-height column-margin column-container"><p><sup>1</sup>&nbsp;这个描述真的太资本主义了，乐。</p></div><p>更通用的做法是，引入带权优先级 (Weighted Priorities)。考虑 <span class="math inline">\(n\)</span> 个优先级队列，每个队列都有一个权重 <span class="math inline">\(w_i\)</span>。我们分若干轮处理所有的包。对于每一轮的每个队列，我们为这个队列处理 <span class="math inline">\(w_i\)</span> bit 的数据（当然在实际中不能）。当第 <span class="math inline">\(i\)</span> 个队列的第 <span class="math inline">\(k\)</span> 个包到达时，我们算出它将在第几轮为完全送出，记为 <span class="math inline">\(F_k\)</span>，有</p>
-<p><span class="math display">\[
-F_k = \max\{F_{k-1}, \mathrm{now}\}+\frac{L_k}{w_i}
-\]</span></p>
-<p><span class="math inline">\(\rm now\)</span> 是当前的轮数，因为可能会有队列为空的情况。<span class="math inline">\(L_k\)</span> 是包的长度。此时，我们遍历每个队列的 Head of Line，选择最小的 <span class="math inline">\(F\)</span> ，即结束轮数，来服务对应的包。注意，上面所说的按每个 bit 处理的方法只是为了得到最终的结论，实际上还是以每个包为单位来处理的。从长期来看，以上方法的结果可以趋近于 bit-by-bit 处理的结果。</p>
-<p>以上方法称为<strong>加权公平排队</strong> (Weighted Fair Queueing, WFQ) 或<strong>分组通用处理器共享</strong> (Packetized Generalized Processor Sharing, PGPS)。</p>
-<p>接下来我们用上面的方法做到真正可保证的 <span class="math inline">\(Q_i(t)\)</span>，因为 WFQ 给了我们每个队列效率的上界 <span class="math inline">\(B/R\)</span> ，我们只需要处理一次性数据涌入过多导致 buffer 溢出的情况。</p>
-<p>首先，对于一个队列，如果在任意一个时间段 <span class="math inline">\([t,t+T]\)</span>，它的到达量 <span class="math inline">\(A(t)\)</span> 均满足 <span class="math inline">\(A(t+T)-A(t)\le B+RT\)</span>，其中 <span class="math inline">\(B\)</span> 为 buffer 的大小，那么我们可以保证队列不会溢出。我们称这种情况是 <span class="math inline">\(A(t)\)</span> 满足 <span class="math inline">\((\sigma,\rho)\)</span> <strong>regulation</strong>，此时 <span class="math inline">\(\sigma = B, \rho = R\)</span>。</p>
-<p>因此，我们可以保证在 <span class="math inline">\(B\ge \sigma, R\ge \rho\)</span> 的情况下，延迟 <span class="math inline">\(Q(t)\le B/R\)</span>。</p>
-<p>如果流使用了 leaky-bucket (实现 <span class="math inline">\((\sigma, \rho)\)</span> constraint)，路由使用了 WFQ，那么端到端延迟就可以保证。RSVP (Resource Reservation Protocol) 就是实现了端到端保证的协议 [IETF RFC 2205]。</p>
+<section id="前置准备" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="前置准备"><span class="header-section-number">1</span> 前置准备</h2>
+<section id="基本流程" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="基本流程"><span class="header-section-number">1.1</span> 基本流程</h3>
+<section id="建立工程" class="level4">
+<h4 class="anchored" data-anchor-id="建立工程">建立工程</h4>
+<p><code>File &gt; New Project</code></p>
+<pre><code>/path/to/project/...
++── images
+│   +── image1.jpg
+│   +── image2.jpg
+│   +── ...
+│   +── imageN.jpg
++── database.db
++── project.ini</code></pre>
 
 
 <!-- -->
 
 </section>
-
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -914,83 +829,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Unit3: Packet Switching"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">order:</span><span class="co"> 3</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2024-3-20</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> last-modified</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "分组交换"</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## What is Packet Switching?</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">## End-to-End delay</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">### 传播延迟（Progagation Delay）</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>传播延迟是指信息的一个比特在链路上传输所需的时间，取决于链路的长度和比特传输的速度。在大多数情况下，比特的传播速度接近光速。传播延迟与链路的数据速率无关，而仅取决于比特的传播速度和电缆的长度。</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">### Packetization Delay</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>packetization delay 是指从将数据包的第一个比特放入链路到最后一个比特放入链路之间的时间。packetization delay 取决于我们能够将比特放入链路的速度，也就是数据速率。数据包化延迟只与数据包的长度和数据速率有关，而与链路的长度或比特传播速度无关。</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="fu">### 端到端延迟</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>将一个长为 $p$ 的包从源主机到目的主机，中间经过若干条线路，每条线路的长度为 $l_i$，数据速率为 $r_i$，则端到端延迟为</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>$$ t = \sum_i \left(\frac{p}{r_i} + \frac{l_i}{c}\right) $$其中 $c$ 是数据在传播介质（光纤等）中的速度，接近光速。</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>这不是故事全部，当多个包同时抵达路由器，它们通过 packet buffer 暂存在一起并以 FCFS（First-Come-First-Served）的顺序送出。因此，我们需要加入每条线路上的排队延迟（Queueing Delay）$Q_i$，即</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>$$ t = \sum_i \left(\frac{p}{r_i} + \frac{l_i}{c} + Q_i(t)\right) $$排队延迟是不可预测的，取决于网络中其他用户发送的流量，是端到端延迟的唯一随机变量。</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="fu">### Playback Buffers</span></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>这个东西就是平常在网站上看视频时的灰色进度条，表示已经接收到且提前缓冲好但还未播放的数据。这部分比较简单，略过。</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="fu">## How a packet switch works</span></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">### Output Queued Packet Switch</span></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>下图是一个交换机或路由器内的布局。</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/output-queued.png)</span>{fig-align="center" width="700"}</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>Packet Queue 用于在拥塞时缓存将要发出去的包，不同颜色的包表示不同的转发端口。当有两个包要从相同的端口转发，其中一个会先在队列中等待。如果所有的 $n$ 个端口都要从相同的端口转发出去，会导致效率的急剧降低。</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="fu">### Input Queued Packet Switch</span></span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/input-queued.png)</span>{fig-align="center" width="700"}</span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>input queued 将缓存放在了输入端口。相应地，input queued 会产生 Head of Line(HOL) Blocking 问题：当当前队列最前端的数据过大时，将它 switch 出去要花费更多的时间，导致队列后面其他端口的包因为堵塞无法发出。这对效率是一个很大的影响（大概会缩减至 $2-\sqrt{2}\approx 58\%$ ）。解决方法是引入 Virtual Output Queues，对于每个 input queue，把将要发送到同一个端口的包再分到一个 virtual queue 中，这样不同发出端口的包不会相互影响。</span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## Strict Priorities and Guaranteed Flow Rates</span></span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>如果有很多流经过队列，它们将按照 FIFO 顺序离开。谁发送的最多，谁的速率就最高。如果流量真的很大，那么一小部分流量可能会被完全挤出。这样鼓励了不良行为——对于一个流来说，最好的做法是尝试通过尽可能快的发送来挤出所有其他流。</span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>一个方法是引入严格优先级 (Strict Priorities)。一个高优先级队列一个低优先级队列，只有当高优先级队列的处理完了才能到低优先级。但如果高优先级的流完全占据了数量上的优势，低优先级的会被饿死<span class="ot">[^1]</span>。</span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="ot">[^1]: </span>这个描述真的太资本主义了，乐。</span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>更通用的做法是，引入带权优先级 (Weighted Priorities)。考虑 $n$ 个优先级队列，每个队列都有一个权重 $w_i$。我们分若干轮处理所有的包。对于每一轮的每个队列，我们为这个队列处理 $w_i$ bit 的数据（当然在实际中不能）。当第 $i$ 个队列的第 $k$ 个包到达时，我们算出它将在第几轮为完全送出，记为 $F_k$，有</span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>F_k = \max<span class="sc">\{</span>F_{k-1}, \mathrm{now}<span class="sc">\}</span>+\frac{L_k}{w_i}</span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>$\rm now$ 是当前的轮数，因为可能会有队列为空的情况。$L_k$ 是包的长度。此时，我们遍历每个队列的 Head of Line，选择最小的 $F$ ，即结束轮数，来服务对应的包。注意，上面所说的按每个 bit 处理的方法只是为了得到最终的结论，实际上还是以每个包为单位来处理的。从长期来看，以上方法的结果可以趋近于 bit-by-bit 处理的结果。</span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>以上方法称为**加权公平排队** (Weighted Fair Queueing, WFQ) 或**分组通用处理器共享** (Packetized Generalized Processor Sharing, PGPS)。</span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>接下来我们用上面的方法做到真正可保证的 $Q_i(t)$，因为 WFQ 给了我们每个队列效率的上界 $B/R$ ，我们只需要处理一次性数据涌入过多导致 buffer 溢出的情况。</span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>首先，对于一个队列，如果在任意一个时间段 $<span class="co">[</span><span class="ot">t,t+T</span><span class="co">]</span>$，它的到达量 $A(t)$ 均满足 $A(t+T)-A(t)\le B+RT$，其中 $B$ 为 buffer 的大小，那么我们可以保证队列不会溢出。我们称这种情况是 $A(t)$ 满足 $(\sigma,\rho)$ **regulation**，此时 $\sigma = B, \rho = R$。</span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>因此，我们可以保证在 $B\ge \sigma, R\ge \rho$ 的情况下，延迟 $Q(t)\le B/R$。</span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>如果流使用了 leaky-bucket (实现 $(\sigma, \rho)$ constraint)，路由使用了 WFQ，那么端到端延迟就可以保证。RSVP (Resource Reservation Protocol) 就是实现了端到端保证的协议 <span class="sc">\[</span>IETF RFC 2205<span class="sc">\]</span>。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Colmap 源码阅读"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="an">order:</span><span class="co"> 1</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2024-3-28</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> last-modified</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "如题。"</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## 前置准备</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">### 基本流程</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">#### 建立工程</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="in">`File &gt; New Project`</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="in">```         </span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="in">/path/to/project/...</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="in">+── images</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="in">│   +── image1.jpg</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="in">│   +── image2.jpg</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="in">│   +── ...</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="in">│   +── imageN.jpg</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="in">+── database.db</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="in">+── project.ini</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">

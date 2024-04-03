@@ -2,6 +2,9 @@
   {
     "listing": "/index.html",
     "items": [
+      "/CS/3d-reconstruction/colmap-notes.html",
+      "/CS/CS144/CS144Lab.html",
+      "/CS/61810/6.1810Lec9.html",
       "/CS/61810/6.1810Lec7.html",
       "/CS/CS144/CS144Unit3.html",
       "/CS/61810/6.1810Lec6.html",
@@ -9,6 +12,7 @@
       "/CS/61810/6.1810Lab2.html",
       "/CS/61810/6.1810Lec3.html",
       "/CS/CS144/CS144Unit2.html",
+      "/CS/3d-reconstruction/sfm-revisited.html",
       "/CS/61810/6.1810Lab1.html",
       "/CS/CS144/CS144Unit1.html",
       "/CS/61810/6.1810Lec1.html"
