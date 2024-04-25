@@ -3,7 +3,7 @@ title: "Lec9 Device Drivers"
 order: 9
 date: 2024-3-23
 date-modified: last-modified
-description: "TODO"
+description: "设备驱动，以控制台为例。"
 ---
 
 ## 课前准备

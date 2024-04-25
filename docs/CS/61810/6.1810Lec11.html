@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2024-03-14">
-<meta name="description" content="介绍页表与内存结构。">
+<meta name="dcterms.date" content="2024-04-06">
+<meta name="description" content="进程切换、调度。">
 
-<title>Lec4 Page Tables</title>
+<title>Lec11 Scheduling 1</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -104,35 +104,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
@@ -182,7 +153,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec1.html">6.1810 Operating System Engineering 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec4.html">Lec4 Page Tables</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec1.html">6.1810 Operating System Engineering 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec11.html">Lec11 Scheduling 1</a></li></ol></nav>
         <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -238,7 +209,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../CS/61810/6.1810Lec4.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../CS/61810/6.1810Lec4.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Lec4 Page Tables</span></a>
   </div>
 </li>
@@ -268,7 +239,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../CS/61810/6.1810Lec11.html" class="sidebar-item-text sidebar-link">
+  <a href="../../CS/61810/6.1810Lec11.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Lec11 Scheduling 1</span></a>
   </div>
 </li>
@@ -364,28 +335,30 @@ window.Quarto = {
   <ul>
   <li><a href="#课前准备" id="toc-课前准备" class="nav-link active" data-scroll-target="#课前准备"><span class="header-section-number">1</span> 课前准备</a>
   <ul class="collapse">
-  <li><a href="#paging-hardware" id="toc-paging-hardware" class="nav-link" data-scroll-target="#paging-hardware"><span class="header-section-number">1.1</span> Paging hardware</a></li>
-  <li><a href="#内核地址空间" id="toc-内核地址空间" class="nav-link" data-scroll-target="#内核地址空间"><span class="header-section-number">1.2</span> 内核地址空间</a></li>
-  <li><a href="#物理地址分配" id="toc-物理地址分配" class="nav-link" data-scroll-target="#物理地址分配"><span class="header-section-number">1.3</span> 物理地址分配</a></li>
-  <li><a href="#进程地址空间" id="toc-进程地址空间" class="nav-link" data-scroll-target="#进程地址空间"><span class="header-section-number">1.4</span> 进程地址空间</a></li>
-  <li><a href="#codeexec" id="toc-codeexec" class="nav-link" data-scroll-target="#codeexec"><span class="header-section-number">1.5</span> Code：exec</a></li>
-  <li><a href="#real-world" id="toc-real-world" class="nav-link" data-scroll-target="#real-world"><span class="header-section-number">1.6</span> Real World</a></li>
+  <li><a href="#多路复用" id="toc-多路复用" class="nav-link" data-scroll-target="#多路复用"><span class="header-section-number">1.1</span> 多路复用</a></li>
+  <li><a href="#code上下文切换" id="toc-code上下文切换" class="nav-link" data-scroll-target="#code上下文切换"><span class="header-section-number">1.2</span> Code：上下文切换</a></li>
+  <li><a href="#code调度" id="toc-code调度" class="nav-link" data-scroll-target="#code调度"><span class="header-section-number">1.3</span> Code：调度</a></li>
+  <li><a href="#codemycpu-and-myproc" id="toc-codemycpu-and-myproc" class="nav-link" data-scroll-target="#codemycpu-and-myproc"><span class="header-section-number">1.4</span> Code：mycpu and myproc</a></li>
   </ul></li>
-  <li><a href="#lecture" id="toc-lecture" class="nav-link" data-scroll-target="#lecture"><span class="header-section-number">2</span> Lecture</a></li>
+  <li><a href="#lecture" id="toc-lecture" class="nav-link" data-scroll-target="#lecture"><span class="header-section-number">2</span> Lecture</a>
+  <ul class="collapse">
+  <li><a href="#线程概述" id="toc-线程概述" class="nav-link" data-scroll-target="#线程概述"><span class="header-section-number">2.1</span> 线程概述</a></li>
+  <li><a href="#线程调度" id="toc-线程调度" class="nav-link" data-scroll-target="#线程调度"><span class="header-section-number">2.2</span> 线程调度</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec1.html">6.1810 Operating System Engineering 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec4.html">Lec4 Page Tables</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec1.html">6.1810 Operating System Engineering 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec11.html">Lec11 Scheduling 1</a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Lec4 Page Tables</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
+<div class="quarto-title-block"><div><h1 class="title">Lec11 Scheduling 1</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
 </div>
 
 <div>
   <div class="description">
-    介绍页表与内存结构。
+    进程切换、调度。
   </div>
 </div>
 
@@ -396,14 +369,14 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">2024-03-14</p>
+      <p class="date">2024-04-06</p>
     </div>
   </div>
   
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">2024-03-19</p>
+      <p class="date-modified">2024-04-10</p>
     </div>
   </div>
     
@@ -417,77 +390,63 @@ window.Quarto = {
 <section id="课前准备" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="课前准备"><span class="header-section-number">1</span> 课前准备</h2>
 <blockquote class="blockquote">
-<p>Read Chapter 3 and <code>kernel/memlayout.h</code>.</p>
+<p>Read “Scheduling” through Section 7.4, and <code>kernel/proc.c</code>, <code>kernel/swtch.S</code>.</p>
 </blockquote>
-<section id="paging-hardware" class="level3" data-number="1.1">
-<h3 data-number="1.1" class="anchored" data-anchor-id="paging-hardware"><span class="header-section-number">1.1</span> Paging hardware</h3>
-<p>RISC-V 指令操纵虚拟地址，机器的 RAM 操纵物理地址。页表将虚拟地址映射到物理地址。</p>
-<p>xv6 运行在 Sv39 RISC-V 上，即 64 位中的低 39 位被用于虚拟地址。在 Sv39 配置中，一个页表是由 <span class="math inline">\(2^{27}\)</span> 的<strong>页表项</strong>（page table entries，PTE）组成的。每个 PTE 由 physical page number（PPN）与一些标志位组成，共 44 位。每个 PTE 低 39 位中的高 27 位用做指向页表中的 PTE 的下标。一个 56 位的物理地址的高 44 位由 PTE 的 PPN 提供，低 12 位拷贝自对应虚拟地址的低 12 位。如下图。Sv39 并未将 64 位地址全部用满，这样做是出于当时对技术的预测。后面还有 Sv48 提供更多的内存空间。</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/page-table.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="500"></p>
-</figure>
-</div>
-<p>上面只是一个简单表示，不是故事的全部。在实际的 Sv39 结构中，如下图，页表实际由一个三层深的完全 512 叉树组成。根结点是一个 512 项的页，每个 PTE 指向下一层一个 512 项的页，这个页的每个 PTE 又指向下一层一个 512 项的 PTE。这个结构对应了虚拟地址用于定位的 27 位，均分为三部分，每个部分分配给一层。这种分层结构的好处是在多数情况下只有一小部分虚拟地址被使用时，操作系统无需为其他的分支分配页。</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/page-table-full.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="650"></p>
-</figure>
-</div>
-<p>在实际执行读取/储存指令时，CPU 必须从内存加载三个 PTE，这可能有拖慢速度的隐患。为此 RISC-V CPU 将页表缓存在<strong>页表缓存</strong>（Translation Look-aside Buffer，TLB）中。</p>
-<p>每个 PTE 的 flag 的含义：<code>PTE_V</code> 表示 PTE 是否存在；<code>PTE_R</code> 控制是否允许被读取；<code>PTE_W</code> 控制是否允许被写入，<code>PTE_X</code> 控制是否 CPU 要将该页的内容解释为指令并执行它们；<code>PTE_U</code> 控制是否允许用户模式下的指令访问该页，默认只能在监督模式下访问。</p>
-<p><code>stap</code> 寄存器给 CPU 提供了根页表页的基址。每个 CPU 都有各自的 <code>satp</code> 寄存器。</p>
-<p>由于页目录位于物理内存中，因此内核可以通过使用标准存储指令写入 PTE 的虚拟地址来对页目录中的 PTE 内容进行编程。</p>
-<p>关于术语的一些注释。与物理内存和虚拟地址不同，虚拟内存不是物理对象， 而是指内核提供的用于管理物理内存和虚拟地址的抽象和机制的集合。</p>
+<section id="多路复用" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="多路复用"><span class="header-section-number">1.1</span> 多路复用</h3>
+<p>有两种情景会导致切换进程。当进程等待设备或管道 I/O 完成、等待子进程退出或等待 <code>sleep</code> 系统调用时，xv6 的 <code>sleep</code> 和 <code>wakeup</code> 机制会切换。其次，xv6 定期强制切换以应对长时间计算而不休眠的进程。</p>
 </section>
-<section id="内核地址空间" class="level3" data-number="1.2">
-<h3 data-number="1.2" class="anchored" data-anchor-id="内核地址空间"><span class="header-section-number">1.2</span> 内核地址空间</h3>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/kernel-address-space.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="900"></p>
-</figure>
-</div>
-<p>内核地址从 0x80000000（<code>KERNBASE</code>）开始，至少延续到 0x88000000（<code>PHYSTOP</code>）。这段地址采取直接映射，即虚拟地址和物理地址相同。有些地址不遵循直接映射，比如 trampoline 和内核栈分页。trampoline 在虚拟地址的顶端，有趣的是，对应这段内容的物理地址被映射了两次，一次在顶端，一次是直接映射。内核栈分页是每个进程拥有的内核栈的地址，每个分页上有 guard page，这个 page 的 <code>PTE_V</code> 是没有设置的，因此栈溢出会导致引起异常。这样的设计可以防止栈溢出覆盖其他内核栈的数据。</p>
-<p>内核将 trampoline 和内核内容授予 <code>PTE_R</code> 和 <code>PTE_X</code> 权限。其他页授予 <code>PTE_R</code> 和 <code>PTE_W</code> 权限。guard pages 的映射无效。</p>
-<p>书上讲了如何分配地址空间的代码和流程，这里略过。</p>
+<section id="code上下文切换" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="code上下文切换"><span class="header-section-number">1.2</span> Code：上下文切换</h3>
+<p>用户进程切换的路径：一个用户-内核转换（系统调用或中断）到旧进程的内核线程、一个到当前 CPU 调度器线程的上下文切换、一个到新进程内核线程的上下文切换，和一个返回到用户进程的 trap。xv6 的调度器是每个 CPU 一个专门的线程（保存有寄存器和栈）。</p>
+<p>从一个进程切换到另一个包含了保存旧内核线程的 CPU 寄存器，然后恢复先前保存的新内核线程的寄存器。<code>swtch</code> 就完成了这件事。</p>
+<p>在实现调度的函数 <code>sched</code> 中，它将内核进程的上下文切换到每个 CPU 保有的调度器上下文中。</p>
 </section>
-<section id="物理地址分配" class="level3" data-number="1.3">
-<h3 data-number="1.3" class="anchored" data-anchor-id="物理地址分配"><span class="header-section-number">1.3</span> 物理地址分配</h3>
-<p>xv6 用内核结束到 PHYSTOP 的空间为运行时分配内存。它使用一个链表来追踪空闲空间。后面讲了这部分的代码。</p>
-<p>个人觉得有意思的点是，内核在释放空间时是将内容全部填为垃圾值而非零，这样可以让悬空指针因为读取到无用内容从而尽早被发现。</p>
+<section id="code调度" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="code调度"><span class="header-section-number">1.3</span> Code：调度</h3>
+<p>见 Lecture 部分。</p>
 </section>
-<section id="进程地址空间" class="level3" data-number="1.4">
-<h3 data-number="1.4" class="anchored" data-anchor-id="进程地址空间"><span class="header-section-number">1.4</span> 进程地址空间</h3>
-<p>每个进程有一个页表，当 xv6 切换进程时，同时切换页表。下图是一个用户地址空间的细节。从 0 到 MAXVA，原则上允许进程寻址 256GB 内存。</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/user-address-space.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="700"></p>
-</figure>
-</div>
-<p>用户的栈被下方的 guard page 保护，当栈溢出时，会引起分页错误异常。当进程申请更多用户内存时，xv6 先使用 <code>kalloc</code> 分配物理页，然后将那些地址的 PTE 加入进程页表。</p>
-<p>我们在这里看到一些使用页表的很好的例子。首先，不同进程的页表将用户地址转换为不同的物理内存页，从而每个进程都拥有私有的用户内存。其次，每个进程将其内存视为具有从零开始的连续虚拟地址，而进程的物理内存可以是不连续的。第三，内核用 trampoline 代码映射一个页面到用户地址空间的顶部（没有 <code>PTE_U</code> 权限），因此单页物理内存显示在所有地址空间中，但只能由内核使用。</p>
-</section>
-<section id="codeexec" class="level3" data-number="1.5">
-<h3 data-number="1.5" class="anchored" data-anchor-id="codeexec"><span class="header-section-number">1.5</span> Code：exec</h3>
-<p><code>exec</code> 从二进制或可执行文件中读取数据并替换进程的地址空间。它读取二进制文件的 ELF 标头。一个 ELF 二进制由 ELF 标头和一系列程序段标头组成。xv6 的程序有两段程序段标头：一个是指令，另一个是数据。</p>
-<p>首先 xv6 会快速检查一个文件是否是 ELF 二进制文件。它通常由四个字节的 “magic number” 0x7F, <code>'E'</code>, <code>'L'</code>, <code>'F'</code> 组成，在程序里设为 <code>ELF_MAGIC</code> 。</p>
-<p>（后面的内容不是很有关联的感觉，就先不写了）</p>
-</section>
-<section id="real-world" class="level3" data-number="1.6">
-<h3 data-number="1.6" class="anchored" data-anchor-id="real-world"><span class="header-section-number">1.6</span> Real World</h3>
-<p>xv6 的简化是通过内核使用虚拟地址和物理地址之间的直接映射，并假设在地址 0x8000000 处存在物理 RAM。但真实硬件将 RAM 和设备放置在不可预测的物理地址处。更严格的内核设计利用页表将任意硬件物理内存布局转换为可预测的内核虚拟地址布局。</p>
-<p>RISC-V 支持物理地址级别的保护，但 xv6 没有使用该功能。</p>
-<p>在具有大量内存的计算机上，使用 RISC-V 对“super pages”的支持可能很有意义。较大的页面对于具有大量 RAM 的机器来说是有意义的，并且可以减少页表操作的开销。</p>
-<p>xv6 缺少可以为小对象提供内存的类似 <code>malloc</code> 的分配器，因此较难使用需要动态分配的复杂数据结构。更复杂的内核可能会分配许多不同大小的小块，而不是（在 xv6 中）仅 4096 字节块；真正的内核分配器需要处理小分配和大分配。内存分配是一个长期的热门话题，基本问题是有效利用有限的内存并为未知的未来请求做好准备。如今，人们更关心速度而不是空间效率。</p>
+<section id="codemycpu-and-myproc" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="codemycpu-and-myproc"><span class="header-section-number">1.4</span> Code：mycpu and myproc</h3>
+<p>xv6 为每个 CPU 维护一个结构体 (<code>struct cpu</code>)，记录了当前在该 CPU 上运行的进程（如果有的话）、CPU 调度器线程的保存寄存器，以及管理中断禁用所需的嵌套自旋锁计数。每个 CPU 的结构体中保存了一个 <code>hartid</code>，用于唯一标识该CPU。</p>
+<p><code>mycpu()</code> 返回指向当前 CPU 结构体的指针。在 RISC-V 中，每个 CPU 都有一个 <code>hartid</code>，而 xv6 保证每个 CPU 的 <code>hartid</code> 都存储在该 CPU 的 <code>tp</code> 寄存器中，这样就可以通过 <code>tp</code> 来索引一个 CPU 结构体数组，找到对应的 CPU。xv6 确保始终使 <code>tp</code> 保存该 CPU 的 <code>hartid</code>，这一过程包括在 CPU 引导序列中早期设置 <code>tp</code>、在用户态 trap 时保存 <code>tp</code> 的值 (<code>usertrapret</code>)、以及在进入内核时从保存的值中恢复 <code>tp</code> 的值 (<code>uservec</code>)。</p>
+<p>为了保证返回值的正确性，在调用 <code>cpuid</code> 和 <code>mycpu</code> 时要保证中断关闭，否则定时器中断可能会改变线程执行的 CPU。</p>
 </section>
 </section>
 <section id="lecture" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="lecture"><span class="header-section-number">2</span> Lecture</h2>
-<p>lecture 上讲的内容很有用，把我看书时的困惑解答了不少，但整体内容与书上是一致的，主要是完善了细节并且澄清了容易误解的地方。</p>
+<section id="线程概述" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="线程概述"><span class="header-section-number">2.1</span> 线程概述</h3>
+<p>我们给线程一个宽松的定义：一个可以认为是串行执行代码的单元。线程还拥有状态，我们可以随时保存线程的状态并暂停线程的运行，并在之后恢复。它通常包括：</p>
+<ol type="1">
+<li><code>pc</code> (program counter)，它表示当前执行命令的位置。</li>
+<li>保存变量的寄存器。</li>
+<li>程序的栈帧，通常来说每个线程有属于自己的栈。</li>
+</ol>
+<p>线程之间共享内存、共享地址空间，因此多个线程同时运行时，修改数据需要加锁。xv6 的布局是这样的：每个用户进程都有一个对应的内核线程，它控制了用户进程代码指令的执行。因此多个内核线程共享一个地址空间。但是每个用户进程都只含有一个线程，这个线程拥有这个进程的地址空间。</p>
+</section>
+<section id="线程调度" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="线程调度"><span class="header-section-number">2.2</span> 线程调度</h3>
+<p>一般来讲，定时器中断会强制将 CPU 控制权从当前的用户进程给到对应的内核线程，这一步是 pre-emptive scheduling，之后内核线程会主动将 CPU 控制权 yield 给调度器，这一步是 voluntary scheduling。</p>
+<p>在线程调度时，我们需要区分线程的状态：</p>
+<ol type="1">
+<li><code>RUNNING</code>，线程正在某个 CPU 上运行；</li>
+<li><code>RUNNABLE</code>，线程还没有在某个 CPU 上运行，但是一旦有空闲的 CPU 就可以运行；</li>
+<li><code>SLEEPING</code>，意味着线程在等待一些 I/O 事件，它只会在 I/O 事件发生了之后运行。</li>
+</ol>
+<p>接下来我们描述一个完整的故事，来详细讲述一个用户进程切换到另一个用户进程时发生的所有事：</p>
+<ol type="1">
+<li>定时器中断强迫 CPU 从用户进程切换到对应的内核线程，用户进程的 trampoline 代码将用户寄存器保存于自己的 <code>trapframe</code> 中；</li>
+<li>到达内核线程，执行内核中的 <code>usertrap()</code>，执行实际的中断处理程序。</li>
+<li>内核线程决定让出 CPU，调用 <code>swtch</code> 将线程上下文保存，并切换到 CPU 对应的调度器线程，执行 <code>scheduler()</code>；</li>
+<li>在 <code>scheduler</code> 中，将旧用户进程设置为 <code>RUNNABLE</code> 状态，然后通过表单找到下一个 <code>RUNNABLE</code> 进程，改为 <code>RUNNING</code>，再次调用 <code>swtch</code>，保存自己的上下文，并恢复新进程对应的内核线程之前保存的上下文，返回到其所在的系统调用或者中断处理程序中；</li>
+<li>在系统调用或中断处理程序中，从 <code>trapframe</code> 恢复用户寄存器，返回用户进程，开始运行。</li>
+</ol>
 
 
 <!-- -->
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -948,86 +907,70 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Lec4 Page Tables"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">order:</span><span class="co"> 5</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2024-3-14</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Lec11 Scheduling 1"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">order:</span><span class="co"> 12</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2024-4-6</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> last-modified</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "介绍页表与内存结构。"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "进程切换、调度。"</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## 课前准备</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Read Chapter 3 and </span><span class="in">`kernel/memlayout.h`</span><span class="at">.</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Read "Scheduling" through Section 7.4, and </span><span class="in">`kernel/proc.c`</span><span class="at">, </span><span class="in">`kernel/swtch.S`</span><span class="at">.</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">### Paging hardware</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">### 多路复用</span></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>RISC-V 指令操纵虚拟地址，机器的 RAM 操纵物理地址。页表将虚拟地址映射到物理地址。</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>有两种情景会导致切换进程。当进程等待设备或管道 I/O 完成、等待子进程退出或等待 <span class="in">`sleep`</span> 系统调用时，xv6 的 <span class="in">`sleep`</span> 和 <span class="in">`wakeup`</span> 机制会切换。其次，xv6 定期强制切换以应对长时间计算而不休眠的进程。</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>xv6 运行在 Sv39 RISC-V 上，即 64 位中的低 39 位被用于虚拟地址。在 Sv39 配置中，一个页表是由 $2^{27}$ 的**页表项**（page table entries，PTE）组成的。每个 PTE 由 physical page number（PPN）与一些标志位组成，共 44 位。每个 PTE 低 39 位中的高 27 位用做指向页表中的 PTE 的下标。一个 56 位的物理地址的高 44 位由 PTE 的 PPN 提供，低 12 位拷贝自对应虚拟地址的低 12 位。如下图。Sv39 并未将 64 位地址全部用满，这样做是出于当时对技术的预测。后面还有 Sv48 提供更多的内存空间。</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">### Code：上下文切换</span></span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/page-table.png)</span>{fig-align="center" width="500"}</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>用户进程切换的路径：一个用户-内核转换（系统调用或中断）到旧进程的内核线程、一个到当前 CPU 调度器线程的上下文切换、一个到新进程内核线程的上下文切换，和一个返回到用户进程的 trap。xv6 的调度器是每个 CPU 一个专门的线程（保存有寄存器和栈）。</span>
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>上面只是一个简单表示，不是故事的全部。在实际的 Sv39 结构中，如下图，页表实际由一个三层深的完全 512 叉树组成。根结点是一个 512 项的页，每个 PTE 指向下一层一个 512 项的页，这个页的每个 PTE 又指向下一层一个 512 项的 PTE。这个结构对应了虚拟地址用于定位的 27 位，均分为三部分，每个部分分配给一层。这种分层结构的好处是在多数情况下只有一小部分虚拟地址被使用时，操作系统无需为其他的分支分配页。</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>从一个进程切换到另一个包含了保存旧内核线程的 CPU 寄存器，然后恢复先前保存的新内核线程的寄存器。<span class="in">`swtch`</span> 就完成了这件事。</span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/page-table-full.png)</span>{fig-align="center" width="650"}</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>在实现调度的函数 <span class="in">`sched`</span> 中，它将内核进程的上下文切换到每个 CPU 保有的调度器上下文中。</span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>在实际执行读取/储存指令时，CPU 必须从内存加载三个 PTE，这可能有拖慢速度的隐患。为此 RISC-V CPU 将页表缓存在**页表缓存**（Translation Look-aside Buffer，TLB）中。</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">### Code：调度</span></span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>每个 PTE 的 flag 的含义：<span class="in">`PTE_V`</span> 表示 PTE 是否存在；<span class="in">`PTE_R`</span> 控制是否允许被读取；<span class="in">`PTE_W`</span> 控制是否允许被写入，<span class="in">`PTE_X`</span> 控制是否 CPU 要将该页的内容解释为指令并执行它们；<span class="in">`PTE_U`</span> 控制是否允许用户模式下的指令访问该页，默认只能在监督模式下访问。</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>见 Lecture 部分。</span>
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="in">`stap`</span> 寄存器给 CPU 提供了根页表页的基址。每个 CPU 都有各自的 <span class="in">`satp`</span> 寄存器。</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="fu">### Code：mycpu and myproc</span></span>
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>由于页目录位于物理内存中，因此内核可以通过使用标准存储指令写入 PTE 的虚拟地址来对页目录中的 PTE 内容进行编程。</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>xv6 为每个 CPU 维护一个结构体 (<span class="in">`struct cpu`</span>)，记录了当前在该 CPU 上运行的进程（如果有的话）、CPU 调度器线程的保存寄存器，以及管理中断禁用所需的嵌套自旋锁计数。每个 CPU 的结构体中保存了一个 <span class="in">`hartid`</span>，用于唯一标识该CPU。</span>
 <span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>关于术语的一些注释。与物理内存和虚拟地址不同，虚拟内存不是物理对象， 而是指内核提供的用于管理物理内存和虚拟地址的抽象和机制的集合。</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="in">`mycpu()`</span> 返回指向当前 CPU 结构体的指针。在 RISC-V 中，每个 CPU 都有一个 <span class="in">`hartid`</span>，而 xv6 保证每个 CPU 的 <span class="in">`hartid`</span> 都存储在该 CPU 的 <span class="in">`tp`</span> 寄存器中，这样就可以通过 <span class="in">`tp`</span> 来索引一个 CPU 结构体数组，找到对应的 CPU。xv6 确保始终使 <span class="in">`tp`</span> 保存该 CPU 的 <span class="in">`hartid`</span>，这一过程包括在 CPU 引导序列中早期设置 <span class="in">`tp`</span>、在用户态 trap 时保存 <span class="in">`tp`</span> 的值 (<span class="in">`usertrapret`</span>)、以及在进入内核时从保存的值中恢复 <span class="in">`tp`</span> 的值 (<span class="in">`uservec`</span>)。</span>
 <span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="fu">### 内核地址空间</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>为了保证返回值的正确性，在调用 <span class="in">`cpuid`</span> 和 <span class="in">`mycpu`</span> 时要保证中断关闭，否则定时器中断可能会改变线程执行的 CPU。</span>
 <span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/kernel-address-space.png)</span>{fig-align="center" width="900"}</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="fu">## Lecture</span></span>
 <span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>内核地址从 0x80000000（<span class="in">`KERNBASE`</span>）开始，至少延续到 0x88000000（<span class="in">`PHYSTOP`</span>）。这段地址采取直接映射，即虚拟地址和物理地址相同。有些地址不遵循直接映射，比如 trampoline 和内核栈分页。trampoline 在虚拟地址的顶端，有趣的是，对应这段内容的物理地址被映射了两次，一次在顶端，一次是直接映射。内核栈分页是每个进程拥有的内核栈的地址，每个分页上有 guard page，这个 page 的 <span class="in">`PTE_V`</span> 是没有设置的，因此栈溢出会导致引起异常。这样的设计可以防止栈溢出覆盖其他内核栈的数据。</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">### 线程概述</span></span>
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>内核将 trampoline 和内核内容授予 <span class="in">`PTE_R`</span> 和 <span class="in">`PTE_X`</span> 权限。其他页授予 <span class="in">`PTE_R`</span> 和 <span class="in">`PTE_W`</span> 权限。guard pages 的映射无效。</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>我们给线程一个宽松的定义：一个可以认为是串行执行代码的单元。线程还拥有状态，我们可以随时保存线程的状态并暂停线程的运行，并在之后恢复。它通常包括：</span>
 <span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>书上讲了如何分配地址空间的代码和流程，这里略过。</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="fu">### 物理地址分配</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span><span class="in">`pc`</span> (program counter)，它表示当前执行命令的位置。</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>保存变量的寄存器。</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>程序的栈帧，通常来说每个线程有属于自己的栈。</span>
 <span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>xv6 用内核结束到 PHYSTOP 的空间为运行时分配内存。它使用一个链表来追踪空闲空间。后面讲了这部分的代码。</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>线程之间共享内存、共享地址空间，因此多个线程同时运行时，修改数据需要加锁。xv6 的布局是这样的：每个用户进程都有一个对应的内核线程，它控制了用户进程代码指令的执行。因此多个内核线程共享一个地址空间。但是每个用户进程都只含有一个线程，这个线程拥有这个进程的地址空间。</span>
 <span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>个人觉得有意思的点是，内核在释放空间时是将内容全部填为垃圾值而非零，这样可以让悬空指针因为读取到无用内容从而尽早被发现。</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="fu">### 线程调度</span></span>
 <span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="fu">### 进程地址空间</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>一般来讲，定时器中断会强制将 CPU 控制权从当前的用户进程给到对应的内核线程，这一步是 pre-emptive scheduling，之后内核线程会主动将 CPU 控制权 yield 给调度器，这一步是 voluntary scheduling。</span>
 <span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>每个进程有一个页表，当 xv6 切换进程时，同时切换页表。下图是一个用户地址空间的细节。从 0 到 MAXVA，原则上允许进程寻址 256GB 内存。</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>在线程调度时，我们需要区分线程的状态：</span>
 <span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/user-address-space.png)</span>{fig-align="center" width="700"}</span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>用户的栈被下方的 guard page 保护，当栈溢出时，会引起分页错误异常。当进程申请更多用户内存时，xv6 先使用 <span class="in">`kalloc`</span> 分配物理页，然后将那些地址的 PTE 加入进程页表。</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span><span class="in">`RUNNING`</span>，线程正在某个 CPU 上运行；</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span><span class="in">`RUNNABLE`</span>，线程还没有在某个 CPU 上运行，但是一旦有空闲的 CPU 就可以运行；</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span><span class="in">`SLEEPING`</span>，意味着线程在等待一些 I/O 事件，它只会在 I/O 事件发生了之后运行。</span>
 <span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>我们在这里看到一些使用页表的很好的例子。首先，不同进程的页表将用户地址转换为不同的物理内存页，从而每个进程都拥有私有的用户内存。其次，每个进程将其内存视为具有从零开始的连续虚拟地址，而进程的物理内存可以是不连续的。第三，内核用 trampoline 代码映射一个页面到用户地址空间的顶部（没有 <span class="in">`PTE_U`</span> 权限），因此单页物理内存显示在所有地址空间中，但只能由内核使用。</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>接下来我们描述一个完整的故事，来详细讲述一个用户进程切换到另一个用户进程时发生的所有事：</span>
 <span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="fu">### Code：exec</span></span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="in">`exec`</span> 从二进制或可执行文件中读取数据并替换进程的地址空间。它读取二进制文件的 ELF 标头。一个 ELF 二进制由 ELF 标头和一系列程序段标头组成。xv6 的程序有两段程序段标头：一个是指令，另一个是数据。</span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>首先 xv6 会快速检查一个文件是否是 ELF 二进制文件。它通常由四个字节的 "magic number" 0x7F, <span class="in">`'E'`</span>, <span class="in">`'L'`</span>, <span class="in">`'F'`</span> 组成，在程序里设为 <span class="in">`ELF_MAGIC`</span> 。</span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>（后面的内容不是很有关联的感觉，就先不写了）</span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a><span class="fu">### Real World</span></span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>xv6 的简化是通过内核使用虚拟地址和物理地址之间的直接映射，并假设在地址 0x8000000 处存在物理 RAM。但真实硬件将 RAM 和设备放置在不可预测的物理地址处。更严格的内核设计利用页表将任意硬件物理内存布局转换为可预测的内核虚拟地址布局。</span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>RISC-V 支持物理地址级别的保护，但 xv6 没有使用该功能。</span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>在具有大量内存的计算机上，使用 RISC-V 对“super pages”的支持可能很有意义。较大的页面对于具有大量 RAM 的机器来说是有意义的，并且可以减少页表操作的开销。</span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>xv6 缺少可以为小对象提供内存的类似 <span class="in">`malloc`</span> 的分配器，因此较难使用需要动态分配的复杂数据结构。更复杂的内核可能会分配许多不同大小的小块，而不是（在 xv6 中）仅 4096 字节块；真正的内核分配器需要处理小分配和大分配。内存分配是一个长期的热门话题，基本问题是有效利用有限的内存并为未知的未来请求做好准备。如今，人们更关心速度而不是空间效率。</span>
-<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a><span class="fu">## Lecture</span></span>
-<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>lecture 上讲的内容很有用，把我看书时的困惑解答了不少，但整体内容与书上是一致的，主要是完善了细节并且澄清了容易误解的地方。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>定时器中断强迫 CPU 从用户进程切换到对应的内核线程，用户进程的 trampoline 代码将用户寄存器保存于自己的 <span class="in">`trapframe`</span> 中；</span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>到达内核线程，执行内核中的 <span class="in">`usertrap()`</span>，执行实际的中断处理程序。</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>内核线程决定让出 CPU，调用 <span class="in">`swtch`</span> 将线程上下文保存，并切换到 CPU 对应的调度器线程，执行 <span class="in">`scheduler()`</span>；</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a><span class="ss">4.  </span>在 <span class="in">`scheduler`</span> 中，将旧用户进程设置为 <span class="in">`RUNNABLE`</span> 状态，然后通过表单找到下一个 <span class="in">`RUNNABLE`</span> 进程，改为 <span class="in">`RUNNING`</span>，再次调用 <span class="in">`swtch`</span>，保存自己的上下文，并恢复新进程对应的内核线程之前保存的上下文，返回到其所在的系统调用或者中断处理程序中；</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a><span class="ss">5.  </span>在系统调用或中断处理程序中，从 <span class="in">`trapframe`</span> 恢复用户寄存器，返回用户进程，开始运行。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
