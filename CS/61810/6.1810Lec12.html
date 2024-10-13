@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-04-06">
+<meta name="description" content="sleep 与 wakeup。">
+
+<title>Lec12 Coordination</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../RI.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Thought Container</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../../CS/CS.html" aria-current="page"> 
+<span class="menu-text">CS</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec1.html">6.1810 Operating System Engineering 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec12.html">Lec12 Coordination</a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../CS/CS.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Computer Science</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../CS/MoveToModernCpp.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">步入现当代 C++</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/ModernCpp/MoveSemantics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">移动语义 (Move Semantics)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/ModernCpp/Templates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">模板与泛型编程</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/ModernCpp/NonVirtualPoly.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C++ 中的（非虚）多态</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">
+ <span class="menu-text">6.1810 Operating System Engineering 笔记</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec1 Introduction and Examples</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lab1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lab1 util: Xv6 and Unix utilities</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec3 Operating System Organization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lab2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lab2 system calls: system calls</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec4 Page Tables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec6 System Call Entry/Exit</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec7.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec7 Page Faults</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec9.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec9 Device Drivers</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec10.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec10 Locking</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec11.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec11 Scheduling 1</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec12.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Lec12 Coordination</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec13.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec13 File System</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/61810/6.1810Lec14.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lec13 Crash Recovery</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false">
+ <span class="menu-text">CS144 Introduction to Computer Networking 笔记</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/CS144/CS144Lab.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CS144 Lab 记录</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/CS144/CS144Unit1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unit1: The Internet and IP</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/CS144/CS144Unit2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unit2: The Transport Layer</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/CS144/CS144Unit3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unit3: Packet Switching</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false">
+ <span class="menu-text">三维重建</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/3d-reconstruction/colmap-notes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">colmap 源码阅读</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../CS/3d-reconstruction/sfm-revisited.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Structure-from-Motion Revisited 阅读笔记</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="2">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#课前准备" id="toc-课前准备" class="nav-link active" data-scroll-target="#课前准备"><span class="header-section-number">1</span> 课前准备</a>
+  <ul class="collapse">
+  <li><a href="#sleep-和-wakeup" id="toc-sleep-和-wakeup" class="nav-link" data-scroll-target="#sleep-和-wakeup"><span class="header-section-number">1.1</span> sleep 和 wakeup</a></li>
+  <li><a href="#code-sleep-and-wakeup" id="toc-code-sleep-and-wakeup" class="nav-link" data-scroll-target="#code-sleep-and-wakeup"><span class="header-section-number">1.2</span> Code: sleep and wakeup</a></li>
+  <li><a href="#codewait-exit-and-kill" id="toc-codewait-exit-and-kill" class="nav-link" data-scroll-target="#codewait-exit-and-kill"><span class="header-section-number">1.3</span> Code：Wait, exit, and kill</a></li>
+  <li><a href="#进程锁" id="toc-进程锁" class="nav-link" data-scroll-target="#进程锁"><span class="header-section-number">1.4</span> 进程锁</a></li>
+  <li><a href="#real-world" id="toc-real-world" class="nav-link" data-scroll-target="#real-world"><span class="header-section-number">1.5</span> Real World</a></li>
+  </ul></li>
+  <li><a href="#lecture" id="toc-lecture" class="nav-link" data-scroll-target="#lecture"><span class="header-section-number">2</span> Lecture</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec1.html">6.1810 Operating System Engineering 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec12.html">Lec12 Coordination</a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Lec12 Coordination</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
+</div>
+
+<div>
+  <div class="description">
+    sleep 与 wakeup。
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2024-04-06</p>
+    </div>
+  </div>
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">2024-10-13</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="课前准备" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="课前准备"><span class="header-section-number">1</span> 课前准备</h2>
+<blockquote class="blockquote">
+<p>Read remainder of “Scheduling”, and corresponding parts of <code>kernel/proc.c</code>, <code>kernel/sleeplock.c</code>.</p>
+</blockquote>
+<section id="sleep-和-wakeup" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="sleep-和-wakeup"><span class="header-section-number">1.1</span> sleep 和 wakeup</h3>
+<p>进程睡眠允许内核线程等待特定事件，让出的 CPU 可以去做其他的工作，待事件回复时唤醒进程。</p>
+<p>考虑生产者-消费者问题，使用锁的实现为：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> semaphore <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> spinlock lock<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> count<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> V<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    s<span class="op">-&gt;</span>count <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> P<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span><span class="op">(</span>s<span class="op">-&gt;</span>count <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    s<span class="op">-&gt;</span>count <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>以上的实现是开销很大的，当生产者生产效率很低时，持续高速的询问会耗费很多资源。我们引入 sleep 和 wakeup 机制：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource c number-lines code-with-copy"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1"></a><span class="dt">void</span> V<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a>    s<span class="op">-&gt;</span>count <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a>    wakeup<span class="op">(</span>s<span class="op">);</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="dt">void</span> P<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a>    <span class="cf">while</span><span class="op">(</span>s<span class="op">-&gt;</span>count <span class="op">==</span> <span class="dv">0</span><span class="op">)</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a>        sleep<span class="op">(</span>s<span class="op">);</span></span>
+<span id="cb2-13"><a href="#cb2-13"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb2-14"><a href="#cb2-14"></a>    s<span class="op">-&gt;</span>count <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb2-16"><a href="#cb2-16"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>当消费者没有得到资源时，睡觉，等到生产者生产了资源再唤醒消费者。但这样有一个问题：lost wakeup。考虑刚刚执行完第 11 行，正准备执行下一行时，第二个线程在消费者上执行，它唤醒了一个不存在的信号量，因此无事发生。但实际上这个信号量正是第 12 行将要送去睡觉的那个。此时第 12 行被执行，但是它由于已经在睡觉之前被唤醒过，再也无法被唤醒，系统停摆。</p>
+<p>为了修复这个错误，我们需要将第 11 到 12 行变为一个原子操作。一个可能的想法是，将消费者的 <code>acquire</code> 提前到最开始，但这又会导致死锁的问题：睡眠的线程由于一直持有锁，唤醒线程无法获取锁。因此我们需要在线程睡眠时同时释放锁，这导出了我们最终的实现：</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> V<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    s<span class="op">-&gt;</span>count <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    wakeup<span class="op">(</span>s<span class="op">);</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> P<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span><span class="op">(</span>s<span class="op">-&gt;</span>count <span class="op">==</span> <span class="dv">0</span><span class="op">)</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        sleep<span class="op">(</span>s<span class="op">,</span> <span class="op">&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    s<span class="op">-&gt;</span>count <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="code-sleep-and-wakeup" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="code-sleep-and-wakeup"><span class="header-section-number">1.2</span> Code: sleep and wakeup</h3>
+<p>基本思想是让 <code>sleep</code> 将当前进程标记为 <code>SLEEPING</code>，然后调用 <code>sched</code> 释放 CPU；<code>wakeup</code> 查找在给定等待 channel 上休眠的进程并将其标记为 <code>RUNNABLE</code>。睡眠和唤醒的呼叫者可以使用任何彼此方便的号码作为 channel，xv6 经常使用参与等待的内核数据结构的地址。</p>
+<p>有时会出现多个进程在同一个通道上休眠的情况；例如，多个进程从管道读取数据。一次唤醒调用即可将它们全部唤醒。其中一个将首先运行并获取调用 <code>sleep</code> 所用的锁，并且读取管道中等待的任何数据。其他进程会发现，尽管被唤醒，却没有数据可读取。从他们的角度来看，这次唤醒是“虚假的”，他们必须再次入睡。因此，总是在检查条件的循环内调用 <code>sleep</code>。</p>
+</section>
+<section id="codewait-exit-and-kill" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="codewait-exit-and-kill"><span class="header-section-number">1.3</span> Code：Wait, exit, and kill</h3>
+<p>子进程在 <code>exit</code> 会被设置为 <code>ZOMBIE</code> 状态，待父进程的 <code>wait</code> 重新发现它时恢复为 <code>UNUSED</code>，如果父进程在子进程退出之前就先退出，则子进程会被交给 <code>init</code> 进程，它会永久调用 <code>wait</code>，因此每个子进程都需要一个父进程来清理。</p>
+<p><code>wait</code> 通过获取 <code>wait_lock</code> 开始，<code>wait_lock</code> 充当条件锁，有助于确保父级不会错过退出子级的唤醒。然后 <code>wait</code> 扫描进程表。如果它发现一个处于 <code>ZOMBIE</code> 状态的子进程，它会释放该子进程的资源及其 <code>proc</code> 结构，将子进程的退出状态复制到提供给 <code>wait</code> 的地址（如果不为 0），并返回子进程的进程 ID。如果 <code>wait</code> 找到子进程但没有退出，它会调用 <code>sleep</code> 来等待它们中的任何一个退出，然后再次扫描。 <code>wait</code> 经常持有两个锁，<code>wait_lock</code> 和某些进程的 <code>pp-&gt;lock</code>；避免死锁的顺序是先 <code>wait_lock</code>，然后 <code>pp-&gt;lock</code>。</p>
+<p><code>exit</code> 记录退出状态，释放一些资源，调用 <code>reparent</code> 把子进程给 <code>init</code> 进程，唤醒父进程，然后将调用者标记为僵尸，然后永久让出 CPU。在将其状态设置为 <code>ZOMBIE</code> 之前，<code>exit</code> 就唤醒父进程可能看起来不正确，但这是安全的：虽然唤醒可能会导致父进程运行，但 <code>wait</code> 中的循环因为没有获取到 <code>p-&gt;lock</code> 而无法进行检查，直到 <code>p-&gt;lock</code> 被 <code>scheduler</code> 释放。</p>
+<p><code>exit</code> 允许进程自行终止，而 <code>kill</code> 则允许一个进程请求另一个进程终止。如果直接销毁受害者进程，<code>kill</code> 会太复杂，因为受害者可能正在另一个 CPU 上执行，也许正在对内核数据结构进行敏感的更新。因此，<code>kill</code> 做的事情很少：它只是设置受害者的 <code>p-&gt;killed</code>，如果它正在睡觉，则将其唤醒。最终，受害者将进入或离开内核，此时，如果设置了 <code>p-&gt;killed</code>，<code>usertrap</code> 中的代码将调用 <code>exit</code>（它通过调用 <code>killed</code> 进行检查）。如果受害者运行在用户空间，它很快就会通过系统调用或因为计时器（或其他设备）中断而进入内核。</p>
+<p>如果受害者进程处于睡眠状态，<code>kill</code> 的 <code>wakeup</code> 调用将导致受害者从睡眠中恢复。这具有潜在的危险，因为正在等待的条件可能不成立。但是，xv6 对 <code>sleep</code> 的调用始终包含在 <code>while</code> 循环中，该循环在 <code>sleep</code> 返回后重新测试条件。一些对 <code>sleep</code> 的调用还会在循环中测试 <code>p-&gt;killed</code>，如果设置了，则放弃当前活动。只有当这种放弃是正确的时候才会这样做。</p>
+<p>一些特定的情况下，xv6 中的 <code>sleep</code> 循环不会检查进程控制块中的 <code>killed</code> 标志。这是因为这些代码位于一个多步系统调用的中间阶段，而这些阶段应该是原子性的。其中一个例子是 <code>virtio</code> 驱动程序，它没有检查 <code>p-&gt;killed</code>，因为磁盘操作可能是一组写操作中的一个，而这些写操作都是为了使文件系统处于正确状态而必要的。如果一个进程在等待磁盘 I/O 时被终止，它将不会退出，直到完成当前的系统调用，并且用户 trap 发现了 <code>killed</code> 标志。</p>
+</section>
+<section id="进程锁" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="进程锁"><span class="header-section-number">1.4</span> 进程锁</h3>
+<p>与每个进程关联的锁 (<code>p-&gt;lock</code>) 是 xv6 中最复杂的锁。考虑 <code>p-&gt;lock</code> 的一个简单方法是，在读取或写入以下任何 <code>struct proc</code> 字段时必须保持它：<code>p-&gt;state</code>、<code>p-&gt;chan</code>、<code>p-&gt;killed</code>、<code>p-&gt;xstate</code> 和 <code>p -&gt;pid</code>。这些字段可以由其他进程或其他核心上的调度程序线程使用，因此它们很自然地必须受到锁的保护。</p>
+<p>然而，<code>p-&gt;lock</code> 的大多数用途都是保护 xv6 进程数据结构和算法的更高级别方面。这是 <code>p-&gt;lock</code> 所做的全套事情：</p>
+<ol type="1">
+<li><p>防止进程槽位分配竞争：<code>p-&gt;lock</code> 与 <code>p-&gt;state</code> 一起，防止在为新进程分配 <code>proc[]</code> 槽位时出现竞争。</p></li>
+<li><p>隐藏进程：在进程创建或销毁期间，<code>p-&gt;lock</code> 将进程隐藏起来，防止外部观察到它的存在。</p></li>
+<li><p>防止父进程等待收集僵尸进程：防止父进程的 <code>wait</code> 调用收集到已经将状态设置为 <code>ZOMBIE</code> 但尚未让出 CPU 的进程。</p></li>
+<li><p>防止另一个内核调度器在进程调用 <code>swtch</code> 之前运行 <code>RUNNABLE</code> 进程。</p></li>
+<li><p>防止定时器中断导致进程在调用 <code>swtch</code> 时让出 CPU。</p></li>
+<li><p>与条件锁一起防止 <code>wakeup</code> 忽略正在调用 <code>sleep</code> 但尚未让出 CPU 的进程。</p></li>
+<li><p>防止 <code>kill</code> 的受害进程退出，并可能在 <code>kill</code> 检查 <code>p-&gt;pid</code> 和设置 <code>p-&gt;killed</code> 之间重新分配。</p></li>
+<li><p>使 <code>kill</code> 的检查和写入 <code>p-&gt;state</code> 具有原子性。</p></li>
+</ol>
+<p>此外，<code>p-&gt;parent</code> 字段由全局锁 <code>wait_lock</code> 保护，而不是由 <code>p-&gt;lock</code> 保护。只有进程的父进程修改 <code>p-&gt;parent</code>，尽管该字段既由进程自身读取，也由其他搜索其子进程的进程读取。<code>wait_lock</code> 的作用是在 <code>wait</code> 等待任何子进程退出时作为条件锁。退出的子进程会持有 <code>wait_lock</code> 或 <code>p-&gt;lock</code>，直到将其状态设置为 <code>ZOMBIE</code>，唤醒其父进程并让出 CPU 之后才会释放。<code>wait_lock</code> 还串行化了父进程和子进程的并发退出，以确保 <code>init</code> 进程能够从其等待中被唤醒。<code>wait_lock</code> 是一个全局锁，而不是每个父进程的单独锁，因为在一个进程获得它之前，它无法知道谁是其父进程。</p>
+</section>
+<section id="real-world" class="level3" data-number="1.5">
+<h3 data-number="1.5" class="anchored" data-anchor-id="real-world"><span class="header-section-number">1.5</span> Real World</h3>
+<p>xv6调度器实现了一个简单的调度策略，它依次运行每个进程。此策略称为 <strong>round robin</strong>。真实的操作系统实施更复杂的策略，例如允许进程具有优先级。这个想法是，调度程序将优先选择可运行的高优先级进程，而非可运行的低优先级进程。这些策略可能很快就会变得复杂，因为经常存在相互竞争的目标：例如，操作系统可能还希望保证公平性和高吞吐量。此外，复杂的策略可能会导致意外的交互，例如<strong>优先级反转</strong> (priority inversion) 和 <strong>convoys</strong>。当低优先级进程和高优先级进程都使用特定的锁时，就会发生优先级反转，当低优先级进程获取该锁时，会阻止高优先级进程取得进展。当许多高优先级进程正在等待获取共享锁的低优先级进程时，就会形成一长串等待进程；convoys 一旦形成，就可以持续很长时间。为了避免此类问题，复杂的调度程序需要额外的机制。</p>
+<p><code>sleep</code> 和 <code>wakeup</code> 是一种简单而有效的同步方法，但还有很多其他方法。所有这些挑战中的第一个挑战是避免我们在本章开头看到的 lost wakeup 问题。最初的 UNIX 内核的 <code>sleep</code> 只是禁用中断，这已经足够了，因为 UNIX 运行在单 CPU 系统上。由于 xv6 在多处理器上运行，因此它添加了显式的睡眠锁。 FreeBSD 的 <code>msleep</code> 采用了相同的方法。 Plan 9 的 <code>sleep</code> 使用回调函数，该函数在睡眠前持有调度锁的情况下运行；该功能用作睡眠状况的最后一刻检查，以避免丢失唤醒。 Linux 内核的 <code>sleep</code> 使用显式进程队列，称为等待队列；队列有自己的内部锁。</p>
+<p>替代在 <code>wakeup</code> 中扫描整个进程集合的低效方法是使用等待队列。Plan 9 中的 <code>sleep</code> 和 <code>wakeup</code> 称之为 rendezvous point。许多线程库将这种结构称为条件变量 (condition variable)，在这种上下文中，<code>sleep</code> 操作和 <code>wakeup</code> 操作被称为 <code>wait</code> 和 <code>signal</code>。所有这些机制都共享相同的特征：在等待过程中，睡眠条件受到某种锁的保护，在睡眠期间原子地释放。</p>
+<p>当有多个进程等待唤醒时，操作系统会调度所有这些进程，它们会竞争检查睡眠条件。这种行为的进程有时被称为 thundering herd，最好避免。大多数条件变量都有两个方法来唤醒等待的进程：<code>signal</code> 唤醒一个进程，<code>broadcast</code> 唤醒所有等待的进程。</p>
+<p>信号量通常用于同步。计数通常对应于诸如管道缓冲区中可用字节的数量或进程拥有的僵尸子进程的数量。使用显式计数作为抽象的一部分可以避免 lost wakeup 问题，因为有一个显式的计数记录唤醒的次数。</p>
+<p>在操作系统中终止和清理进程引入了许多复杂性。处理深度睡眠中的受害进程的栈取消回溯需要小心，因为调用栈上的每个函数可能需要进行一些清理工作。一些语言通过提供异常机制来简化这个过程，但 C 语言不提供这种机制。</p>
+<p>xv6 对 <code>kill</code> 的支持并不完全令人满意。相关的问题是，在一个线程即将进入睡眠状态时，<code>kill</code> 可能会设置 <code>p-&gt;killed</code> 并尝试唤醒此受害者。如果受害者在检查完 <code>p-&gt;killed</code> 之后但在调用 <code>sleep</code> 之前被尝试唤醒，那么受害者可能直到等待的条件发生后才会注意到 <code>p-&gt;killed</code>。这个时间可能很长，甚至到永远（比如受害者进程等待 <code>console</code> 输入，但是用户一直不输入）。</p>
+<p>真正的操作系统会在常数时间内找到具有空闲列表的空闲 <code>proc</code> 结构，而不是在 <code>allocproc</code> 中进行线性时间搜索；xv6 只是为了简单起见。</p>
+</section>
+</section>
+<section id="lecture" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="lecture"><span class="header-section-number">2</span> Lecture</h2>
+<p>并无新鲜事。</p>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb4" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Lec12 Coordination"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="an">order:</span><span class="co"> 12</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2024-4-6</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> last-modified</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "sleep 与 wakeup。"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## 课前准备</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Read remainder of "Scheduling", and corresponding parts of </span><span class="in">`kernel/proc.c`</span><span class="at">, </span><span class="in">`kernel/sleeplock.c`</span><span class="at">.</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="fu">### sleep 和 wakeup</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>进程睡眠允许内核线程等待特定事件，让出的 CPU 可以去做其他的工作，待事件回复时唤醒进程。</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>考虑生产者-消费者问题，使用锁的实现为：</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> semaphore <span class="op">{</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> spinlock lock<span class="op">;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> count<span class="op">;</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> V<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    s<span class="op">-&gt;</span>count <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> P<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span><span class="op">(</span>s<span class="op">-&gt;</span>count <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    s<span class="op">-&gt;</span>count <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>以上的实现是开销很大的，当生产者生产效率很低时，持续高速的询问会耗费很多资源。我们引入 sleep 和 wakeup 机制：</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="in">``` {.c code-line-numbers="true"}</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="in">void V(struct semaphore *s)</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="in">{</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="in">    acquire(&amp;s-&gt;lock);</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a><span class="in">    s-&gt;count += 1;</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a><span class="in">    wakeup(s);</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="in">    release(&amp;s-&gt;lock);</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="in">}</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="in">void P(struct semaphore *s)</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="in">{</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="in">    while(s-&gt;count == 0)</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a><span class="in">        sleep(s);</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="in">    acquire(&amp;s-&gt;lock);</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a><span class="in">    s-&gt;count -= 1;</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a><span class="in">    release(&amp;s-&gt;lock);</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a><span class="in">}</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>当消费者没有得到资源时，睡觉，等到生产者生产了资源再唤醒消费者。但这样有一个问题：lost wakeup。考虑刚刚执行完第 11 行，正准备执行下一行时，第二个线程在消费者上执行，它唤醒了一个不存在的信号量，因此无事发生。但实际上这个信号量正是第 12 行将要送去睡觉的那个。此时第 12 行被执行，但是它由于已经在睡觉之前被唤醒过，再也无法被唤醒，系统停摆。</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>为了修复这个错误，我们需要将第 11 到 12 行变为一个原子操作。一个可能的想法是，将消费者的 <span class="in">`acquire`</span> 提前到最开始，但这又会导致死锁的问题：睡眠的线程由于一直持有锁，唤醒线程无法获取锁。因此我们需要在线程睡眠时同时释放锁，这导出了我们最终的实现：</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> V<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>    s<span class="op">-&gt;</span>count <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>    wakeup<span class="op">(</span>s<span class="op">);</span></span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> P<span class="op">(</span><span class="kw">struct</span> semaphore <span class="op">*</span>s<span class="op">)</span></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>    acquire<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span><span class="op">(</span>s<span class="op">-&gt;</span>count <span class="op">==</span> <span class="dv">0</span><span class="op">)</span></span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>        sleep<span class="op">(</span>s<span class="op">,</span> <span class="op">&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>    s<span class="op">-&gt;</span>count <span class="op">-=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>    release<span class="op">(&amp;</span>s<span class="op">-&gt;</span>lock<span class="op">);</span></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a><span class="fu">### Code: sleep and wakeup</span></span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>基本思想是让 <span class="in">`sleep`</span> 将当前进程标记为 <span class="in">`SLEEPING`</span>，然后调用 <span class="in">`sched`</span> 释放 CPU；<span class="in">`wakeup`</span> 查找在给定等待 channel 上休眠的进程并将其标记为 <span class="in">`RUNNABLE`</span>。睡眠和唤醒的呼叫者可以使用任何彼此方便的号码作为 channel，xv6 经常使用参与等待的内核数据结构的地址。</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>有时会出现多个进程在同一个通道上休眠的情况；例如，多个进程从管道读取数据。一次唤醒调用即可将它们全部唤醒。其中一个将首先运行并获取调用 <span class="in">`sleep`</span> 所用的锁，并且读取管道中等待的任何数据。其他进程会发现，尽管被唤醒，却没有数据可读取。从他们的角度来看，这次唤醒是“虚假的”，他们必须再次入睡。因此，总是在检查条件的循环内调用 <span class="in">`sleep`</span>。</span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a><span class="fu">### Code：Wait, exit, and kill</span></span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>子进程在 <span class="in">`exit`</span> 会被设置为 <span class="in">`ZOMBIE`</span> 状态，待父进程的 <span class="in">`wait`</span> 重新发现它时恢复为 <span class="in">`UNUSED`</span>，如果父进程在子进程退出之前就先退出，则子进程会被交给 <span class="in">`init`</span> 进程，它会永久调用 <span class="in">`wait`</span>，因此每个子进程都需要一个父进程来清理。</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a><span class="in">`wait`</span> 通过获取 <span class="in">`wait_lock`</span> 开始，<span class="in">`wait_lock`</span> 充当条件锁，有助于确保父级不会错过退出子级的唤醒。然后 <span class="in">`wait`</span> 扫描进程表。如果它发现一个处于 <span class="in">`ZOMBIE`</span> 状态的子进程，它会释放该子进程的资源及其 <span class="in">`proc`</span> 结构，将子进程的退出状态复制到提供给 <span class="in">`wait`</span> 的地址（如果不为 0），并返回子进程的进程 ID。如果 <span class="in">`wait`</span> 找到子进程但没有退出，它会调用 <span class="in">`sleep`</span> 来等待它们中的任何一个退出，然后再次扫描。 <span class="in">`wait`</span> 经常持有两个锁，<span class="in">`wait_lock`</span> 和某些进程的 <span class="in">`pp-&gt;lock`</span>；避免死锁的顺序是先 <span class="in">`wait_lock`</span>，然后 <span class="in">`pp-&gt;lock`</span>。</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a><span class="in">`exit`</span> 记录退出状态，释放一些资源，调用 <span class="in">`reparent`</span> 把子进程给 <span class="in">`init`</span> 进程，唤醒父进程，然后将调用者标记为僵尸，然后永久让出 CPU。在将其状态设置为 <span class="in">`ZOMBIE`</span> 之前，<span class="in">`exit`</span> 就唤醒父进程可能看起来不正确，但这是安全的：虽然唤醒可能会导致父进程运行，但 <span class="in">`wait`</span> 中的循环因为没有获取到 <span class="in">`p-&gt;lock`</span> 而无法进行检查，直到 <span class="in">`p-&gt;lock`</span> 被 <span class="in">`scheduler`</span> 释放。</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a><span class="in">`exit`</span> 允许进程自行终止，而 <span class="in">`kill`</span> 则允许一个进程请求另一个进程终止。如果直接销毁受害者进程，<span class="in">`kill`</span> 会太复杂，因为受害者可能正在另一个 CPU 上执行，也许正在对内核数据结构进行敏感的更新。因此，<span class="in">`kill`</span> 做的事情很少：它只是设置受害者的 <span class="in">`p-&gt;killed`</span>，如果它正在睡觉，则将其唤醒。最终，受害者将进入或离开内核，此时，如果设置了 <span class="in">`p-&gt;killed`</span>，<span class="in">`usertrap`</span> 中的代码将调用 <span class="in">`exit`</span>（它通过调用 <span class="in">`killed`</span> 进行检查）。如果受害者运行在用户空间，它很快就会通过系统调用或因为计时器（或其他设备）中断而进入内核。</span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>如果受害者进程处于睡眠状态，<span class="in">`kill`</span> 的 <span class="in">`wakeup`</span> 调用将导致受害者从睡眠中恢复。这具有潜在的危险，因为正在等待的条件可能不成立。但是，xv6 对 <span class="in">`sleep`</span> 的调用始终包含在 <span class="in">`while`</span> 循环中，该循环在 <span class="in">`sleep`</span> 返回后重新测试条件。一些对 <span class="in">`sleep`</span> 的调用还会在循环中测试 <span class="in">`p-&gt;killed`</span>，如果设置了，则放弃当前活动。只有当这种放弃是正确的时候才会这样做。</span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>一些特定的情况下，xv6 中的 <span class="in">`sleep`</span> 循环不会检查进程控制块中的 <span class="in">`killed`</span> 标志。这是因为这些代码位于一个多步系统调用的中间阶段，而这些阶段应该是原子性的。其中一个例子是 <span class="in">`virtio`</span> 驱动程序，它没有检查 <span class="in">`p-&gt;killed`</span>，因为磁盘操作可能是一组写操作中的一个，而这些写操作都是为了使文件系统处于正确状态而必要的。如果一个进程在等待磁盘 I/O 时被终止，它将不会退出，直到完成当前的系统调用，并且用户 trap 发现了 <span class="in">`killed`</span> 标志。</span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a><span class="fu">### 进程锁</span></span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>与每个进程关联的锁 (<span class="in">`p-&gt;lock`</span>) 是 xv6 中最复杂的锁。考虑 <span class="in">`p-&gt;lock`</span> 的一个简单方法是，在读取或写入以下任何 <span class="in">`struct proc`</span> 字段时必须保持它：<span class="in">`p-&gt;state`</span>、<span class="in">`p-&gt;chan`</span>、<span class="in">`p-&gt;killed`</span>、<span class="in">`p-&gt;xstate`</span> 和 <span class="in">`p -&gt;pid`</span>。这些字段可以由其他进程或其他核心上的调度程序线程使用，因此它们很自然地必须受到锁的保护。</span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>然而，<span class="in">`p-&gt;lock`</span> 的大多数用途都是保护 xv6 进程数据结构和算法的更高级别方面。这是 <span class="in">`p-&gt;lock`</span> 所做的全套事情：</span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>防止进程槽位分配竞争：<span class="in">`p-&gt;lock`</span> 与 <span class="in">`p-&gt;state`</span> 一起，防止在为新进程分配 <span class="in">`proc[]`</span> 槽位时出现竞争。</span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>隐藏进程：在进程创建或销毁期间，<span class="in">`p-&gt;lock`</span> 将进程隐藏起来，防止外部观察到它的存在。</span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>防止父进程等待收集僵尸进程：防止父进程的 <span class="in">`wait`</span> 调用收集到已经将状态设置为 <span class="in">`ZOMBIE`</span> 但尚未让出 CPU 的进程。</span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a><span class="ss">4.  </span>防止另一个内核调度器在进程调用 <span class="in">`swtch`</span> 之前运行 <span class="in">`RUNNABLE`</span> 进程。</span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a><span class="ss">5.  </span>防止定时器中断导致进程在调用 <span class="in">`swtch`</span> 时让出 CPU。</span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a><span class="ss">6.  </span>与条件锁一起防止 <span class="in">`wakeup`</span> 忽略正在调用 <span class="in">`sleep`</span> 但尚未让出 CPU 的进程。</span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a><span class="ss">7.  </span>防止 <span class="in">`kill`</span> 的受害进程退出，并可能在 <span class="in">`kill`</span> 检查 <span class="in">`p-&gt;pid`</span> 和设置 <span class="in">`p-&gt;killed`</span> 之间重新分配。</span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a><span class="ss">8.  </span>使 <span class="in">`kill`</span> 的检查和写入 <span class="in">`p-&gt;state`</span> 具有原子性。</span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a>此外，<span class="in">`p-&gt;parent`</span> 字段由全局锁 <span class="in">`wait_lock`</span> 保护，而不是由 <span class="in">`p-&gt;lock`</span> 保护。只有进程的父进程修改 <span class="in">`p-&gt;parent`</span>，尽管该字段既由进程自身读取，也由其他搜索其子进程的进程读取。<span class="in">`wait_lock`</span> 的作用是在 <span class="in">`wait`</span> 等待任何子进程退出时作为条件锁。退出的子进程会持有 <span class="in">`wait_lock`</span> 或 <span class="in">`p-&gt;lock`</span>，直到将其状态设置为 <span class="in">`ZOMBIE`</span>，唤醒其父进程并让出 CPU 之后才会释放。<span class="in">`wait_lock`</span> 还串行化了父进程和子进程的并发退出，以确保 <span class="in">`init`</span> 进程能够从其等待中被唤醒。<span class="in">`wait_lock`</span> 是一个全局锁，而不是每个父进程的单独锁，因为在一个进程获得它之前，它无法知道谁是其父进程。</span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a><span class="fu">### Real World</span></span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a>xv6调度器实现了一个简单的调度策略，它依次运行每个进程。此策略称为 **round robin**。真实的操作系统实施更复杂的策略，例如允许进程具有优先级。这个想法是，调度程序将优先选择可运行的高优先级进程，而非可运行的低优先级进程。这些策略可能很快就会变得复杂，因为经常存在相互竞争的目标：例如，操作系统可能还希望保证公平性和高吞吐量。此外，复杂的策略可能会导致意外的交互，例如**优先级反转** (priority inversion) 和 **convoys**。当低优先级进程和高优先级进程都使用特定的锁时，就会发生优先级反转，当低优先级进程获取该锁时，会阻止高优先级进程取得进展。当许多高优先级进程正在等待获取共享锁的低优先级进程时，就会形成一长串等待进程；convoys 一旦形成，就可以持续很长时间。为了避免此类问题，复杂的调度程序需要额外的机制。</span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a><span class="in">`sleep`</span> 和 <span class="in">`wakeup`</span> 是一种简单而有效的同步方法，但还有很多其他方法。所有这些挑战中的第一个挑战是避免我们在本章开头看到的 lost wakeup 问题。最初的 UNIX 内核的 <span class="in">`sleep`</span> 只是禁用中断，这已经足够了，因为 UNIX 运行在单 CPU 系统上。由于 xv6 在多处理器上运行，因此它添加了显式的睡眠锁。 FreeBSD 的 <span class="in">`msleep`</span> 采用了相同的方法。 Plan 9 的 <span class="in">`sleep`</span> 使用回调函数，该函数在睡眠前持有调度锁的情况下运行；该功能用作睡眠状况的最后一刻检查，以避免丢失唤醒。 Linux 内核的 <span class="in">`sleep`</span> 使用显式进程队列，称为等待队列；队列有自己的内部锁。</span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a>替代在 <span class="in">`wakeup`</span> 中扫描整个进程集合的低效方法是使用等待队列。Plan 9 中的 <span class="in">`sleep`</span> 和 <span class="in">`wakeup`</span> 称之为 rendezvous point。许多线程库将这种结构称为条件变量 (condition variable)，在这种上下文中，<span class="in">`sleep`</span> 操作和 <span class="in">`wakeup`</span> 操作被称为 <span class="in">`wait`</span> 和 <span class="in">`signal`</span>。所有这些机制都共享相同的特征：在等待过程中，睡眠条件受到某种锁的保护，在睡眠期间原子地释放。</span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a>当有多个进程等待唤醒时，操作系统会调度所有这些进程，它们会竞争检查睡眠条件。这种行为的进程有时被称为 thundering herd，最好避免。大多数条件变量都有两个方法来唤醒等待的进程：<span class="in">`signal`</span> 唤醒一个进程，<span class="in">`broadcast`</span> 唤醒所有等待的进程。</span>
+<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a>信号量通常用于同步。计数通常对应于诸如管道缓冲区中可用字节的数量或进程拥有的僵尸子进程的数量。使用显式计数作为抽象的一部分可以避免 lost wakeup 问题，因为有一个显式的计数记录唤醒的次数。</span>
+<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a>在操作系统中终止和清理进程引入了许多复杂性。处理深度睡眠中的受害进程的栈取消回溯需要小心，因为调用栈上的每个函数可能需要进行一些清理工作。一些语言通过提供异常机制来简化这个过程，但 C 语言不提供这种机制。</span>
+<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a>xv6 对 <span class="in">`kill`</span> 的支持并不完全令人满意。相关的问题是，在一个线程即将进入睡眠状态时，<span class="in">`kill`</span> 可能会设置 <span class="in">`p-&gt;killed`</span> 并尝试唤醒此受害者。如果受害者在检查完 <span class="in">`p-&gt;killed`</span> 之后但在调用 <span class="in">`sleep`</span> 之前被尝试唤醒，那么受害者可能直到等待的条件发生后才会注意到 <span class="in">`p-&gt;killed`</span>。这个时间可能很长，甚至到永远（比如受害者进程等待 <span class="in">`console`</span> 输入，但是用户一直不输入）。</span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a>真正的操作系统会在常数时间内找到具有空闲列表的空闲 <span class="in">`proc`</span> 结构，而不是在 <span class="in">`allocproc`</span> 中进行线性时间搜索；xv6 只是为了简单起见。</span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a><span class="fu">## Lecture</span></span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a>并无新鲜事。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p><a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="https://creativecommons.org/wp-content/themes/vocabulary-theme/vocabulary/svg/cc/icons/cc-icons.svg#cc-logo" class="img-fluid" alt="CC" width="25"><img src="https://creativecommons.org/wp-content/themes/vocabulary-theme/vocabulary/svg/cc/icons/cc-icons.svg#cc-by" class="img-fluid" alt="CC" width="25"><img src="https://creativecommons.org/wp-content/themes/vocabulary-theme/vocabulary/svg/cc/icons/cc-icons.svg#cc-sa" class="img-fluid" alt="CC" width="25"></a></p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
