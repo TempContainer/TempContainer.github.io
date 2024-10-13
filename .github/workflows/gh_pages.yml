@@ -1,4 +1,4 @@
-name: Generate Websites
+name: Render and Publish
 
 on:
   push:
@@ -7,18 +7,23 @@ on:
 
 permissions:
   pages: write
-  id-token: write
-  contents: read
+  contents: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Install Quarto
+        uses: actions/checkout@v4
+      - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
-      - name: Render Quarto Document
-        uses: quarto-dev/quarto-actions/render@v2
-      - name: Publish Quarto Document
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Python
+        uses: actions/setup-python@v3
+      - name: Publish to GitHub Pages (and render)
         uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
