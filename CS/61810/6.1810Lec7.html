@@ -2,14 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.549">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2024-03-20">
 <meta name="description" content="COW fork, lazy allocation, demand page, mmap">
 
-<title>Lec7 Page Faults</title>
+<title>Lec7 Page Faults – Thought Container</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -35,7 +35,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -120,7 +120,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -139,7 +139,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
-          <div class="quarto-navbar-tools">
+            <div class="quarto-navbar-tools">
   <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
   <div class="quarto-reader-toggle-btn">
   <i class="bi"></i>
@@ -150,11 +150,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec1.html">6.1810 Operating System Engineering 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/61810/6.1810Lec7.html">Lec7 Page Faults</a></li></ol></nav>
-        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -169,7 +169,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../../CS/CS.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Computer Science</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -178,7 +178,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../../CS/MoveToModernCpp.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">步入现当代 C++</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -205,9 +205,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
  <span class="menu-text">6.1810 Operating System Engineering 笔记</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -294,9 +294,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
  <span class="menu-text">CS144 Introduction to Computer Networking 笔记</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -323,29 +323,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../../CS/CS144/CS144Unit3.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Unit3: Packet Switching</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-          <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false">
- <span class="menu-text">三维重建</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../CS/3d-reconstruction/colmap-notes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">colmap 源码阅读</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../CS/3d-reconstruction/sfm-revisited.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Structure-from-Motion Revisited 阅读笔记</span></a>
   </div>
 </li>
       </ul>
@@ -425,9 +402,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 <p><code>scause</code> 寄存器会标示 page fault 的类型，<code>stval</code> 寄存器存有无法翻译的地址。</p>
 <p>COW fork 的基本思想是父子进程在刚开始享有同一片物理内存，但是是只读的（<code>PTE_W</code> 未设置）。当任何一方要向某一页写入数据时，RISC-V CPU 会引发一个 page-fault exception。内核的 trap handler 会分配一个页的物理内存并复制引发异常的页的内容，并修改对应的 PTE 标识。此时恢复并重新执行刚才出错的命令，由于这次有了写权限，命令照常执行。COW fork 需要一个记事簿<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>（book-keeping）来帮助决定哪个页面可以被释放，因为每个页都有可能被很多进程共享。</p>
-<div class="no-row-height column-margin column-container"><p><sup>1</sup>&nbsp;其实就是引用计数。</p></div><p>另一个广泛应用的是 lazy allocation。当进程通过 <code>sbrk</code> 申请更多空间时，内核注意到了空间的扩张，但并未真正分配内存。当新地址上出现了 page fault，内核才会真正分配内存并在页表上建立映射。</p>
+<div class="no-row-height column-margin column-container"><div id="fn1"><p><sup>1</sup>&nbsp;其实就是引用计数。</p></div></div><p>另一个广泛应用的是 lazy allocation。当进程通过 <code>sbrk</code> 申请更多空间时，内核注意到了空间的扩张，但并未真正分配内存。当新地址上出现了 page fault，内核才会真正分配内存并在页表上建立映射。</p>
 <p>另一个广泛使用的是 demand page。在 <code>exec</code> 中，xv6 加载应用程序的所有文本和数据都 eagerly<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> 存入内存。由于应用程序可能很大并且从磁盘读取数据的成本很高，这种启动成本可能会引起用户的注意：当用户从 shell 启动大型应用程序，可能需要很长时间才能看到响应。现代内核为用户地址空间创建页表，但标记页面 PTE 无效。发生 page fault 时，内核从磁盘读取页面内容并将其映射到用户地址空间。</p>
-<div class="no-row-height column-margin column-container"><p><sup>2</sup>&nbsp;与 lazy 相对。</p></div><p>计算机上运行的程序可能需要比计算机 RAM 更多的内存。为了优雅地应对，操作系统可能会实现 <strong>paging on disk</strong>。这个想法是只将一小部分用户页存储在 RAM 中，并将其余部分存储在磁盘的 <strong>paging area</strong> 中。内核将与存储在 paging area（因此不在 RAM 中）的内存相对应的 PTE 标记为无效。如果应用程序尝试使用已 <strong>paged out</strong> 到磁盘的页面之一，则应用程序将引发 page fault，并且必须将页面 <strong>paged in</strong>：内核 trap handler 将分配物理 RAM 页面，从磁盘写入 RAM，并修改相关 PTE 指向 RAM。</p>
+<div class="no-row-height column-margin column-container"><div id="fn2"><p><sup>2</sup>&nbsp;与 lazy 相对。</p></div></div><p>计算机上运行的程序可能需要比计算机 RAM 更多的内存。为了优雅地应对，操作系统可能会实现 <strong>paging on disk</strong>。这个想法是只将一小部分用户页存储在 RAM 中，并将其余部分存储在磁盘的 <strong>paging area</strong> 中。内核将与存储在 paging area（因此不在 RAM 中）的内存相对应的 PTE 标记为无效。如果应用程序尝试使用已 <strong>paged out</strong> 到磁盘的页面之一，则应用程序将引发 page fault，并且必须将页面 <strong>paged in</strong>：内核 trap handler 将分配物理 RAM 页面，从磁盘写入 RAM，并修改相关 PTE 指向 RAM。</p>
 <p>如果一个页面需要被 paged in，但是没有空闲的物理内存怎么办？在这种情况下，内核必须首先释放一个物理页面，将其 paged out 或者逐出（evicting）到磁盘上的 paging area，并将指向该物理页面的 PTE 标记为无效。逐出操作是昂贵的，因此分页的性能最佳时是它不频繁发生。即，应用程序只使用其内存页面的子集，并且这些子集的并集能够适应内存。这种特性通常被称为具有良好的局部性。</p>
 </section>
 <section id="lecture" class="level2" data-number="2">
@@ -483,18 +460,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -526,7 +492,29 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
   const viewSource = window.document.getElementById('quarto-view-source') ||
                      window.document.getElementById('quarto-code-tools-source');
   if (viewSource) {
@@ -580,15 +568,20 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/TempContainer\.github\.io\/");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
           // target, if specified
           link.setAttribute("target", "_blank");
           if (link.getAttribute("rel") === null) {
@@ -630,7 +623,11 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
     });
   }
   const xrefs = window.document.querySelectorAll('a.quarto-xref');
@@ -958,7 +955,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>假设文件内容是读写并且内核实现 <span class="in">`mmap`</span> 的方式是 eager 方式（不过大部分系统都不会这么做），内核会从文件的 offset 位置开始，将数据拷贝到内存，设置好 PTE 指向物理内存的位置。之后应用程序就可以使用 load 或者 store 指令来修改内存中对应的文件内容。当完成操作之后，会有一个对应的 <span class="in">`unmap`</span> 系统调用，来表明应用程序已经完成了对文件的操作，在 <span class="in">`unmap`</span> 时间点，我们需要将 dirty block 写回到文件中。我们可以很容易的找到哪些 block 是 dirty 的，因为它们在 PTE 中的 dirty bit 为 1。</span>
 <span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>当然，在任何聪明的内存管理机制中，所有的这些都是以 lazy 的方式实现。你不会立即将文件内容拷贝到内存中，而是先记录一下这个 PTE 属于这个文件描述符。相应的信息通常在 VMA (Virtual Memory Area) 结构体中保存。在 VMA 中我们会记录文件描述符，偏移量等等，这些信息用来表示对应的内存虚拟地址的实际内容在哪，这样当我们得到一个位于 VMA 地址范围的 page fault时，内核可以从磁盘中读数据，并加载到内存中。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>当然，在任何聪明的内存管理机制中，所有的这些都是以 lazy 的方式实现。你不会立即将文件内容拷贝到内存中，而是先记录一下这个 PTE 属于这个文件描述符。相应的信息通常在 VMA (Virtual Memory Area) 结构体中保存。在 VMA 中我们会记录文件描述符，偏移量等等，这些信息用来表示对应的内存虚拟地址的实际内容在哪，这样当我们得到一个位于 VMA 地址范围的 page fault时，内核可以从磁盘中读数据，并加载到内存中。</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">

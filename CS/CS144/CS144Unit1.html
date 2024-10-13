@@ -2,14 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="cn" xml:lang="cn"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.549">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2024-02-24">
 <meta name="description" content="四层网络模型">
 
-<title>Unit1: The Internet and IP</title>
+<title>Unit1: The Internet and IP – Thought Container</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -35,7 +35,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -104,7 +104,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <script type="text/javascript">
@@ -149,7 +149,7 @@ window.Quarto = {
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -168,7 +168,7 @@ window.Quarto = {
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
-          <div class="quarto-navbar-tools">
+            <div class="quarto-navbar-tools">
   <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
   <div class="quarto-reader-toggle-btn">
   <i class="bi"></i>
@@ -179,11 +179,11 @@ window.Quarto = {
     </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../CS/CS.html">Computer Science</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Lab.html">CS144 Introduction to Computer Networking 笔记</a></li><li class="breadcrumb-item"><a href="../../CS/CS144/CS144Unit1.html">Unit1: The Internet and IP</a></li></ol></nav>
-        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
   </nav>
@@ -198,7 +198,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a href="../../CS/CS.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Computer Science</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -207,7 +207,7 @@ window.Quarto = {
       <div class="sidebar-item-container"> 
             <a href="../../CS/MoveToModernCpp.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">步入现当代 C++</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -234,9 +234,9 @@ window.Quarto = {
   </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
  <span class="menu-text">6.1810 Operating System Engineering 笔记</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -323,9 +323,9 @@ window.Quarto = {
   </li>
           <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
  <span class="menu-text">CS144 Introduction to Computer Networking 笔记</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -352,29 +352,6 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="../../CS/CS144/CS144Unit3.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Unit3: Packet Switching</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-          <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false">
- <span class="menu-text">三维重建</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth2 ">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../CS/3d-reconstruction/colmap-notes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">colmap 源码阅读</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../CS/3d-reconstruction/sfm-revisited.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Structure-from-Motion Revisited 阅读笔记</span></a>
   </div>
 </li>
       </ul>
@@ -461,7 +438,7 @@ window.Quarto = {
 <li>Best effort。IP 只会在必要时才丢弃数据报。</li>
 <li>无连接（connectionless）。IP 不会为每个数据流<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>维护独立状态信息（no per-flow state）。</li>
 </ol>
-<div class="no-row-height column-margin column-container"><p><sup>1</sup>&nbsp;hop 指数据包经过路由器或节点转移到其他网络的过程。</p><p><sup>2</sup>&nbsp;数据流是一堆数据报的集合，它们同属于一个端到端的连接，比如 TCP connection。</p></div><p><strong>端到端原则</strong>：尽可能在终端主机实现特性。</p>
+<div class="no-row-height column-margin column-container"><div id="fn1"><p><sup>1</sup>&nbsp;hop 指数据包经过路由器或节点转移到其他网络的过程。</p></div><div id="fn2"><p><sup>2</sup>&nbsp;数据流是一堆数据报的集合，它们同属于一个端到端的连接，比如 TCP connection。</p></div></div><p><strong>端到端原则</strong>：尽可能在终端主机实现特性。</p>
 <p><img src="images/ip-service-model.png" class="img-fluid"></p>
 </section>
 <section id="tcp-字节流" class="level2" data-number="3">
@@ -501,7 +478,7 @@ window.Quarto = {
 <p>子网掩码（netmask）用来标识 IP 地址哪些位置是主机所在网络地址，也表示成 IP 地址的形式。比如 255.128.0.0 表示一个 9bit 掩码。两个 IP 地址如果与其掩码相与后相等，则这两个 IP 地址在同一个网络下。</p>
 <p>IP 地址由 CIDR（Classless Inter-Domain Routing）管理。CIDR 表示法：如 198.51.100.0/22 表示从 198.51.100.0 到 198.51.103.255 的 <span class="math inline">\(2^{32-22}=1024\)</span> 个 IP 地址。斜线后面的数字表示掩码的位数，掩码后的位置可以自由分配。</p>
 <p>在每个路由器的 forwarding table 中，一个 IP 地址可能会与多个地址匹配。比如 171.33.0.1 可以和 0.0.0.0/0<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> 与 171.33.0.0/16 匹配，此时我们选取具有最长公共前缀的匹配。</p>
-<div class="no-row-height column-margin column-container"><p><sup>3</sup>&nbsp;称为 default route，可以与所有 IP 地址匹配。</p></div></section>
+<div class="no-row-height column-margin column-container"><div id="fn3"><p><sup>3</sup>&nbsp;称为 default route，可以与所有 IP 地址匹配。</p></div></div></section>
 <section id="地址解析协议arpaddress-resolution-protocol" class="level2" data-number="8">
 <h2 data-number="8" class="anchored" data-anchor-id="地址解析协议arpaddress-resolution-protocol"><span class="header-section-number">8</span> 地址解析协议（ARP，Address Resolution Protocol）</h2>
 <p>ARP 是一个通过解析网络层地址来找寻数据链路层地址的网络传输协议。数据最终由网卡硬件传输，每个网卡都有独立的 MAC（Media Access Control Address） 地址（如 00:13:72:4c:d9:6a）。由于历史原因，网络层和链路层的地址是耦合在一起的。在发送一个包时，不仅需要 IP 地址，还需要对应的链路层地址。ARP 维护一个 IP 与链路层地址对应的缓存，当要发送一个包时，如果缓存上没有对应的数据，ARP 会发送一个广播请求，接收请求的对应主机会回复自己的 MAC 地址，当得到回应时 ARP 更新对应的缓存并发送数据。缓存会在保留一段时间后自动丢弃。</p>
@@ -548,18 +525,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -591,7 +557,29 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
   const viewSource = window.document.getElementById('quarto-view-source') ||
                      window.document.getElementById('quarto-code-tools-source');
   if (viewSource) {
@@ -645,15 +633,20 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/TempContainer\.github\.io\/");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
           // target, if specified
           link.setAttribute("target", "_blank");
           if (link.getAttribute("rel") === null) {
@@ -695,7 +688,11 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
     });
   }
   const xrefs = window.document.querySelectorAll('a.quarto-xref');
@@ -1052,7 +1049,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a><span class="fu">## 地址解析协议（ARP，Address Resolution Protocol）</span></span>
 <span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>ARP 是一个通过解析网络层地址来找寻数据链路层地址的网络传输协议。数据最终由网卡硬件传输，每个网卡都有独立的 MAC（Media Access Control Address） 地址（如 00:13:72:4c:d9:6a）。由于历史原因，网络层和链路层的地址是耦合在一起的。在发送一个包时，不仅需要 IP 地址，还需要对应的链路层地址。ARP 维护一个 IP 与链路层地址对应的缓存，当要发送一个包时，如果缓存上没有对应的数据，ARP 会发送一个广播请求，接收请求的对应主机会回复自己的 MAC 地址，当得到回应时 ARP 更新对应的缓存并发送数据。缓存会在保留一段时间后自动丢弃。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>ARP 是一个通过解析网络层地址来找寻数据链路层地址的网络传输协议。数据最终由网卡硬件传输，每个网卡都有独立的 MAC（Media Access Control Address） 地址（如 00:13:72:4c:d9:6a）。由于历史原因，网络层和链路层的地址是耦合在一起的。在发送一个包时，不仅需要 IP 地址，还需要对应的链路层地址。ARP 维护一个 IP 与链路层地址对应的缓存，当要发送一个包时，如果缓存上没有对应的数据，ARP 会发送一个广播请求，接收请求的对应主机会回复自己的 MAC 地址，当得到回应时 ARP 更新对应的缓存并发送数据。缓存会在保留一段时间后自动丢弃。</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">

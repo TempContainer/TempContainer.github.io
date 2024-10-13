@@ -1,243 +1,35 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Thought “Temp” Container",
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
     "section": "",
-    "text": "这个网站用来记录我学习的知识和思考的东西。"
+    "text": "About this site"
   },
   {
-    "objectID": "CS/ModernCpp/Templates.html",
-    "href": "CS/ModernCpp/Templates.html",
-    "title": "模板与泛型编程",
+    "objectID": "CS/61810/6.1810Lec13.html",
+    "href": "CS/61810/6.1810Lec13.html",
+    "title": "Lec13 File System",
     "section": "",
-    "text": "非常基础的内容会以很少的笔墨稍微提及，我们会迅速聚焦到重要主题上。",
+    "text": "Read kernel/bio.c, kernel/fs.c, kernel/sysfile.c, kernel/file.c and “File system” (except for the logging sections).\n\n文件系统的挑战：\n\n文件系统需要磁盘数据结构来表示命名目录和文件的树，记录保存每个文件内容的块的标识，并记录磁盘的哪些区域是空闲的。\n文件系统必须支持崩溃恢复。也就是说，如果发生崩溃（例如电源故障），文件系统在重新启动后仍必须正常工作。风险在于崩溃可能会中断一系列更新并留下不持久的磁盘数据结构（例如，既在文件中使用又标记为空闲的块）。\n不同的进程可能同时对文件系统进行操作，因此文件系统代码必须协调以保持不变量。\n访问磁盘比访问内存慢几个数量级，因此文件系统必须维护最常使用的块的内存缓存。\n\n\n\nxv6 的文件系统总共有七层。\n\n\n\nFile descriptor\n\n\nPathname\n\n\nDirectory\n\n\nInode\n\n\nLogging\n\n\nBuffer cache\n\n\nDisk\n\n\n\ndisk 层从 virtio 硬件驱动读写块。buffer cache 层将 disk block 缓存并且同步对它们的访问，保证对于任何特定的 block 一次只有一个内核进程能修改它。logging 层允许更高的层包装对若干块的更新为一个 transaction，确保在崩溃时原子地更新块（即全部更新或不更新）。inode 层提供单独的文件，每一个表示为一个 inode——一个唯一的 i-number 和一些持有文件数据的块。directory 层将每个目录实现为一种特殊的 inode，其内容是一系列条目，每个目录条目包含一个文件名和 i-number。pathname 层提供层级路径名，并通过递归查找解析它们。file descriptor 层使用文件系统接口抽象了许多 UNIX 资源（比如管道、设备、文件等）。\n磁盘硬件传统上将磁盘上的数据表示为 512 字节块（也称为扇区）的编号序列：扇区 0 是前 512 字节，扇区 1 是下一个，依此类推。操作系统用于其文件系统的块大小可能与磁盘使用的扇区大小不同，但通常块大小是扇区大小的倍数。xv6 在 struct buf 类型的对象中保存已读入内存的块的副本。此结构中存储的数据有时与磁盘不同步：它可能尚未从磁盘读取（磁盘正在处理它，但尚未返回扇区的内容），或者它可能已被软件更新但尚未写入磁盘。\n文件系统必须计划在磁盘上存储 inode 和内容块的位置。为此，xv6 将磁盘分为几个部分，如图 8.2 所示。文件系统不使用块 0（它保存引导扇区）。块 1 称为 superblock；它包含有关文件系统的元数据（以块为单位的文件系统大小、数据块的数量、inode 的数量以及日志中的块的数量）。从 2 开始的块保存 log。log 之后是 inode，每个块有多个 inode。之后是 bitmap 块，跟踪哪些数据块正在使用。其余块为数据块；每个都在 bitmap 块中标记为空闲，或者保存文件或目录的内容。superblock 由一个名为 mkfs 的单独程序填充，该程序构建初始文件系统。\n\n\n\n\n\n\n\n\n俩职责：(1) 同步访问以确保同一时间只有一个块的拷贝在内存里并且只有一个内核线程可以访问；(2) 将经常访问的块缓存起来。\n主要接口：bread 和 bwrite。前者获得一个包含可以在内存中读取或修改的块副本的 buf，后者将修改后的缓冲区写入磁盘上的相应块。内核线程在使用完缓冲区后必须通过调用 brelse 来释放该缓冲区。buffer cache 使用睡眠锁来确保一次只有一个线程使用每个缓冲区（以及每个磁盘块）； bread 返回一个锁定的缓冲区，brelse 释放该锁。\nbuffer cache 具有固定数量的 buffer 来保存磁盘块。如果文件系统请求 cache 里不存在的块，buffer cache 回收 LRU (least recently used) 的 buffer 来保存新的块。\n\n\n\n（以下条目通过 ChatGPT 生成）\n\n缓存管理的基本结构：\n\n缓存管理中使用了一个双向链表来表示缓存中的缓冲区（buffer）。\n在系统启动时，通过调用 binit 函数（在 kernel/main.c 的第 27 行调用），使用 buf 数组中的 NBUF 个缓冲区来初始化这个链表。\n\n缓冲区的状态：\n\n每个缓冲区有两个状态字段：valid 表示缓冲区中是否包含块的副本，disk 表示缓冲区的内容是否已经传递给磁盘，这可能会改变缓冲区的内容。\n\n缓冲区的获取：\n\nbread 函数（在 kernel/bio.c 的第 93 行）调用 bget 函数来获取给定扇区的缓冲区。\nbget 函数扫描缓冲区链表，以获取指定设备和扇区号的缓冲区。如果找到了相应的缓冲区，则获取该缓冲区的睡眠锁，并返回该缓冲区。\n如果没有缓存的缓冲区用于给定的扇区，则 bget 必须创建一个。它再次扫描缓冲区链表，以查找未使用的缓冲区。任何未使用的缓冲区都可以使用。bget 编辑缓冲区的元数据，记录新的设备和扇区号，并获取其睡眠锁。\n\n缓冲区的并发控制：\n\n重要的是每个磁盘扇区最多只能有一个缓存的缓冲区，以确保读者可以看到写入，并且文件系统使用缓冲区上的锁进行同步。\nbget 通过持续保持 bcache.lock 来确保这个不变式。这导致了对块是否存在的检查以及（如果不存在）指定一个缓冲区来保存块的操作是原子的。\n\n缓冲区的使用：\n\n当 bread 函数从磁盘读取数据（如果需要）并将缓冲区返回给其调用者后，调用者对缓冲区具有排他性使用权，可以读取或写入数据字节。\n如果调用者修改了缓冲区，它必须调用 bwrite 将更改的数据写入磁盘，然后释放缓冲区。\n\n缓冲区的释放：\n\n当调用者使用完缓冲区后，必须调用 brelse 来释放它。brelse 函数释放睡眠锁，并将缓冲区移到链表的前面。\n将缓冲区移到链表的前面使得链表按最近使用的顺序排列，即最先的缓冲区是最近被使用的，最后的是最不常用的。\nbget 中的两个循环利用了这一点：查找现有缓冲区的扫描在最坏的情况下必须处理整个链表，但从最近使用的缓冲区开始检查（从 bcache.head 开始并按照 next 指针遍历）将减少扫描时间，当引用的局部性好时。选择要重用的缓冲区的扫描通过向后扫描（跟随 prev 指针）选择最近最少使用的缓冲区。\n\n\n这里提到了两个锁，bcache.lock 用于保护缓冲区链表的访问和修改，保证其原子性。b-&gt;lock 用于保护对缓冲区内容的读写操作，以确保在一个时刻只有一个线程可以修改缓冲区的内容。\n\n\n\n（跳过了 logging 的部分）\n文件和目录内容存储在磁盘块中，这些磁盘块必须从一个空闲池中分配出来。xv6 的块分配器维护一个 bitmap，每一位上对应一个磁盘块，0 表示空闲，1 表示被使用。mkfs 会设置 bitmap 对应于引导扇区、superblock、日志块、inode 块和 bitmap 块。\nballoc 函数的实现通过循环来考虑每个块，从块 0 开始到文件系统中的总块数（sb.size）为止。它寻找位图中值为零的位，表示该块是空闲的。如果找到了空闲块，就更新 bitmap 并返回该块。为了提高效率，balloc 函数的循环分成两部分。外部循环读取 bitmap 位的每个块，内部循环检查单个 bitmap 块中的所有位。由于 buffer cache 一次只允许一个进程使用任何一个 bitmap 块，所以可以防止两个进程同时分配块时可能出现的竞争条件。\n\n\n\ninode 有两个含义，第一个是在磁盘上的数据结构，由一个文件大小和一列 data block numbers 组成。第二个是在内存上的 inode，它是磁盘上 inode 的拷贝，同时含有内核需要的其他信息。\n磁盘上的 inode 被包在一系列连续磁盘区域中，称为 inode block。每个都是相同大小，因此给定一个下标 \\(n\\)，索引它是很轻松的。实际上这个索引就称为 i-number。\n磁盘上的 inode 被定义为 struct dinode，type 字段区分文件、目录、特殊文件（设备）。如果为 0 表示空闲。nlink 统计指向这个 inode 的条目数量。size 记录文件中内容的字节数。addrs 记录持有文件内容的 disk block number。\n内核将内存中活跃的 inode 集合维护在一个表 itable 中；struct inode 是在内存中的 struct dnode 的拷贝。内核只有在 C 指针指向 inode 时才将那个 inode 拷贝到内存中。并对其维护一个共享指针1。iget 和 iput 分别获取和释放指向 inode 的指针，并修改它的引用计数。\n1 和 C++ 中的 shared_ptr 一致。iget 返回的 struct inode 可能没有任何有用的内容。为了确保它保存磁盘上 inode 的副本，代码必须调用 ilock。这会锁定 inode（以便其他进程无法锁定它）并从磁盘读取（如果尚未读取）。 iunlock 释放 inode 上的锁。将 inode 指针的获取与锁定分开有助于避免某些情况下的死锁，例如在目录查找期间。多个进程可以持有指向 iget 返回的 inode 的 C 指针，但同时只有一个进程可以锁定该 inode。\niput 这里，书上说会写入磁盘，但我并没有在源码中看到相关内容。\n文件系统中的每个文件都有一个链接计数，表示有多少个目录项指向该文件。当链接计数降至零时，表示没有任何目录项指向该文件，即文件不再可见。但是，即使链接计数为零，文件仍然可能在内存中被进程引用，例如某个进程仍然打开着该文件。这意味着如果在最后一个进程关闭文件描述符之前发生了崩溃，文件将会被标记为在磁盘上分配但没有任何目录项指向它。\n针对这个问题，两种解决方案：\n\n系统重启后会扫描整个文件系统，查找已标记为分配但没有目录项指向的文件。一旦找到这样的文件，文件系统就可以释放它们。\n文件系统会在磁盘上记录一个列表，其中包含链接计数降至零但引用计数不为零的文件的 inode 编号。当文件系统删除文件时，如果文件的引用计数达到了零，它会更新该列表，将对应的 inode 从列表中删除。在恢复时，文件系统只需释放列表中的文件。\n\nxv6 以上两种方法都没有实现。这意味着 xv6 有可能会把磁盘空间耗尽。\n\n\n\n主要是代码的实现细节，略过。\n\n\n\n(以下内容由 ChatGPT 生成）\n这段文本描述了文件系统中目录（directory）的内部实现以及两个与目录操作相关的函数：dirlookup 和 dirlink。\n\n目录结构： 目录在内部实现上类似于一个文件，其 inode 的类型为 T_DIR，而数据则是一个目录项（directory entries）的序列。每个目录项都是一个结构体 struct dirent，包含一个名称和一个 inode 编号。目录项中的名称最长为 DIRSIZ（14）个字符，如果名称长度小于 DIRSIZ，则以 NULL（0）字节终止。inode 编号为零的目录项表示空闲。\ndirlookup 函数： dirlookup 函数用于在目录中搜索具有给定名称的目录项。如果找到匹配项，则返回对应的 inode 指针（未加锁），并将 poff 设置为目录中该条目的字节偏移量，以便调用者可以编辑它。如果 dirlookup 找到正确的名称，它会更新 poff 并返回一个通过 iget 获取的未加锁的 inode。dirlookup 返回未锁定的 inode 是因为调用者已经锁定了目录 dp，因此如果 dirlookup 返回已锁定的 inode，那么如果查找的是当前目录的别名.，那么在返回之前尝试锁定 inode 就会尝试重新锁定 dp，从而导致死锁。因此，调用者可以解锁 dp，然后锁定 ip，确保一次只持有一个锁。\ndirlink 函数： dirlink 函数用于在目录 dp 中写入具有给定名称和 inode 编号的新目录项。如果名称已经存在，dirlink 返回一个错误。主循环读取目录项以寻找未分配的条目。当找到一个未分配的条目时，它提前终止循环，并将 off 设置为可用条目的偏移量。否则，循环以 dp-&gt;size 的偏移量结束。无论哪种情况，dirlink 都会在偏移量 off 处写入一个新的目录项，从而向目录中添加一个新的条目。\n\n\n\n\n(以下内容由 ChatGPT 生成）\n这段文本描述了在文件系统中执行路径名查找（path name lookup）的过程，以及其中涉及的一系列函数。\n\nnamei 函数： namei 函数路径并返回相应的 inode。它通过一系列对 dirlookup 的调用来实现路径名的解析，每次调用都对应路径中的一个路径组件。如果路径中存在多个路径组件，namei 会连续调用 dirlookup，直到找到最终的目标 inode。\nnameiparent 函数： nameiparent 函数是 namei 函数的一个变体，但它在最后一个元素之前停止，返回父目录的 inode，并将最后一个元素复制到名称中。它也调用了通用函数 namex 来执行实际的工作。\nnamex 函数： namex 函数开始决定路径解析从哪里开始。如果路径以斜杠开头，则从根目录开始解析；否则，从当前目录开始。然后，它使用 skipelem 逐个考虑路径的每个元素。每次循环迭代都必须在当前 inode ip 中查找名称。循环的每一次迭代开始时，会锁定 ip 并检查其是否为目录。如果不是，查找将失败。如果调用是 nameiparent 并且这是最后一个路径元素，则循环会提前停止。最后，循环使用 dirlookup 查找路径元素，并为下一次迭代做准备。当循环用尽路径元素时，它返回 ip。\n\n这段文本还提到了并发问题，即在进行路径名查找时，可能有多个内核线程同时执行。为了确保并发安全，xv6 采取了一些措施，例如在查找过程中保持对目录的锁定，并在释放锁定之前获取新的锁定。此外，xv6 通过维护 inode 的引用计数来避免在查找过程中删除目录或文件的风险，从而防止由此引起的不一致性。\n\n\n\n每个进程以文件描述符的形式维护自己打开的文件，这是一个 struct file，中间封装了 inode 或者管道。\nftable 是系统维护的一个全局打开的文件表。还定义了一些读写文件的方法，略过。\n\n\n\n冗长的细节，略过。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "步入现当代 C++",
-      "模板与泛型编程"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec13 File System"
     ]
   },
   {
-    "objectID": "CS/ModernCpp/Templates.html#函数模板",
-    "href": "CS/ModernCpp/Templates.html#函数模板",
-    "title": "模板与泛型编程",
-    "section": "1 函数模板",
-    "text": "1 函数模板\n假设你需要为很多不同类型的对象写一个 swap 方法，考虑到所有类型的逻辑都相差无几，我们可以使用模板来创建：\ntemplate&lt;typename T&gt;\nvoid swap(T &a, T &b) {\n    T temp {a};\n    a = b;\n    b = temp;\n}\n尖括号包裹的为模板形参，每个 typename 后都跟着一个类型的占位符。在编译时，函数模板会将形参替换并实例化为不同类型的 swap 函数。当然 typename 也可以换成 class，两个词是等价的。当然，参数里也可以写非类型参数。\ntemplate&lt;typename T, size_t N&gt; // non-type parameter",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "步入现当代 C++",
-      "模板与泛型编程"
-    ]
-  },
-  {
-    "objectID": "CS/ModernCpp/Templates.html#特化-v.s.-实例化",
-    "href": "CS/ModernCpp/Templates.html#特化-v.s.-实例化",
-    "title": "模板与泛型编程",
-    "section": "2 特化 v.s. 实例化",
-    "text": "2 特化 v.s. 实例化\n\n特化：将特定组合的实参替换模板形参的过程。\n实例化：从模板定义中生成函数定义的过程称为实例化。\n因此，每一次实例化都是由特化引发的。\n\n\n\n\n\n\ngraph BT\n    spec[\"特化\"]:::expr\n    inst[\"实例化（隐式特化）\"]\n    exp_spec[\"显式特化\"]\n    imp_inst[\"隐式实例化\"]\n    exp_inst[\"显式实例化\"]\n    classDef expr fill:#FFDAB9,stroke:#333,stroke-width:2px;\n    \n    exp_inst --&gt; inst\n    inst --&gt; spec\n    exp_spec --&gt; spec\n    imp_inst --&gt; inst\n\n\n\n\n\n\n默认情况下，模板实例化都是隐式实例化，由编译器自动执行。除非你想进行显式实例化，此时编译器会就地实例化你写的函数：\ntemplate void swap&lt;string&gt;(string &a, string &b);\n// 使用模板参数推导\ntemplate void swap(int &a, int &b);\n显式特化则是（注意并没有实例化）：\ntemplate&lt;&gt; void swap&lt;string&gt;(string &a, string &b);",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "步入现当代 C++",
-      "模板与泛型编程"
-    ]
-  },
-  {
-    "objectID": "CS/ModernCpp/Templates.html#函数模板实参推导",
-    "href": "CS/ModernCpp/Templates.html#函数模板实参推导",
-    "title": "模板与泛型编程",
-    "section": "3 （函数）模板实参推导",
-    "text": "3 （函数）模板实参推导\n模板实参推导是编译器基于函数实参类型决定函数模板实参类型的过程。\ntemplate&lt;typename T&gt; void f(ParameterType t);  f(SomeExpression);\n通过给定的 f 和 SomeExpression，编译需要决定 ParameterType 和 T，注意到它们两个不一定相同，如 PararmeterType 取 const string& 时，T 取 string。\n最简单的情况是显式指定模板实参 f&lt;SomeTemplateArgument&gt;(SomeExpression);，此时推导是平凡的：\n\n\n\n\n\n\n\ntemplate&lt;class T&gt;\nvoid f(T t);\n// T is double\n// ParameterType is double\ndouble d = 2.78;\nf&lt;double&gt;(d);\ntemplate&lt;class T&gt;\nvoid f(T const& t);\n// T is double\n// ParameterType is double const&\ndouble d = 2.78;\nf&lt;double&gt;(d);\n\n\n\n否则，编译器将同时根据 SomeExpression 和 ParameterType 来决定，有下表：\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nType of ParameterType\n\n\n\n\n\n\n\n\nType of SomeExpression\nT\nT const*\nT const&\nT const&&\nT*\nT&\nT&&\n\n\nint const\nint\n-\nint\n-\n-\nint\nint\n\n\nint const*\nint const*\nint\nint const*\nint const*\nint const\n-\nint const*\n\n\nint const&\nint\n-\nint\n-\n-\nint const\nint const&\n\n\nint const&&\nint\n-\nint\nint\nint const\nint const\nint const\n\n\nint\nint\n-\nint\n-\n-\nint\nint\n\n\nint*\nint*\nint\nint*\nint*\nint\nint*\nint*\n\n\nint&\nint\n-\nint\n-\n-\n-\nint&\n\n\nint&&\nint\n-\nint\nint\nint\nint\nint\n\n\n\n编译器会将二者相互作用的结果直接替换 T。\n注意到，这里面发生了引用折叠，我们在移动语义一章中做了介绍。\n\n3.1 返回值推导\n如果返回值依赖模板参数，可以使用 auto 来让编译器推导，或使用 common_type_t 等 type_traits 来推导。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "步入现当代 C++",
-      "模板与泛型编程"
-    ]
-  },
-  {
-    "objectID": "CS/ModernCpp/Templates.html#类模板",
-    "href": "CS/ModernCpp/Templates.html#类模板",
-    "title": "模板与泛型编程",
-    "section": "4 类模板",
-    "text": "4 类模板\n假设我们想定义一个栈的模板类（注意这里面的模板形参 T 的影响范围）：\ntemplate&lt;class T&gt; // The scope of template parameter T begins here...\nclass Stack{\n    vector&lt;T&gt; m_data;\npublic:\n    bool is_empty() const;\n    T const& top() const;\n    void pop();\n    void push(T const& t);\n    Stack push_all_from(Stack const& other);\n}; // ...and ends here.\n\ntemplate&lt;class T&gt;\nStack&lt;T&gt; Stack&lt;T&gt;::/* Class scope begins here... */push_all_from(Stack const& other)\n{\n    Stack tmp(*this);\n    m_data.insert(m_data.end(), other.begin(), other.end());\n    return tmp;\n} // ...and ends here.\n\n4.1 待决名\n由于我们用 vector 的尾元素模拟栈顶，因此迭代器应当反向。我们现在需要在类模板中定义类型别名，比如\nusing const_iterator = vector&lt;T&gt;::const_reverse_iterator;\n但编译器会报错：error: missing typename prior to dependent type name...。这是因为 vector&lt;T&gt; 是依赖于模板形参 T 的，那么类中别名 const_iterator 也被传递依赖于 T。为了修复，我们需要向编译器“保证”它确实是一个类型名，并一定存在。\nusing const_iterator = typename vector&lt;T&gt;::const_reverse_iterator;\n此时我们可以定义 begin() 和 end()：\ntemplate&lt;class T&gt;\nclass Stack{\n    ...\npublic:\n    using const_iterator = typename vector&lt;T&gt;::const_reverse_iterator;\n    const_iterator begin() const {\n        return m_data.crbegin();\n    }\n    const_iterator end() const;\n    ...\n};\n\n// 注意在类作用域外的函数定义，typename 也是必须的\ntemplate&lt;class T&gt;\ntypename Stack&lt;T&gt;::const_iterator Stack&lt;T&gt;::end() const {\n    return m_data.crend();\n}\n// 当然，可以通过尾置类型返回直接交给编译器推导\ntemplate&lt;class T&gt;\nauto Stack&lt;T&gt;::end() const -&gt; const_iterator {\n    return m_data.crend();\n}\n类模板中的静态变量在 C++17 之后可以直接通过 inline static ... 在模板中定义。\n\n\n4.2 模板全特化\ntemplate&lt;&gt;\nclass stack&lt;int&gt; {\n    vector&lt;int&gt; m_data;\npublic:\n    bool is_empty() const;\n    int top() const;\n    void pop();\n    void push(int t);\n    void push_from( string const& s);\n};\n\nvoid Stack&lt;int&gt;::push_from(string const& s) {\n    m_data.insert(m_data.end(), s.begin(), s.end());\n}\n全特化的类外函数定义没有 template 标识符，意味着它不是 inline 的。\n\n\n4.3 模板偏特化\n//TODO",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "步入现当代 C++",
-      "模板与泛型编程"
-    ]
-  },
-  {
-    "objectID": "CS/ModernCpp/Templates.html#concepts",
-    "href": "CS/ModernCpp/Templates.html#concepts",
-    "title": "模板与泛型编程",
-    "section": "5 Concepts",
-    "text": "5 Concepts\n//TODO",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "步入现当代 C++",
-      "模板与泛型编程"
-    ]
-  },
-  {
-    "objectID": "CS/ModernCpp/Templates.html#参考资料",
-    "href": "CS/ModernCpp/Templates.html#参考资料",
-    "title": "模板与泛型编程",
-    "section": "6 参考资料",
-    "text": "6 参考资料\n\nBack to Basics: Templates (part 2 of 2) - Bob Steagall - CppCon 2021\ncppreference",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "步入现当代 C++",
-      "模板与泛型编程"
-    ]
-  },
-  {
-    "objectID": "CS/ModernCpp/MoveSemantics.html",
-    "href": "CS/ModernCpp/MoveSemantics.html",
-    "title": "移动语义 (Move Semantics)",
+    "objectID": "CS/61810/6.1810Lec13.html#课前准备",
+    "href": "CS/61810/6.1810Lec13.html#课前准备",
+    "title": "Lec13 File System",
     "section": "",
-    "text": "C++ 中的每一个表达式都有一个类型 (type)，同时，它还属于一种值类别。二者是相互独立的两个概念。随着移动语义引入到 C++11 之中，值类别被重新进行了定义，以区别表达式的两种独立的性质：\n\n拥有身份 (identity)：可以确定表达式是否与另一表达式指代同一实体，例如通过比较它们所标识的对象或函数的（直接或间接获得的）地址；\n可被移动：实现了移动语义的函数能够绑定于这个表达式。\n\n\n\n\n\n\ngraph TB\n    expression[\"表达式\"]:::expr\n    glvalue[\"泛左值 (glvalue)\"]\n    rvalue[\"右值 (rvalue)\"]\n    lvalue[\"左值 (lvalue)\"]\n    xvalue[\"亡值 (xvalue)\"]\n    prvalue[\"纯右值 (prvalue)\"]\n\n    classDef expr fill:#FFDAB9,stroke:#333,stroke-width:2px;\n\n    expression --&gt; glvalue\n    expression --&gt; rvalue\n    glvalue --&gt; lvalue\n    glvalue --&gt; xvalue\n    rvalue --&gt; xvalue\n    rvalue --&gt; prvalue\n\n\n\n\n\n\n泛左值是一个求值可确定某个对象或函数的标识的表达式。它：\n\n在内存中存储；\n有名字（直接或间接）；\n有可以取址的地址；\n非常量泛左值可以被赋值。\n\n纯右值是计算某个运算符的操作数或初始化某个对象的表达式，它：\n\n没有名字；\n没有存储。\n\n亡值是代表它的资源能够被重新使用的对象或位域的泛左值。std::move(v) 就是将左值 v 转化为亡值，表明马上这个值我不再关心（因为它的资源被移走了）。左值是非亡值的泛左值。",
+    "text": "Read kernel/bio.c, kernel/fs.c, kernel/sysfile.c, kernel/file.c and “File system” (except for the logging sections).\n\n文件系统的挑战：\n\n文件系统需要磁盘数据结构来表示命名目录和文件的树，记录保存每个文件内容的块的标识，并记录磁盘的哪些区域是空闲的。\n文件系统必须支持崩溃恢复。也就是说，如果发生崩溃（例如电源故障），文件系统在重新启动后仍必须正常工作。风险在于崩溃可能会中断一系列更新并留下不持久的磁盘数据结构（例如，既在文件中使用又标记为空闲的块）。\n不同的进程可能同时对文件系统进行操作，因此文件系统代码必须协调以保持不变量。\n访问磁盘比访问内存慢几个数量级，因此文件系统必须维护最常使用的块的内存缓存。\n\n\n\nxv6 的文件系统总共有七层。\n\n\n\nFile descriptor\n\n\nPathname\n\n\nDirectory\n\n\nInode\n\n\nLogging\n\n\nBuffer cache\n\n\nDisk\n\n\n\ndisk 层从 virtio 硬件驱动读写块。buffer cache 层将 disk block 缓存并且同步对它们的访问，保证对于任何特定的 block 一次只有一个内核进程能修改它。logging 层允许更高的层包装对若干块的更新为一个 transaction，确保在崩溃时原子地更新块（即全部更新或不更新）。inode 层提供单独的文件，每一个表示为一个 inode——一个唯一的 i-number 和一些持有文件数据的块。directory 层将每个目录实现为一种特殊的 inode，其内容是一系列条目，每个目录条目包含一个文件名和 i-number。pathname 层提供层级路径名，并通过递归查找解析它们。file descriptor 层使用文件系统接口抽象了许多 UNIX 资源（比如管道、设备、文件等）。\n磁盘硬件传统上将磁盘上的数据表示为 512 字节块（也称为扇区）的编号序列：扇区 0 是前 512 字节，扇区 1 是下一个，依此类推。操作系统用于其文件系统的块大小可能与磁盘使用的扇区大小不同，但通常块大小是扇区大小的倍数。xv6 在 struct buf 类型的对象中保存已读入内存的块的副本。此结构中存储的数据有时与磁盘不同步：它可能尚未从磁盘读取（磁盘正在处理它，但尚未返回扇区的内容），或者它可能已被软件更新但尚未写入磁盘。\n文件系统必须计划在磁盘上存储 inode 和内容块的位置。为此，xv6 将磁盘分为几个部分，如图 8.2 所示。文件系统不使用块 0（它保存引导扇区）。块 1 称为 superblock；它包含有关文件系统的元数据（以块为单位的文件系统大小、数据块的数量、inode 的数量以及日志中的块的数量）。从 2 开始的块保存 log。log 之后是 inode，每个块有多个 inode。之后是 bitmap 块，跟踪哪些数据块正在使用。其余块为数据块；每个都在 bitmap 块中标记为空闲，或者保存文件或目录的内容。superblock 由一个名为 mkfs 的单独程序填充，该程序构建初始文件系统。\n\n\n\n\n\n\n\n\n俩职责：(1) 同步访问以确保同一时间只有一个块的拷贝在内存里并且只有一个内核线程可以访问；(2) 将经常访问的块缓存起来。\n主要接口：bread 和 bwrite。前者获得一个包含可以在内存中读取或修改的块副本的 buf，后者将修改后的缓冲区写入磁盘上的相应块。内核线程在使用完缓冲区后必须通过调用 brelse 来释放该缓冲区。buffer cache 使用睡眠锁来确保一次只有一个线程使用每个缓冲区（以及每个磁盘块）； bread 返回一个锁定的缓冲区，brelse 释放该锁。\nbuffer cache 具有固定数量的 buffer 来保存磁盘块。如果文件系统请求 cache 里不存在的块，buffer cache 回收 LRU (least recently used) 的 buffer 来保存新的块。\n\n\n\n（以下条目通过 ChatGPT 生成）\n\n缓存管理的基本结构：\n\n缓存管理中使用了一个双向链表来表示缓存中的缓冲区（buffer）。\n在系统启动时，通过调用 binit 函数（在 kernel/main.c 的第 27 行调用），使用 buf 数组中的 NBUF 个缓冲区来初始化这个链表。\n\n缓冲区的状态：\n\n每个缓冲区有两个状态字段：valid 表示缓冲区中是否包含块的副本，disk 表示缓冲区的内容是否已经传递给磁盘，这可能会改变缓冲区的内容。\n\n缓冲区的获取：\n\nbread 函数（在 kernel/bio.c 的第 93 行）调用 bget 函数来获取给定扇区的缓冲区。\nbget 函数扫描缓冲区链表，以获取指定设备和扇区号的缓冲区。如果找到了相应的缓冲区，则获取该缓冲区的睡眠锁，并返回该缓冲区。\n如果没有缓存的缓冲区用于给定的扇区，则 bget 必须创建一个。它再次扫描缓冲区链表，以查找未使用的缓冲区。任何未使用的缓冲区都可以使用。bget 编辑缓冲区的元数据，记录新的设备和扇区号，并获取其睡眠锁。\n\n缓冲区的并发控制：\n\n重要的是每个磁盘扇区最多只能有一个缓存的缓冲区，以确保读者可以看到写入，并且文件系统使用缓冲区上的锁进行同步。\nbget 通过持续保持 bcache.lock 来确保这个不变式。这导致了对块是否存在的检查以及（如果不存在）指定一个缓冲区来保存块的操作是原子的。\n\n缓冲区的使用：\n\n当 bread 函数从磁盘读取数据（如果需要）并将缓冲区返回给其调用者后，调用者对缓冲区具有排他性使用权，可以读取或写入数据字节。\n如果调用者修改了缓冲区，它必须调用 bwrite 将更改的数据写入磁盘，然后释放缓冲区。\n\n缓冲区的释放：\n\n当调用者使用完缓冲区后，必须调用 brelse 来释放它。brelse 函数释放睡眠锁，并将缓冲区移到链表的前面。\n将缓冲区移到链表的前面使得链表按最近使用的顺序排列，即最先的缓冲区是最近被使用的，最后的是最不常用的。\nbget 中的两个循环利用了这一点：查找现有缓冲区的扫描在最坏的情况下必须处理整个链表，但从最近使用的缓冲区开始检查（从 bcache.head 开始并按照 next 指针遍历）将减少扫描时间，当引用的局部性好时。选择要重用的缓冲区的扫描通过向后扫描（跟随 prev 指针）选择最近最少使用的缓冲区。\n\n\n这里提到了两个锁，bcache.lock 用于保护缓冲区链表的访问和修改，保证其原子性。b-&gt;lock 用于保护对缓冲区内容的读写操作，以确保在一个时刻只有一个线程可以修改缓冲区的内容。\n\n\n\n（跳过了 logging 的部分）\n文件和目录内容存储在磁盘块中，这些磁盘块必须从一个空闲池中分配出来。xv6 的块分配器维护一个 bitmap，每一位上对应一个磁盘块，0 表示空闲，1 表示被使用。mkfs 会设置 bitmap 对应于引导扇区、superblock、日志块、inode 块和 bitmap 块。\nballoc 函数的实现通过循环来考虑每个块，从块 0 开始到文件系统中的总块数（sb.size）为止。它寻找位图中值为零的位，表示该块是空闲的。如果找到了空闲块，就更新 bitmap 并返回该块。为了提高效率，balloc 函数的循环分成两部分。外部循环读取 bitmap 位的每个块，内部循环检查单个 bitmap 块中的所有位。由于 buffer cache 一次只允许一个进程使用任何一个 bitmap 块，所以可以防止两个进程同时分配块时可能出现的竞争条件。\n\n\n\ninode 有两个含义，第一个是在磁盘上的数据结构，由一个文件大小和一列 data block numbers 组成。第二个是在内存上的 inode，它是磁盘上 inode 的拷贝，同时含有内核需要的其他信息。\n磁盘上的 inode 被包在一系列连续磁盘区域中，称为 inode block。每个都是相同大小，因此给定一个下标 \\(n\\)，索引它是很轻松的。实际上这个索引就称为 i-number。\n磁盘上的 inode 被定义为 struct dinode，type 字段区分文件、目录、特殊文件（设备）。如果为 0 表示空闲。nlink 统计指向这个 inode 的条目数量。size 记录文件中内容的字节数。addrs 记录持有文件内容的 disk block number。\n内核将内存中活跃的 inode 集合维护在一个表 itable 中；struct inode 是在内存中的 struct dnode 的拷贝。内核只有在 C 指针指向 inode 时才将那个 inode 拷贝到内存中。并对其维护一个共享指针1。iget 和 iput 分别获取和释放指向 inode 的指针，并修改它的引用计数。\n1 和 C++ 中的 shared_ptr 一致。iget 返回的 struct inode 可能没有任何有用的内容。为了确保它保存磁盘上 inode 的副本，代码必须调用 ilock。这会锁定 inode（以便其他进程无法锁定它）并从磁盘读取（如果尚未读取）。 iunlock 释放 inode 上的锁。将 inode 指针的获取与锁定分开有助于避免某些情况下的死锁，例如在目录查找期间。多个进程可以持有指向 iget 返回的 inode 的 C 指针，但同时只有一个进程可以锁定该 inode。\niput 这里，书上说会写入磁盘，但我并没有在源码中看到相关内容。\n文件系统中的每个文件都有一个链接计数，表示有多少个目录项指向该文件。当链接计数降至零时，表示没有任何目录项指向该文件，即文件不再可见。但是，即使链接计数为零，文件仍然可能在内存中被进程引用，例如某个进程仍然打开着该文件。这意味着如果在最后一个进程关闭文件描述符之前发生了崩溃，文件将会被标记为在磁盘上分配但没有任何目录项指向它。\n针对这个问题，两种解决方案：\n\n系统重启后会扫描整个文件系统，查找已标记为分配但没有目录项指向的文件。一旦找到这样的文件，文件系统就可以释放它们。\n文件系统会在磁盘上记录一个列表，其中包含链接计数降至零但引用计数不为零的文件的 inode 编号。当文件系统删除文件时，如果文件的引用计数达到了零，它会更新该列表，将对应的 inode 从列表中删除。在恢复时，文件系统只需释放列表中的文件。\n\nxv6 以上两种方法都没有实现。这意味着 xv6 有可能会把磁盘空间耗尽。\n\n\n\n主要是代码的实现细节，略过。\n\n\n\n(以下内容由 ChatGPT 生成）\n这段文本描述了文件系统中目录（directory）的内部实现以及两个与目录操作相关的函数：dirlookup 和 dirlink。\n\n目录结构： 目录在内部实现上类似于一个文件，其 inode 的类型为 T_DIR，而数据则是一个目录项（directory entries）的序列。每个目录项都是一个结构体 struct dirent，包含一个名称和一个 inode 编号。目录项中的名称最长为 DIRSIZ（14）个字符，如果名称长度小于 DIRSIZ，则以 NULL（0）字节终止。inode 编号为零的目录项表示空闲。\ndirlookup 函数： dirlookup 函数用于在目录中搜索具有给定名称的目录项。如果找到匹配项，则返回对应的 inode 指针（未加锁），并将 poff 设置为目录中该条目的字节偏移量，以便调用者可以编辑它。如果 dirlookup 找到正确的名称，它会更新 poff 并返回一个通过 iget 获取的未加锁的 inode。dirlookup 返回未锁定的 inode 是因为调用者已经锁定了目录 dp，因此如果 dirlookup 返回已锁定的 inode，那么如果查找的是当前目录的别名.，那么在返回之前尝试锁定 inode 就会尝试重新锁定 dp，从而导致死锁。因此，调用者可以解锁 dp，然后锁定 ip，确保一次只持有一个锁。\ndirlink 函数： dirlink 函数用于在目录 dp 中写入具有给定名称和 inode 编号的新目录项。如果名称已经存在，dirlink 返回一个错误。主循环读取目录项以寻找未分配的条目。当找到一个未分配的条目时，它提前终止循环，并将 off 设置为可用条目的偏移量。否则，循环以 dp-&gt;size 的偏移量结束。无论哪种情况，dirlink 都会在偏移量 off 处写入一个新的目录项，从而向目录中添加一个新的条目。\n\n\n\n\n(以下内容由 ChatGPT 生成）\n这段文本描述了在文件系统中执行路径名查找（path name lookup）的过程，以及其中涉及的一系列函数。\n\nnamei 函数： namei 函数路径并返回相应的 inode。它通过一系列对 dirlookup 的调用来实现路径名的解析，每次调用都对应路径中的一个路径组件。如果路径中存在多个路径组件，namei 会连续调用 dirlookup，直到找到最终的目标 inode。\nnameiparent 函数： nameiparent 函数是 namei 函数的一个变体，但它在最后一个元素之前停止，返回父目录的 inode，并将最后一个元素复制到名称中。它也调用了通用函数 namex 来执行实际的工作。\nnamex 函数： namex 函数开始决定路径解析从哪里开始。如果路径以斜杠开头，则从根目录开始解析；否则，从当前目录开始。然后，它使用 skipelem 逐个考虑路径的每个元素。每次循环迭代都必须在当前 inode ip 中查找名称。循环的每一次迭代开始时，会锁定 ip 并检查其是否为目录。如果不是，查找将失败。如果调用是 nameiparent 并且这是最后一个路径元素，则循环会提前停止。最后，循环使用 dirlookup 查找路径元素，并为下一次迭代做准备。当循环用尽路径元素时，它返回 ip。\n\n这段文本还提到了并发问题，即在进行路径名查找时，可能有多个内核线程同时执行。为了确保并发安全，xv6 采取了一些措施，例如在查找过程中保持对目录的锁定，并在释放锁定之前获取新的锁定。此外，xv6 通过维护 inode 的引用计数来避免在查找过程中删除目录或文件的风险，从而防止由此引起的不一致性。\n\n\n\n每个进程以文件描述符的形式维护自己打开的文件，这是一个 struct file，中间封装了 inode 或者管道。\nftable 是系统维护的一个全局打开的文件表。还定义了一些读写文件的方法，略过。\n\n\n\n冗长的细节，略过。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "步入现当代 C++",
-      "移动语义 (Move Semantics)"
-    ]
-  },
-  {
-    "objectID": "CS/ModernCpp/MoveSemantics.html#完美转发",
-    "href": "CS/ModernCpp/MoveSemantics.html#完美转发",
-    "title": "移动语义 (Move Semantics)",
-    "section": "",
-    "text": "C++ 中的每一个表达式都有一个类型 (type)，同时，它还属于一种值类别。二者是相互独立的两个概念。随着移动语义引入到 C++11 之中，值类别被重新进行了定义，以区别表达式的两种独立的性质：\n\n拥有身份 (identity)：可以确定表达式是否与另一表达式指代同一实体，例如通过比较它们所标识的对象或函数的（直接或间接获得的）地址；\n可被移动：实现了移动语义的函数能够绑定于这个表达式。\n\n\n\n\n\n\ngraph TB\n    expression[\"表达式\"]:::expr\n    glvalue[\"泛左值 (glvalue)\"]\n    rvalue[\"右值 (rvalue)\"]\n    lvalue[\"左值 (lvalue)\"]\n    xvalue[\"亡值 (xvalue)\"]\n    prvalue[\"纯右值 (prvalue)\"]\n\n    classDef expr fill:#FFDAB9,stroke:#333,stroke-width:2px;\n\n    expression --&gt; glvalue\n    expression --&gt; rvalue\n    glvalue --&gt; lvalue\n    glvalue --&gt; xvalue\n    rvalue --&gt; xvalue\n    rvalue --&gt; prvalue\n\n\n\n\n\n\n泛左值是一个求值可确定某个对象或函数的标识的表达式。它：\n\n在内存中存储；\n有名字（直接或间接）；\n有可以取址的地址；\n非常量泛左值可以被赋值。\n\n纯右值是计算某个运算符的操作数或初始化某个对象的表达式，它：\n\n没有名字；\n没有存储。\n\n亡值是代表它的资源能够被重新使用的对象或位域的泛左值。std::move(v) 就是将左值 v 转化为亡值，表明马上这个值我不再关心（因为它的资源被移走了）。左值是非亡值的泛左值。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "步入现当代 C++",
-      "移动语义 (Move Semantics)"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Unit2.html",
-    "href": "CS/CS144/CS144Unit2.html",
-    "title": "Unit2: The Transport Layer",
-    "section": "",
-    "text": "TCP 提供两个应用进程之间顺序、可靠的字节流传输。\n\n\n见上一节。在主机 A 和 B 建立联系时，A 会生成一个 ISN（Initial Sequence Number）随 SYN 一同传递给 B，同理，B 也会随 SYN+ACK 一同传输自己的 ISN。ISN 可以一定程度上保证 TCP 在全因特网范围内 ID 的唯一性。\n\n\n\n建立完连接后，A 将字节流中的数据放入 TCP 段（TCP Segment）中，交给 IP 层进一步封装，之后交给 B。B 提取 TCP 段并重建字节流，传递给应用层。\n\n\n\nA 向 B 传输 FIN 消息，表示结束（finish）。B 返回 ACK 消息并不再从 A 读取数据，但是 B 仍可以向 A 传输数据。当 B 结束传输数据时，向 A 发送 FIN 消息，A 回复 ACK 消息。此时，连接完全关闭。\n\n\n\n\n字节流：可靠的字节传输服务。\n可靠传输：\n\nACK 信息来确认数据传输正确。\n校验和（Checksums）检测损坏数据。\n序列号检测丢失数据。\n流量控制（flow-control）来防止接收方过载。\n\n按顺序：从 A 发送的数据以相同的顺序倍被 B 的应用层接收。如果 B 接收的 TCP 段是无序的，TCP 层会重新排出正确的顺序。\n拥塞控制（congestion control）：TCP 试图将网络上的所有 TCP 连接的负载均衡。后面会细讲。\n\n\n\n\n可以参考这篇文章：TCP 报文段格式。\n\n\n\n\n\n\n\n\nID 的唯一性由五个属性保证：TCP 段的源端口和目的端口、IP 段的源地址（IPSA）和目的地址（IPDA），以及协议 ID（即 Protocol ID = “TCP”）。主机 A 对每个新连接会增加源端口的编号，同时生成 ISN 来尽量保证唯一性。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit2: The Transport Layer"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Unit2.html#tcp-服务模型",
-    "href": "CS/CS144/CS144Unit2.html#tcp-服务模型",
-    "title": "Unit2: The Transport Layer",
-    "section": "",
-    "text": "TCP 提供两个应用进程之间顺序、可靠的字节流传输。\n\n\n见上一节。在主机 A 和 B 建立联系时，A 会生成一个 ISN（Initial Sequence Number）随 SYN 一同传递给 B，同理，B 也会随 SYN+ACK 一同传输自己的 ISN。ISN 可以一定程度上保证 TCP 在全因特网范围内 ID 的唯一性。\n\n\n\n建立完连接后，A 将字节流中的数据放入 TCP 段（TCP Segment）中，交给 IP 层进一步封装，之后交给 B。B 提取 TCP 段并重建字节流，传递给应用层。\n\n\n\nA 向 B 传输 FIN 消息，表示结束（finish）。B 返回 ACK 消息并不再从 A 读取数据，但是 B 仍可以向 A 传输数据。当 B 结束传输数据时，向 A 发送 FIN 消息，A 回复 ACK 消息。此时，连接完全关闭。\n\n\n\n\n字节流：可靠的字节传输服务。\n可靠传输：\n\nACK 信息来确认数据传输正确。\n校验和（Checksums）检测损坏数据。\n序列号检测丢失数据。\n流量控制（flow-control）来防止接收方过载。\n\n按顺序：从 A 发送的数据以相同的顺序倍被 B 的应用层接收。如果 B 接收的 TCP 段是无序的，TCP 层会重新排出正确的顺序。\n拥塞控制（congestion control）：TCP 试图将网络上的所有 TCP 连接的负载均衡。后面会细讲。\n\n\n\n\n可以参考这篇文章：TCP 报文段格式。\n\n\n\n\n\n\n\n\nID 的唯一性由五个属性保证：TCP 段的源端口和目的端口、IP 段的源地址（IPSA）和目的地址（IPDA），以及协议 ID（即 Protocol ID = “TCP”）。主机 A 对每个新连接会增加源端口的编号，同时生成 ISN 来尽量保证唯一性。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit2: The Transport Layer"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Unit2.html#udp-服务模型",
-    "href": "CS/CS144/CS144Unit2.html#udp-服务模型",
-    "title": "Unit2: The Transport Layer",
-    "section": "2 UDP 服务模型",
-    "text": "2 UDP 服务模型\nUDP 提供更简单的传输服务。\n\n2.1 UDP 的特点\n\n无连接：不保证连接建立。\n数据报：包会以任何顺序传输。\nSelf-contained datagrams\n不可靠传输：\n\n没有确认消息。\n没有检测丢失或顺序错乱的机制。\n没有流量控制。\n\n\n\n\n2.2 UDP 段格式\n\n\n\n\n\n设计 UDP 的意图是为了更快的传输速率，或者应用层自己对数据传输的可靠性做规定，方便扩展。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit2: The Transport Layer"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Unit2.html#icmpinternet-control-message-protocol服务模型",
-    "href": "CS/CS144/CS144Unit2.html#icmpinternet-control-message-protocol服务模型",
-    "title": "Unit2: The Transport Layer",
-    "section": "3 ICMP（Internet Control Message Protocol）服务模型",
-    "text": "3 ICMP（Internet Control Message Protocol）服务模型\nICMP 给终端主机和路由器提供网络层的信息，比如错误和诊断信息。ICMP 也属于传输层。ping 和 traceroute 指令就是使用 ICMP 的例子。\nIP 数据报在终端主机间逐跳（hop-by-hop）传递，每个路由器都会生成 forwarding table 来指示数据报的下一个目的地。当出现错误时，比如 forwarding table 上没有对应的 IP 地址，路由器会生成一个 ICMP 包传回主机，表明 “Destination Network Unreachable”。同样，ICMP 也有对应的格式，这里略过。\n\n3.1 ICMP 的特点\n\n报告消息：self-contained 的报告错误的消息。\n不可靠。不会重新发送。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit2: The Transport Layer"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Unit2.html#end-to-end-principle",
-    "href": "CS/CS144/CS144Unit2.html#end-to-end-principle",
-    "title": "Unit2: The Transport Layer",
-    "section": "4 End-to-End Principle",
-    "text": "4 End-to-End Principle\n端到端原则：\n\nThe function in question can completely and correctly be implemented only with the knowledge and help of the application standing at the end points of the communication system. Therefore, providing that questioned function as a feature of the communication system itself is not possible. (Sometimes an incomplete version of the function provided by the communication system may be useful as a performance enhancement.) We call this line of reasoning … “the end-to-end argument.1\n问题中涉及的功能只有在通信系统末端的应用程序的知识和帮助下才能完全且正确地实现。因此，将该功能作为通信系统本身的特性提供是不可能的。（有时，由通信系统提供的该功能的不完整版本可能对性能有所提升。）我们称这种推理为……“端到端论证”。\n1 Saltzer, Reed, and Clark, End-to-end Arguments in System Design, 1984\n强端到端：\n\nThe network’s job is to transmit datagrams as efficiently and flexibly as possible. Everything else should be done at the fringes …2\n2 [RFC 1958]",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit2: The Transport Layer"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Unit2.html#错误检测checksumcrc-和-mac",
-    "href": "CS/CS144/CS144Unit2.html#错误检测checksumcrc-和-mac",
-    "title": "Unit2: The Transport Layer",
-    "section": "5 错误检测：Checksum，CRC 和 MAC",
-    "text": "5 错误检测：Checksum，CRC 和 MAC\n\nChecksum 把包中每个 16 位的数据加在一起（IP，TCP）\n\n软件计算快速、低开销\n不是很健壮\n\n循环冗余校验（CRC，Cyclic Redundancy Check）计算模一个多项式的余数（以太网）\n\n比 Checksum 开销更大，但是在今天的硬件上非常容易实现\n保证检测出任意 2 位错误、任意 \\(\\le c\\) 位的突发错误、任意奇数位错误。\n\n消息认证码（MAC，Message Authentication Code）安全传输数据（传输层安全协议（TLS，Transport Layer Security））\n\n检测恶意修改。\n任意两条消息有 \\(2^{-n}\\) 的概率有相同的 MAC。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit2: The Transport Layer"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Unit2.html#流量控制",
-    "href": "CS/CS144/CS144Unit2.html#流量控制",
-    "title": "Unit2: The Transport Layer",
-    "section": "6 流量控制",
-    "text": "6 流量控制\n\n6.1 Stop and Wait\n如果接收方的吞吐量小于传送方，则需要流量控制。最简单的方式就是 Stop and Wait，即发送方每次只传送一个包，直到收到了 ACK 消息再发送下一个；否则在等待一段时间后认定超时，重新发送这个包。这种方法可能存在问题，这里略过。\n\n\n6.2 滑动窗口\nStop and Wait 方式效率太低。滑动窗口允许多个包同时在网络上传输，这些包组成了一个“窗口”，当接收到 ACK 消息时，移动这个窗口。具体可以参考《滑动窗口，TCP的流量控制机制》。\n根据收发窗口的大小，会发生 go-back-N 或 selective repeat 两种情况。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit2: The Transport Layer"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Lab.html#checkpoint-1",
-    "href": "CS/CS144/CS144Lab.html#checkpoint-1",
-    "title": "CS144 Lab 记录",
-    "section": "2 Checkpoint 1",
-    "text": "2 Checkpoint 1",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "CS144 Lab 记录"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Lab.html#checkpoint-2the-tcp-receiver",
-    "href": "CS/CS144/CS144Lab.html#checkpoint-2the-tcp-receiver",
-    "title": "CS144 Lab 记录",
-    "section": "3 Checkpoint 2：The TCP Receiver",
-    "text": "3 Checkpoint 2：The TCP Receiver",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "CS144 Lab 记录"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec13 File System"
     ]
   },
   {
@@ -332,68 +124,94 @@
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lec3.html",
-    "href": "CS/61810/6.1810Lec3.html",
-    "title": "Lec3 Operating System Organization",
+    "objectID": "CS/61810/6.1810Lab2.html",
+    "href": "CS/61810/6.1810Lab2.html",
+    "title": "Lab2 system calls: system calls",
     "section": "",
-    "text": "Lec2 是 C 和 gdb，跳过。",
+    "text": "按照提示来。\n\nLooking at the backtrace output, which function called syscall?\n\n通过 bt 命令，知道 kernel/trap.c 的 usertrap() 调用了 syscall 。\n\nWhat is the value of p-&gt;trapframe-&gt;a7 and what does that value represent? (Hint: look user/initcode.S, the first user program xv6 starts.)\n\n值为 SYS_exec ，代表 exec 在函数指针数组中的下标。\n\nWhat was the previous mode that the CPU was in?\n\n我猜在 user mode。\n\nWrite down the assembly instruction the kernel is panicing at. Which register corresponds to the variable num?\n\n通过搜索 sepc 数字（我这里是 800020b6），看到命令为 lw a3,0(zero) 。所以 num 对应寄存器 a3 。\n\nWhy does the kernel crash? Hint: look at figure 3-3 in the text; is address 0 mapped in the kernel address space? Is that confirmed by the value in scause above? (See description of scause in RISC-V privileged instructions)\n\n从书上的图看出地址 0 在内核空间是没有定义的，因此无法加载这页的内存。scause 代码查询手册得知代表“load page fault”，这印证了上面的想法。\n\nWhat is the name of the binary that was running when the kernel paniced? What is its process id (pid)?\n\ninitcode 。pid 为 1。",
     "crumbs": [
       "CS",
       "Computer Science",
       "6.1810 Operating System Engineering 笔记",
-      "Lec3 Operating System Organization"
+      "Lab2 system calls: system calls"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lec3.html#课前准备",
-    "href": "CS/61810/6.1810Lec3.html#课前准备",
-    "title": "Lec3 Operating System Organization",
-    "section": "1 课前准备",
-    "text": "1 课前准备\n\nRead chapter 2 and xv6 code: kernel/proc.h, kernel/defs.h, kernel/entry.S, kernel/main.c, user/initcode.S, user/init.c, and skim kernel/proc.c and kernel/exec.c.\n\n操作系统需要满足三个需求：复用、隔离和交互。\n为什么操作系统要设计成现在这样？不仅是为了安全和隔离，也是为了使用的便利。\n\n1.1 用户模式、监督模式和系统调用\nCPU 为强隔离提供硬件支持。RISC-V 有三种 CPU 执行指令的模式：机器模式、监督模式和用户模式。机器模式主要用于配置计算机。xv6 在机器模式下执行几行，后更改为监督模式。\n在监督模式下，CPU 可以执行特权命令：启用或禁用中断、读写持有页表地址的寄存器，等等。如果一个用户模式下的应用试图执行特权命令，CPU 不会执行指令，而是切换为监督模式并终止应用。一个只能执行用户模式命令的应用运行在用户空间中，可以执行监督模式下特权命令的应用运行在内核空间中，这个应用称为内核。\n想要调用内核函数（例如 xv6 中的 read 系统调用）的应用必须转换到内核；应用程序不能直接调用内核函数。CPU 提供了一种特殊的指令，可以将 CPU 从用户模式切换到监督模式，并在内核指定的入口点进入内核（比如 RISC-V 的 ecall）。一旦 CPU 切换到监督模式，内核就可以验证系统调用的参数，决定是否允许应用程序执行请求的操作（例如，检查应用程序是否允许写入指定的文件），然后拒绝或执行它。内核控制转换到管理模式的入口点非常重要；例如，如果应用程序可以决定内核入口点，则恶意应用程序可以在跳过参数验证的点进入内核。\n\n\n1.2 内核组织\n设计的核心问题是，应该把操作系统的哪些部分放在监督模式下运行？一个想法是把整个系统全部放入内核中，这种组织方式称为宏内核（monolithic kernel）。优点是方便设计和不同部分间的合作，缺点是接口复杂且开发人员容易犯错误，而在监督模式下犯错是致命的。\n为了减少犯错的风险，微内核（microkernel）尽量减少在监督模式下运行的操作系统代码，并将大部分作为服务器（server）在用户模式下运行。比如，文件服务器在用户空间里运行，为允许应用与文件服务器交互，内核通过收发信息来提供进程间的通信，如下图。\n\n\n\n\n\n两种方法都是流行的组织方法，并没有哪个完全优于另一个的结论。具体问题，具体分析。在本课程中，我们更关注两种方法共同体现出的关键思想。它们实现系统调用、使用页表、处理中断、支持进程、使用锁进行并发控制、实现文件系统等。\n与大多数 UNIX 操作系统一样，xv6 是 monolithic 的。因此，xv6 的内核接口就对应于整个操作系统的接口，内核实现了完整的操作系统。由于 xv6 没有提供很多服务，因此它的内核比某些微内核要小，但从概念上讲 xv6 仍是宏内核。\nxv6 内核的代码位于 kernel 文件夹下，大致遵循模块化的理念分成各个文件，见书中的表。模块间接口在 kernel/defs.h 中定义。\n\n\n1.3 进程概览\n进程给了程序一个自己仿佛拥有私有机器和私有内存空间（称为地址空间）的幻象。进程同时让程序认为自己拥有了自己的 CPU 来执行命令。这样的设计也是为了保证隔离。\nxv6 使用页表（硬件实现）为每个进程提供自己的地址空间。RISC-V 页表将虚拟地址映射到物理地址。xv6 为每个进程维护一个单独的页表，页表定义了进程的地址空间。如图所示，包含用户内存的地址空间从虚拟地址零开始，首先是指令、全局变量，然后是栈、堆。RISC-V 是 64 位的，但硬件在页表种查找虚拟地址时只用低 39 位的数据，而 xv6 只用这之中的 38 位。因此，最大地址为 \\(2^{38}-1=\\rm{0x3fffffffff}\\)，即 MAXVA。在顶端 xv6 为 trampoline 和映射进程的 trapframe 分别保留了一页空间。xv6 使用这两个页面来转换到内核并返回；trampoline 页包含转换进/出内核的代码，并且映射 trapframe 对于保存/恢复用户进程的状态是必要的，第 4 章会细讲。\n进程的状态储存在一个 struct proc 中，在下文中我们以 p 代之，并以 p-&gt;xxx 代表其中的属性。每个进程都有一个执行线程（或简称线程）执行进程的指令。线程可以挂起并稍后恢复。为了在进程之间透明地切换，内核挂起当前正在运行的线程并恢复另一个进程的线程。线程的大部分状态（局部变量、函数调用返回地址）都存储在线程的栈中。每个进程都有两个栈：用户栈和内核栈 (p-&gt;kstack)。执行用户指令时使用用户栈，进入内核执行内核代码时使用内核栈。进程的线程在这两个栈之间切换。内核栈被用户代码保护。\n进程通过 ecall 执行系统调用，这个指令提升了硬件的权限并将 program counter 改为内核定义的入口点，开始执行指令。结束时，内核调用 sret 返回，它同时也降低了硬件权限。进程的线程可以在内核中“阻塞”以等待 I/O，并在 I/O 完成时从中断处恢复。\np-&gt;state 指示进程是否已分配、准备运行、正在运行、正在等待 I/O 或正在退出。p-&gt;pagetable 是页表。\n总之，进程捆绑了两种设计思想：地址空间给进程提供了自己的内存的假象，线程给进程提供了自己的 CPU 的假象。在 xv6 中，一个进程由一个地址空间和一个线程组成。在实际操作系统中，一个进程可能有多个线程来利用多个 CPU。\n\n\n1.4 Code：starting xv6, the first process and system call\n这一节讲了启动 xv6 的具体代码流程，这里省略了，看书吧。\n\n\n1.5 安全模型\n操作系统如何解决恶意代码？操作系统中典型的安全假设是：操作系统必须假设进程的用户级代码可能尽最大努力破坏内核或其他进程；相反，内核代码被认为是由善意且细心的程序员编写的。内核代码应该没有错误，并且肯定不包含任何恶意内容。在硬件层面，RISC-V CPU、RAM、磁盘等应当按照文档中描述的方式运行，没有硬件错误。\n当然，现实世界是残酷的。系统漏洞和恶意代码是无法完全杜绝的。\n\n\n1.6 Real World\n现代操作系统支持一个进程多个线程。这涉及到 xv6 所没有的大量机制，包括潜在的接口更改（例如 Linux 的 clone ，一个变体 fork ）。",
+    "objectID": "CS/61810/6.1810Lab2.html#using-gdb-easy",
+    "href": "CS/61810/6.1810Lab2.html#using-gdb-easy",
+    "title": "Lab2 system calls: system calls",
+    "section": "",
+    "text": "按照提示来。\n\nLooking at the backtrace output, which function called syscall?\n\n通过 bt 命令，知道 kernel/trap.c 的 usertrap() 调用了 syscall 。\n\nWhat is the value of p-&gt;trapframe-&gt;a7 and what does that value represent? (Hint: look user/initcode.S, the first user program xv6 starts.)\n\n值为 SYS_exec ，代表 exec 在函数指针数组中的下标。\n\nWhat was the previous mode that the CPU was in?\n\n我猜在 user mode。\n\nWrite down the assembly instruction the kernel is panicing at. Which register corresponds to the variable num?\n\n通过搜索 sepc 数字（我这里是 800020b6），看到命令为 lw a3,0(zero) 。所以 num 对应寄存器 a3 。\n\nWhy does the kernel crash? Hint: look at figure 3-3 in the text; is address 0 mapped in the kernel address space? Is that confirmed by the value in scause above? (See description of scause in RISC-V privileged instructions)\n\n从书上的图看出地址 0 在内核空间是没有定义的，因此无法加载这页的内存。scause 代码查询手册得知代表“load page fault”，这印证了上面的想法。\n\nWhat is the name of the binary that was running when the kernel paniced? What is its process id (pid)?\n\ninitcode 。pid 为 1。",
     "crumbs": [
       "CS",
       "Computer Science",
       "6.1810 Operating System Engineering 笔记",
-      "Lec3 Operating System Organization"
+      "Lab2 system calls: system calls"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lec3.html#lecture",
-    "href": "CS/61810/6.1810Lec3.html#lecture",
-    "title": "Lec3 Operating System Organization",
+    "objectID": "CS/61810/6.1810Lab2.html#system-call-tracing-moderate",
+    "href": "CS/61810/6.1810Lab2.html#system-call-tracing-moderate",
+    "title": "Lab2 system calls: system calls",
+    "section": "2 System call tracing (moderate)",
+    "text": "2 System call tracing (moderate)\n\nIn this assignment you will add a system call tracing feature that may help you when debugging later labs. You’ll create a new trace system call that will control tracing. It should take one argument, an integer “mask”, whose bits specify which system calls to trace. For example, to trace the fork system call, a program calls trace(1 &lt;&lt; SYS_fork), where SYS_fork is a syscall number from kernel/syscall.h. You have to modify the xv6 kernel to print out a line when each system call is about to return, if the system call’s number is set in the mask. The line should contain the process id, the name of the system call and the return value; you don’t need to print the system call arguments. The trace system call should enable tracing for the process that calls it and any children that it subsequently forks, but should not affect other processes.\n\n跟着提示来就行。注意到新的变量 proc-&gt;trace_mask 应该初始化的，但是由于整个结构体是定义在全局空间内的，不初始化也不会影响结果。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lab2 system calls: system calls"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lab2.html#sysinfo-moderate",
+    "href": "CS/61810/6.1810Lab2.html#sysinfo-moderate",
+    "title": "Lab2 system calls: system calls",
+    "section": "3 Sysinfo (moderate)",
+    "text": "3 Sysinfo (moderate)\n\nIn this assignment you will add a system call, sysinfo, that collects information about the running system. The system call takes one argument: a pointer to a struct sysinfo (see kernel/sysinfo.h). The kernel should fill out the fields of this struct: the freemem field should be set to the number of bytes of free memory, and the nproc field should be set to the number of processes whose state is not UNUSED. We provide a test program sysinfotest; you pass this assignment if it prints “sysinfotest: OK”.\n\n按照提示来就行。只需注意一点，工程将需要用到的内核函数统一声明在 defs.h 中，符合 monolithic 的思想。因此你新定义的函数也需要加进 defs.h 。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lab2 system calls: system calls"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec4.html",
+    "href": "CS/61810/6.1810Lec4.html",
+    "title": "Lec4 Page Tables",
+    "section": "",
+    "text": "Read Chapter 3 and kernel/memlayout.h.\n\n\n\nRISC-V 指令操纵虚拟地址，机器的 RAM 操纵物理地址。页表将虚拟地址映射到物理地址。\nxv6 运行在 Sv39 RISC-V 上，即 64 位中的低 39 位被用于虚拟地址。在 Sv39 配置中，一个页表是由 \\(2^{27}\\) 的页表项（page table entries，PTE）组成的。每个 PTE 由 physical page number（PPN）与一些标志位组成，共 44 位。每个 PTE 低 39 位中的高 27 位用做指向页表中的 PTE 的下标。一个 56 位的物理地址的高 44 位由 PTE 的 PPN 提供，低 12 位拷贝自对应虚拟地址的低 12 位。如下图。Sv39 并未将 64 位地址全部用满，这样做是出于当时对技术的预测。后面还有 Sv48 提供更多的内存空间。\n\n\n\n\n\n上面只是一个简单表示，不是故事的全部。在实际的 Sv39 结构中，如下图，页表实际由一个三层深的完全 512 叉树组成。根结点是一个 512 项的页，每个 PTE 指向下一层一个 512 项的页，这个页的每个 PTE 又指向下一层一个 512 项的 PTE。这个结构对应了虚拟地址用于定位的 27 位，均分为三部分，每个部分分配给一层。这种分层结构的好处是在多数情况下只有一小部分虚拟地址被使用时，操作系统无需为其他的分支分配页。\n\n\n\n\n\n在实际执行读取/储存指令时，CPU 必须从内存加载三个 PTE，这可能有拖慢速度的隐患。为此 RISC-V CPU 将页表缓存在页表缓存（Translation Look-aside Buffer，TLB）中。\n每个 PTE 的 flag 的含义：PTE_V 表示 PTE 是否存在；PTE_R 控制是否允许被读取；PTE_W 控制是否允许被写入，PTE_X 控制是否 CPU 要将该页的内容解释为指令并执行它们；PTE_U 控制是否允许用户模式下的指令访问该页，默认只能在监督模式下访问。\nstap 寄存器给 CPU 提供了根页表页的基址。每个 CPU 都有各自的 satp 寄存器。\n由于页目录位于物理内存中，因此内核可以通过使用标准存储指令写入 PTE 的虚拟地址来对页目录中的 PTE 内容进行编程。\n关于术语的一些注释。与物理内存和虚拟地址不同，虚拟内存不是物理对象， 而是指内核提供的用于管理物理内存和虚拟地址的抽象和机制的集合。\n\n\n\n\n\n\n\n\n内核地址从 0x80000000（KERNBASE）开始，至少延续到 0x88000000（PHYSTOP）。这段地址采取直接映射，即虚拟地址和物理地址相同。有些地址不遵循直接映射，比如 trampoline 和内核栈分页。trampoline 在虚拟地址的顶端，有趣的是，对应这段内容的物理地址被映射了两次，一次在顶端，一次是直接映射。内核栈分页是每个进程拥有的内核栈的地址，每个分页上有 guard page，这个 page 的 PTE_V 是没有设置的，因此栈溢出会导致引起异常。这样的设计可以防止栈溢出覆盖其他内核栈的数据。\n内核将 trampoline 和内核内容授予 PTE_R 和 PTE_X 权限。其他页授予 PTE_R 和 PTE_W 权限。guard pages 的映射无效。\n书上讲了如何分配地址空间的代码和流程，这里略过。\n\n\n\nxv6 用内核结束到 PHYSTOP 的空间为运行时分配内存。它使用一个链表来追踪空闲空间。后面讲了这部分的代码。\n个人觉得有意思的点是，内核在释放空间时是将内容全部填为垃圾值而非零，这样可以让悬空指针因为读取到无用内容从而尽早被发现。\n\n\n\n每个进程有一个页表，当 xv6 切换进程时，同时切换页表。下图是一个用户地址空间的细节。从 0 到 MAXVA，原则上允许进程寻址 256GB 内存。\n\n\n\n\n\n用户的栈被下方的 guard page 保护，当栈溢出时，会引起分页错误异常。当进程申请更多用户内存时，xv6 先使用 kalloc 分配物理页，然后将那些地址的 PTE 加入进程页表。\n我们在这里看到一些使用页表的很好的例子。首先，不同进程的页表将用户地址转换为不同的物理内存页，从而每个进程都拥有私有的用户内存。其次，每个进程将其内存视为具有从零开始的连续虚拟地址，而进程的物理内存可以是不连续的。第三，内核用 trampoline 代码映射一个页面到用户地址空间的顶部（没有 PTE_U 权限），因此单页物理内存显示在所有地址空间中，但只能由内核使用。\n\n\n\nexec 从二进制或可执行文件中读取数据并替换进程的地址空间。它读取二进制文件的 ELF 标头。一个 ELF 二进制由 ELF 标头和一系列程序段标头组成。xv6 的程序有两段程序段标头：一个是指令，另一个是数据。\n首先 xv6 会快速检查一个文件是否是 ELF 二进制文件。它通常由四个字节的 “magic number” 0x7F, 'E', 'L', 'F' 组成，在程序里设为 ELF_MAGIC 。\n（后面的内容不是很有关联的感觉，就先不写了）\n\n\n\nxv6 的简化是通过内核使用虚拟地址和物理地址之间的直接映射，并假设在地址 0x8000000 处存在物理 RAM。但真实硬件将 RAM 和设备放置在不可预测的物理地址处。更严格的内核设计利用页表将任意硬件物理内存布局转换为可预测的内核虚拟地址布局。\nRISC-V 支持物理地址级别的保护，但 xv6 没有使用该功能。\n在具有大量内存的计算机上，使用 RISC-V 对“super pages”的支持可能很有意义。较大的页面对于具有大量 RAM 的机器来说是有意义的，并且可以减少页表操作的开销。\nxv6 缺少可以为小对象提供内存的类似 malloc 的分配器，因此较难使用需要动态分配的复杂数据结构。更复杂的内核可能会分配许多不同大小的小块，而不是（在 xv6 中）仅 4096 字节块；真正的内核分配器需要处理小分配和大分配。内存分配是一个长期的热门话题，基本问题是有效利用有限的内存并为未知的未来请求做好准备。如今，人们更关心速度而不是空间效率。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec4 Page Tables"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec4.html#课前准备",
+    "href": "CS/61810/6.1810Lec4.html#课前准备",
+    "title": "Lec4 Page Tables",
+    "section": "",
+    "text": "Read Chapter 3 and kernel/memlayout.h.\n\n\n\nRISC-V 指令操纵虚拟地址，机器的 RAM 操纵物理地址。页表将虚拟地址映射到物理地址。\nxv6 运行在 Sv39 RISC-V 上，即 64 位中的低 39 位被用于虚拟地址。在 Sv39 配置中，一个页表是由 \\(2^{27}\\) 的页表项（page table entries，PTE）组成的。每个 PTE 由 physical page number（PPN）与一些标志位组成，共 44 位。每个 PTE 低 39 位中的高 27 位用做指向页表中的 PTE 的下标。一个 56 位的物理地址的高 44 位由 PTE 的 PPN 提供，低 12 位拷贝自对应虚拟地址的低 12 位。如下图。Sv39 并未将 64 位地址全部用满，这样做是出于当时对技术的预测。后面还有 Sv48 提供更多的内存空间。\n\n\n\n\n\n上面只是一个简单表示，不是故事的全部。在实际的 Sv39 结构中，如下图，页表实际由一个三层深的完全 512 叉树组成。根结点是一个 512 项的页，每个 PTE 指向下一层一个 512 项的页，这个页的每个 PTE 又指向下一层一个 512 项的 PTE。这个结构对应了虚拟地址用于定位的 27 位，均分为三部分，每个部分分配给一层。这种分层结构的好处是在多数情况下只有一小部分虚拟地址被使用时，操作系统无需为其他的分支分配页。\n\n\n\n\n\n在实际执行读取/储存指令时，CPU 必须从内存加载三个 PTE，这可能有拖慢速度的隐患。为此 RISC-V CPU 将页表缓存在页表缓存（Translation Look-aside Buffer，TLB）中。\n每个 PTE 的 flag 的含义：PTE_V 表示 PTE 是否存在；PTE_R 控制是否允许被读取；PTE_W 控制是否允许被写入，PTE_X 控制是否 CPU 要将该页的内容解释为指令并执行它们；PTE_U 控制是否允许用户模式下的指令访问该页，默认只能在监督模式下访问。\nstap 寄存器给 CPU 提供了根页表页的基址。每个 CPU 都有各自的 satp 寄存器。\n由于页目录位于物理内存中，因此内核可以通过使用标准存储指令写入 PTE 的虚拟地址来对页目录中的 PTE 内容进行编程。\n关于术语的一些注释。与物理内存和虚拟地址不同，虚拟内存不是物理对象， 而是指内核提供的用于管理物理内存和虚拟地址的抽象和机制的集合。\n\n\n\n\n\n\n\n\n内核地址从 0x80000000（KERNBASE）开始，至少延续到 0x88000000（PHYSTOP）。这段地址采取直接映射，即虚拟地址和物理地址相同。有些地址不遵循直接映射，比如 trampoline 和内核栈分页。trampoline 在虚拟地址的顶端，有趣的是，对应这段内容的物理地址被映射了两次，一次在顶端，一次是直接映射。内核栈分页是每个进程拥有的内核栈的地址，每个分页上有 guard page，这个 page 的 PTE_V 是没有设置的，因此栈溢出会导致引起异常。这样的设计可以防止栈溢出覆盖其他内核栈的数据。\n内核将 trampoline 和内核内容授予 PTE_R 和 PTE_X 权限。其他页授予 PTE_R 和 PTE_W 权限。guard pages 的映射无效。\n书上讲了如何分配地址空间的代码和流程，这里略过。\n\n\n\nxv6 用内核结束到 PHYSTOP 的空间为运行时分配内存。它使用一个链表来追踪空闲空间。后面讲了这部分的代码。\n个人觉得有意思的点是，内核在释放空间时是将内容全部填为垃圾值而非零，这样可以让悬空指针因为读取到无用内容从而尽早被发现。\n\n\n\n每个进程有一个页表，当 xv6 切换进程时，同时切换页表。下图是一个用户地址空间的细节。从 0 到 MAXVA，原则上允许进程寻址 256GB 内存。\n\n\n\n\n\n用户的栈被下方的 guard page 保护，当栈溢出时，会引起分页错误异常。当进程申请更多用户内存时，xv6 先使用 kalloc 分配物理页，然后将那些地址的 PTE 加入进程页表。\n我们在这里看到一些使用页表的很好的例子。首先，不同进程的页表将用户地址转换为不同的物理内存页，从而每个进程都拥有私有的用户内存。其次，每个进程将其内存视为具有从零开始的连续虚拟地址，而进程的物理内存可以是不连续的。第三，内核用 trampoline 代码映射一个页面到用户地址空间的顶部（没有 PTE_U 权限），因此单页物理内存显示在所有地址空间中，但只能由内核使用。\n\n\n\nexec 从二进制或可执行文件中读取数据并替换进程的地址空间。它读取二进制文件的 ELF 标头。一个 ELF 二进制由 ELF 标头和一系列程序段标头组成。xv6 的程序有两段程序段标头：一个是指令，另一个是数据。\n首先 xv6 会快速检查一个文件是否是 ELF 二进制文件。它通常由四个字节的 “magic number” 0x7F, 'E', 'L', 'F' 组成，在程序里设为 ELF_MAGIC 。\n（后面的内容不是很有关联的感觉，就先不写了）\n\n\n\nxv6 的简化是通过内核使用虚拟地址和物理地址之间的直接映射，并假设在地址 0x8000000 处存在物理 RAM。但真实硬件将 RAM 和设备放置在不可预测的物理地址处。更严格的内核设计利用页表将任意硬件物理内存布局转换为可预测的内核虚拟地址布局。\nRISC-V 支持物理地址级别的保护，但 xv6 没有使用该功能。\n在具有大量内存的计算机上，使用 RISC-V 对“super pages”的支持可能很有意义。较大的页面对于具有大量 RAM 的机器来说是有意义的，并且可以减少页表操作的开销。\nxv6 缺少可以为小对象提供内存的类似 malloc 的分配器，因此较难使用需要动态分配的复杂数据结构。更复杂的内核可能会分配许多不同大小的小块，而不是（在 xv6 中）仅 4096 字节块；真正的内核分配器需要处理小分配和大分配。内存分配是一个长期的热门话题，基本问题是有效利用有限的内存并为未知的未来请求做好准备。如今，人们更关心速度而不是空间效率。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec4 Page Tables"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec4.html#lecture",
+    "href": "CS/61810/6.1810Lec4.html#lecture",
+    "title": "Lec4 Page Tables",
     "section": "2 Lecture",
-    "text": "2 Lecture\n课上详细调试了 xv6 系统的启动过程，对应了上面我省略的部分，这里简单叙述一下。程序从 _entry 处开始，先分配一个栈供执行 C 代码，然后调用 main 函数，main 函数主要做一些东西的初始化工作（虚拟内存、页表、文件系统等等）。之后创建第一个进程 userinit，它更像是一个胶水代码，将执行 initcode 中的内容。而 initcode 则是执行系统调用 syscall_exec ，这个 exec 则执行 init 程序。注意这个 init 与之前不同，是用户级别的初始化程序。它会为用户配置一些东西，如 console，然后 fork 出一个子进程执行 shell。这样 xv6 正式启动，用户可以输入指令了。",
+    "text": "2 Lecture\nlecture 上讲的内容很有用，把我看书时的困惑解答了不少，但整体内容与书上是一致的，主要是完善了细节并且澄清了容易误解的地方。",
     "crumbs": [
       "CS",
       "Computer Science",
       "6.1810 Operating System Engineering 笔记",
-      "Lec3 Operating System Organization"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec13.html",
-    "href": "CS/61810/6.1810Lec13.html",
-    "title": "Lec13 File System",
-    "section": "",
-    "text": "Read kernel/bio.c, kernel/fs.c, kernel/sysfile.c, kernel/file.c and “File system” (except for the logging sections).\n\n文件系统的挑战：\n\n文件系统需要磁盘数据结构来表示命名目录和文件的树，记录保存每个文件内容的块的标识，并记录磁盘的哪些区域是空闲的。\n文件系统必须支持崩溃恢复。也就是说，如果发生崩溃（例如电源故障），文件系统在重新启动后仍必须正常工作。风险在于崩溃可能会中断一系列更新并留下不持久的磁盘数据结构（例如，既在文件中使用又标记为空闲的块）。\n不同的进程可能同时对文件系统进行操作，因此文件系统代码必须协调以保持不变量。\n访问磁盘比访问内存慢几个数量级，因此文件系统必须维护最常使用的块的内存缓存。\n\n\n\nxv6 的文件系统总共有七层。\n\n\n\nFile descriptor\n\n\nPathname\n\n\nDirectory\n\n\nInode\n\n\nLogging\n\n\nBuffer cache\n\n\nDisk\n\n\n\ndisk 层从 virtio 硬件驱动读写块。buffer cache 层将 disk block 缓存并且同步对它们的访问，保证对于任何特定的 block 一次只有一个内核进程能修改它。logging 层允许更高的层包装对若干块的更新为一个 transaction，确保在崩溃时原子地更新块（即全部更新或不更新）。inode 层提供单独的文件，每一个表示为一个 inode——一个唯一的 i-number 和一些持有文件数据的块。directory 层将每个目录实现为一种特殊的 inode，其内容是一系列条目，每个目录条目包含一个文件名和 i-number。pathname 层提供层级路径名，并通过递归查找解析它们。file descriptor 层使用文件系统接口抽象了许多 UNIX 资源（比如管道、设备、文件等）。\n磁盘硬件传统上将磁盘上的数据表示为 512 字节块（也称为扇区）的编号序列：扇区 0 是前 512 字节，扇区 1 是下一个，依此类推。操作系统用于其文件系统的块大小可能与磁盘使用的扇区大小不同，但通常块大小是扇区大小的倍数。xv6 在 struct buf 类型的对象中保存已读入内存的块的副本。此结构中存储的数据有时与磁盘不同步：它可能尚未从磁盘读取（磁盘正在处理它，但尚未返回扇区的内容），或者它可能已被软件更新但尚未写入磁盘。\n文件系统必须计划在磁盘上存储 inode 和内容块的位置。为此，xv6 将磁盘分为几个部分，如图 8.2 所示。文件系统不使用块 0（它保存引导扇区）。块 1 称为 superblock；它包含有关文件系统的元数据（以块为单位的文件系统大小、数据块的数量、inode 的数量以及日志中的块的数量）。从 2 开始的块保存 log。log 之后是 inode，每个块有多个 inode。之后是 bitmap 块，跟踪哪些数据块正在使用。其余块为数据块；每个都在 bitmap 块中标记为空闲，或者保存文件或目录的内容。superblock 由一个名为 mkfs 的单独程序填充，该程序构建初始文件系统。\n\n\n\n\n\n\n\n\n俩职责：(1) 同步访问以确保同一时间只有一个块的拷贝在内存里并且只有一个内核线程可以访问；(2) 将经常访问的块缓存起来。\n主要接口：bread 和 bwrite。前者获得一个包含可以在内存中读取或修改的块副本的 buf，后者将修改后的缓冲区写入磁盘上的相应块。内核线程在使用完缓冲区后必须通过调用 brelse 来释放该缓冲区。buffer cache 使用睡眠锁来确保一次只有一个线程使用每个缓冲区（以及每个磁盘块）； bread 返回一个锁定的缓冲区，brelse 释放该锁。\nbuffer cache 具有固定数量的 buffer 来保存磁盘块。如果文件系统请求 cache 里不存在的块，buffer cache 回收 LRU (least recently used) 的 buffer 来保存新的块。\n\n\n\n（以下条目通过 ChatGPT 生成）\n\n缓存管理的基本结构：\n\n缓存管理中使用了一个双向链表来表示缓存中的缓冲区（buffer）。\n在系统启动时，通过调用 binit 函数（在 kernel/main.c 的第 27 行调用），使用 buf 数组中的 NBUF 个缓冲区来初始化这个链表。\n\n缓冲区的状态：\n\n每个缓冲区有两个状态字段：valid 表示缓冲区中是否包含块的副本，disk 表示缓冲区的内容是否已经传递给磁盘，这可能会改变缓冲区的内容。\n\n缓冲区的获取：\n\nbread 函数（在 kernel/bio.c 的第 93 行）调用 bget 函数来获取给定扇区的缓冲区。\nbget 函数扫描缓冲区链表，以获取指定设备和扇区号的缓冲区。如果找到了相应的缓冲区，则获取该缓冲区的睡眠锁，并返回该缓冲区。\n如果没有缓存的缓冲区用于给定的扇区，则 bget 必须创建一个。它再次扫描缓冲区链表，以查找未使用的缓冲区。任何未使用的缓冲区都可以使用。bget 编辑缓冲区的元数据，记录新的设备和扇区号，并获取其睡眠锁。\n\n缓冲区的并发控制：\n\n重要的是每个磁盘扇区最多只能有一个缓存的缓冲区，以确保读者可以看到写入，并且文件系统使用缓冲区上的锁进行同步。\nbget 通过持续保持 bcache.lock 来确保这个不变式。这导致了对块是否存在的检查以及（如果不存在）指定一个缓冲区来保存块的操作是原子的。\n\n缓冲区的使用：\n\n当 bread 函数从磁盘读取数据（如果需要）并将缓冲区返回给其调用者后，调用者对缓冲区具有排他性使用权，可以读取或写入数据字节。\n如果调用者修改了缓冲区，它必须调用 bwrite 将更改的数据写入磁盘，然后释放缓冲区。\n\n缓冲区的释放：\n\n当调用者使用完缓冲区后，必须调用 brelse 来释放它。brelse 函数释放睡眠锁，并将缓冲区移到链表的前面。\n将缓冲区移到链表的前面使得链表按最近使用的顺序排列，即最先的缓冲区是最近被使用的，最后的是最不常用的。\nbget 中的两个循环利用了这一点：查找现有缓冲区的扫描在最坏的情况下必须处理整个链表，但从最近使用的缓冲区开始检查（从 bcache.head 开始并按照 next 指针遍历）将减少扫描时间，当引用的局部性好时。选择要重用的缓冲区的扫描通过向后扫描（跟随 prev 指针）选择最近最少使用的缓冲区。\n\n\n这里提到了两个锁，bcache.lock 用于保护缓冲区链表的访问和修改，保证其原子性。b-&gt;lock 用于保护对缓冲区内容的读写操作，以确保在一个时刻只有一个线程可以修改缓冲区的内容。\n\n\n\n（跳过了 logging 的部分）\n文件和目录内容存储在磁盘块中，这些磁盘块必须从一个空闲池中分配出来。xv6 的块分配器维护一个 bitmap，每一位上对应一个磁盘块，0 表示空闲，1 表示被使用。mkfs 会设置 bitmap 对应于引导扇区、superblock、日志块、inode 块和 bitmap 块。\nballoc 函数的实现通过循环来考虑每个块，从块 0 开始到文件系统中的总块数（sb.size）为止。它寻找位图中值为零的位，表示该块是空闲的。如果找到了空闲块，就更新 bitmap 并返回该块。为了提高效率，balloc 函数的循环分成两部分。外部循环读取 bitmap 位的每个块，内部循环检查单个 bitmap 块中的所有位。由于 buffer cache 一次只允许一个进程使用任何一个 bitmap 块，所以可以防止两个进程同时分配块时可能出现的竞争条件。\n\n\n\ninode 有两个含义，第一个是在磁盘上的数据结构，由一个文件大小和一列 data block numbers 组成。第二个是在内存上的 inode，它是磁盘上 inode 的拷贝，同时含有内核需要的其他信息。\n磁盘上的 inode 被包在一系列连续磁盘区域中，称为 inode block。每个都是相同大小，因此给定一个下标 \\(n\\)，索引它是很轻松的。实际上这个索引就称为 i-number。\n磁盘上的 inode 被定义为 struct dinode，type 字段区分文件、目录、特殊文件（设备）。如果为 0 表示空闲。nlink 统计指向这个 inode 的条目数量。size 记录文件中内容的字节数。addrs 记录持有文件内容的 disk block number。\n内核将内存中活跃的 inode 集合维护在一个表 itable 中；struct inode 是在内存中的 struct dnode 的拷贝。内核只有在 C 指针指向 inode 时才将那个 inode 拷贝到内存中。并对其维护一个共享指针1。iget 和 iput 分别获取和释放指向 inode 的指针，并修改它的引用计数。\n1 和 C++ 中的 shared_ptr 一致。iget 返回的 struct inode 可能没有任何有用的内容。为了确保它保存磁盘上 inode 的副本，代码必须调用 ilock。这会锁定 inode（以便其他进程无法锁定它）并从磁盘读取（如果尚未读取）。 iunlock 释放 inode 上的锁。将 inode 指针的获取与锁定分开有助于避免某些情况下的死锁，例如在目录查找期间。多个进程可以持有指向 iget 返回的 inode 的 C 指针，但同时只有一个进程可以锁定该 inode。\niput 这里，书上说会写入磁盘，但我并没有在源码中看到相关内容。\n文件系统中的每个文件都有一个链接计数，表示有多少个目录项指向该文件。当链接计数降至零时，表示没有任何目录项指向该文件，即文件不再可见。但是，即使链接计数为零，文件仍然可能在内存中被进程引用，例如某个进程仍然打开着该文件。这意味着如果在最后一个进程关闭文件描述符之前发生了崩溃，文件将会被标记为在磁盘上分配但没有任何目录项指向它。\n针对这个问题，两种解决方案：\n\n系统重启后会扫描整个文件系统，查找已标记为分配但没有目录项指向的文件。一旦找到这样的文件，文件系统就可以释放它们。\n文件系统会在磁盘上记录一个列表，其中包含链接计数降至零但引用计数不为零的文件的 inode 编号。当文件系统删除文件时，如果文件的引用计数达到了零，它会更新该列表，将对应的 inode 从列表中删除。在恢复时，文件系统只需释放列表中的文件。\n\nxv6 以上两种方法都没有实现。这意味着 xv6 有可能会把磁盘空间耗尽。\n\n\n\n主要是代码的实现细节，略过。\n\n\n\n(以下内容由 ChatGPT 生成）\n这段文本描述了文件系统中目录（directory）的内部实现以及两个与目录操作相关的函数：dirlookup 和 dirlink。\n\n目录结构： 目录在内部实现上类似于一个文件，其 inode 的类型为 T_DIR，而数据则是一个目录项（directory entries）的序列。每个目录项都是一个结构体 struct dirent，包含一个名称和一个 inode 编号。目录项中的名称最长为 DIRSIZ（14）个字符，如果名称长度小于 DIRSIZ，则以 NULL（0）字节终止。inode 编号为零的目录项表示空闲。\ndirlookup 函数： dirlookup 函数用于在目录中搜索具有给定名称的目录项。如果找到匹配项，则返回对应的 inode 指针（未加锁），并将 poff 设置为目录中该条目的字节偏移量，以便调用者可以编辑它。如果 dirlookup 找到正确的名称，它会更新 poff 并返回一个通过 iget 获取的未加锁的 inode。dirlookup 返回未锁定的 inode 是因为调用者已经锁定了目录 dp，因此如果 dirlookup 返回已锁定的 inode，那么如果查找的是当前目录的别名.，那么在返回之前尝试锁定 inode 就会尝试重新锁定 dp，从而导致死锁。因此，调用者可以解锁 dp，然后锁定 ip，确保一次只持有一个锁。\ndirlink 函数： dirlink 函数用于在目录 dp 中写入具有给定名称和 inode 编号的新目录项。如果名称已经存在，dirlink 返回一个错误。主循环读取目录项以寻找未分配的条目。当找到一个未分配的条目时，它提前终止循环，并将 off 设置为可用条目的偏移量。否则，循环以 dp-&gt;size 的偏移量结束。无论哪种情况，dirlink 都会在偏移量 off 处写入一个新的目录项，从而向目录中添加一个新的条目。\n\n\n\n\n(以下内容由 ChatGPT 生成）\n这段文本描述了在文件系统中执行路径名查找（path name lookup）的过程，以及其中涉及的一系列函数。\n\nnamei 函数： namei 函数路径并返回相应的 inode。它通过一系列对 dirlookup 的调用来实现路径名的解析，每次调用都对应路径中的一个路径组件。如果路径中存在多个路径组件，namei 会连续调用 dirlookup，直到找到最终的目标 inode。\nnameiparent 函数： nameiparent 函数是 namei 函数的一个变体，但它在最后一个元素之前停止，返回父目录的 inode，并将最后一个元素复制到名称中。它也调用了通用函数 namex 来执行实际的工作。\nnamex 函数： namex 函数开始决定路径解析从哪里开始。如果路径以斜杠开头，则从根目录开始解析；否则，从当前目录开始。然后，它使用 skipelem 逐个考虑路径的每个元素。每次循环迭代都必须在当前 inode ip 中查找名称。循环的每一次迭代开始时，会锁定 ip 并检查其是否为目录。如果不是，查找将失败。如果调用是 nameiparent 并且这是最后一个路径元素，则循环会提前停止。最后，循环使用 dirlookup 查找路径元素，并为下一次迭代做准备。当循环用尽路径元素时，它返回 ip。\n\n这段文本还提到了并发问题，即在进行路径名查找时，可能有多个内核线程同时执行。为了确保并发安全，xv6 采取了一些措施，例如在查找过程中保持对目录的锁定，并在释放锁定之前获取新的锁定。此外，xv6 通过维护 inode 的引用计数来避免在查找过程中删除目录或文件的风险，从而防止由此引起的不一致性。\n\n\n\n每个进程以文件描述符的形式维护自己打开的文件，这是一个 struct file，中间封装了 inode 或者管道。\nftable 是系统维护的一个全局打开的文件表。还定义了一些读写文件的方法，略过。\n\n\n\n冗长的细节，略过。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec13 File System"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec13.html#课前准备",
-    "href": "CS/61810/6.1810Lec13.html#课前准备",
-    "title": "Lec13 File System",
-    "section": "",
-    "text": "Read kernel/bio.c, kernel/fs.c, kernel/sysfile.c, kernel/file.c and “File system” (except for the logging sections).\n\n文件系统的挑战：\n\n文件系统需要磁盘数据结构来表示命名目录和文件的树，记录保存每个文件内容的块的标识，并记录磁盘的哪些区域是空闲的。\n文件系统必须支持崩溃恢复。也就是说，如果发生崩溃（例如电源故障），文件系统在重新启动后仍必须正常工作。风险在于崩溃可能会中断一系列更新并留下不持久的磁盘数据结构（例如，既在文件中使用又标记为空闲的块）。\n不同的进程可能同时对文件系统进行操作，因此文件系统代码必须协调以保持不变量。\n访问磁盘比访问内存慢几个数量级，因此文件系统必须维护最常使用的块的内存缓存。\n\n\n\nxv6 的文件系统总共有七层。\n\n\n\nFile descriptor\n\n\nPathname\n\n\nDirectory\n\n\nInode\n\n\nLogging\n\n\nBuffer cache\n\n\nDisk\n\n\n\ndisk 层从 virtio 硬件驱动读写块。buffer cache 层将 disk block 缓存并且同步对它们的访问，保证对于任何特定的 block 一次只有一个内核进程能修改它。logging 层允许更高的层包装对若干块的更新为一个 transaction，确保在崩溃时原子地更新块（即全部更新或不更新）。inode 层提供单独的文件，每一个表示为一个 inode——一个唯一的 i-number 和一些持有文件数据的块。directory 层将每个目录实现为一种特殊的 inode，其内容是一系列条目，每个目录条目包含一个文件名和 i-number。pathname 层提供层级路径名，并通过递归查找解析它们。file descriptor 层使用文件系统接口抽象了许多 UNIX 资源（比如管道、设备、文件等）。\n磁盘硬件传统上将磁盘上的数据表示为 512 字节块（也称为扇区）的编号序列：扇区 0 是前 512 字节，扇区 1 是下一个，依此类推。操作系统用于其文件系统的块大小可能与磁盘使用的扇区大小不同，但通常块大小是扇区大小的倍数。xv6 在 struct buf 类型的对象中保存已读入内存的块的副本。此结构中存储的数据有时与磁盘不同步：它可能尚未从磁盘读取（磁盘正在处理它，但尚未返回扇区的内容），或者它可能已被软件更新但尚未写入磁盘。\n文件系统必须计划在磁盘上存储 inode 和内容块的位置。为此，xv6 将磁盘分为几个部分，如图 8.2 所示。文件系统不使用块 0（它保存引导扇区）。块 1 称为 superblock；它包含有关文件系统的元数据（以块为单位的文件系统大小、数据块的数量、inode 的数量以及日志中的块的数量）。从 2 开始的块保存 log。log 之后是 inode，每个块有多个 inode。之后是 bitmap 块，跟踪哪些数据块正在使用。其余块为数据块；每个都在 bitmap 块中标记为空闲，或者保存文件或目录的内容。superblock 由一个名为 mkfs 的单独程序填充，该程序构建初始文件系统。\n\n\n\n\n\n\n\n\n俩职责：(1) 同步访问以确保同一时间只有一个块的拷贝在内存里并且只有一个内核线程可以访问；(2) 将经常访问的块缓存起来。\n主要接口：bread 和 bwrite。前者获得一个包含可以在内存中读取或修改的块副本的 buf，后者将修改后的缓冲区写入磁盘上的相应块。内核线程在使用完缓冲区后必须通过调用 brelse 来释放该缓冲区。buffer cache 使用睡眠锁来确保一次只有一个线程使用每个缓冲区（以及每个磁盘块）； bread 返回一个锁定的缓冲区，brelse 释放该锁。\nbuffer cache 具有固定数量的 buffer 来保存磁盘块。如果文件系统请求 cache 里不存在的块，buffer cache 回收 LRU (least recently used) 的 buffer 来保存新的块。\n\n\n\n（以下条目通过 ChatGPT 生成）\n\n缓存管理的基本结构：\n\n缓存管理中使用了一个双向链表来表示缓存中的缓冲区（buffer）。\n在系统启动时，通过调用 binit 函数（在 kernel/main.c 的第 27 行调用），使用 buf 数组中的 NBUF 个缓冲区来初始化这个链表。\n\n缓冲区的状态：\n\n每个缓冲区有两个状态字段：valid 表示缓冲区中是否包含块的副本，disk 表示缓冲区的内容是否已经传递给磁盘，这可能会改变缓冲区的内容。\n\n缓冲区的获取：\n\nbread 函数（在 kernel/bio.c 的第 93 行）调用 bget 函数来获取给定扇区的缓冲区。\nbget 函数扫描缓冲区链表，以获取指定设备和扇区号的缓冲区。如果找到了相应的缓冲区，则获取该缓冲区的睡眠锁，并返回该缓冲区。\n如果没有缓存的缓冲区用于给定的扇区，则 bget 必须创建一个。它再次扫描缓冲区链表，以查找未使用的缓冲区。任何未使用的缓冲区都可以使用。bget 编辑缓冲区的元数据，记录新的设备和扇区号，并获取其睡眠锁。\n\n缓冲区的并发控制：\n\n重要的是每个磁盘扇区最多只能有一个缓存的缓冲区，以确保读者可以看到写入，并且文件系统使用缓冲区上的锁进行同步。\nbget 通过持续保持 bcache.lock 来确保这个不变式。这导致了对块是否存在的检查以及（如果不存在）指定一个缓冲区来保存块的操作是原子的。\n\n缓冲区的使用：\n\n当 bread 函数从磁盘读取数据（如果需要）并将缓冲区返回给其调用者后，调用者对缓冲区具有排他性使用权，可以读取或写入数据字节。\n如果调用者修改了缓冲区，它必须调用 bwrite 将更改的数据写入磁盘，然后释放缓冲区。\n\n缓冲区的释放：\n\n当调用者使用完缓冲区后，必须调用 brelse 来释放它。brelse 函数释放睡眠锁，并将缓冲区移到链表的前面。\n将缓冲区移到链表的前面使得链表按最近使用的顺序排列，即最先的缓冲区是最近被使用的，最后的是最不常用的。\nbget 中的两个循环利用了这一点：查找现有缓冲区的扫描在最坏的情况下必须处理整个链表，但从最近使用的缓冲区开始检查（从 bcache.head 开始并按照 next 指针遍历）将减少扫描时间，当引用的局部性好时。选择要重用的缓冲区的扫描通过向后扫描（跟随 prev 指针）选择最近最少使用的缓冲区。\n\n\n这里提到了两个锁，bcache.lock 用于保护缓冲区链表的访问和修改，保证其原子性。b-&gt;lock 用于保护对缓冲区内容的读写操作，以确保在一个时刻只有一个线程可以修改缓冲区的内容。\n\n\n\n（跳过了 logging 的部分）\n文件和目录内容存储在磁盘块中，这些磁盘块必须从一个空闲池中分配出来。xv6 的块分配器维护一个 bitmap，每一位上对应一个磁盘块，0 表示空闲，1 表示被使用。mkfs 会设置 bitmap 对应于引导扇区、superblock、日志块、inode 块和 bitmap 块。\nballoc 函数的实现通过循环来考虑每个块，从块 0 开始到文件系统中的总块数（sb.size）为止。它寻找位图中值为零的位，表示该块是空闲的。如果找到了空闲块，就更新 bitmap 并返回该块。为了提高效率，balloc 函数的循环分成两部分。外部循环读取 bitmap 位的每个块，内部循环检查单个 bitmap 块中的所有位。由于 buffer cache 一次只允许一个进程使用任何一个 bitmap 块，所以可以防止两个进程同时分配块时可能出现的竞争条件。\n\n\n\ninode 有两个含义，第一个是在磁盘上的数据结构，由一个文件大小和一列 data block numbers 组成。第二个是在内存上的 inode，它是磁盘上 inode 的拷贝，同时含有内核需要的其他信息。\n磁盘上的 inode 被包在一系列连续磁盘区域中，称为 inode block。每个都是相同大小，因此给定一个下标 \\(n\\)，索引它是很轻松的。实际上这个索引就称为 i-number。\n磁盘上的 inode 被定义为 struct dinode，type 字段区分文件、目录、特殊文件（设备）。如果为 0 表示空闲。nlink 统计指向这个 inode 的条目数量。size 记录文件中内容的字节数。addrs 记录持有文件内容的 disk block number。\n内核将内存中活跃的 inode 集合维护在一个表 itable 中；struct inode 是在内存中的 struct dnode 的拷贝。内核只有在 C 指针指向 inode 时才将那个 inode 拷贝到内存中。并对其维护一个共享指针1。iget 和 iput 分别获取和释放指向 inode 的指针，并修改它的引用计数。\n1 和 C++ 中的 shared_ptr 一致。iget 返回的 struct inode 可能没有任何有用的内容。为了确保它保存磁盘上 inode 的副本，代码必须调用 ilock。这会锁定 inode（以便其他进程无法锁定它）并从磁盘读取（如果尚未读取）。 iunlock 释放 inode 上的锁。将 inode 指针的获取与锁定分开有助于避免某些情况下的死锁，例如在目录查找期间。多个进程可以持有指向 iget 返回的 inode 的 C 指针，但同时只有一个进程可以锁定该 inode。\niput 这里，书上说会写入磁盘，但我并没有在源码中看到相关内容。\n文件系统中的每个文件都有一个链接计数，表示有多少个目录项指向该文件。当链接计数降至零时，表示没有任何目录项指向该文件，即文件不再可见。但是，即使链接计数为零，文件仍然可能在内存中被进程引用，例如某个进程仍然打开着该文件。这意味着如果在最后一个进程关闭文件描述符之前发生了崩溃，文件将会被标记为在磁盘上分配但没有任何目录项指向它。\n针对这个问题，两种解决方案：\n\n系统重启后会扫描整个文件系统，查找已标记为分配但没有目录项指向的文件。一旦找到这样的文件，文件系统就可以释放它们。\n文件系统会在磁盘上记录一个列表，其中包含链接计数降至零但引用计数不为零的文件的 inode 编号。当文件系统删除文件时，如果文件的引用计数达到了零，它会更新该列表，将对应的 inode 从列表中删除。在恢复时，文件系统只需释放列表中的文件。\n\nxv6 以上两种方法都没有实现。这意味着 xv6 有可能会把磁盘空间耗尽。\n\n\n\n主要是代码的实现细节，略过。\n\n\n\n(以下内容由 ChatGPT 生成）\n这段文本描述了文件系统中目录（directory）的内部实现以及两个与目录操作相关的函数：dirlookup 和 dirlink。\n\n目录结构： 目录在内部实现上类似于一个文件，其 inode 的类型为 T_DIR，而数据则是一个目录项（directory entries）的序列。每个目录项都是一个结构体 struct dirent，包含一个名称和一个 inode 编号。目录项中的名称最长为 DIRSIZ（14）个字符，如果名称长度小于 DIRSIZ，则以 NULL（0）字节终止。inode 编号为零的目录项表示空闲。\ndirlookup 函数： dirlookup 函数用于在目录中搜索具有给定名称的目录项。如果找到匹配项，则返回对应的 inode 指针（未加锁），并将 poff 设置为目录中该条目的字节偏移量，以便调用者可以编辑它。如果 dirlookup 找到正确的名称，它会更新 poff 并返回一个通过 iget 获取的未加锁的 inode。dirlookup 返回未锁定的 inode 是因为调用者已经锁定了目录 dp，因此如果 dirlookup 返回已锁定的 inode，那么如果查找的是当前目录的别名.，那么在返回之前尝试锁定 inode 就会尝试重新锁定 dp，从而导致死锁。因此，调用者可以解锁 dp，然后锁定 ip，确保一次只持有一个锁。\ndirlink 函数： dirlink 函数用于在目录 dp 中写入具有给定名称和 inode 编号的新目录项。如果名称已经存在，dirlink 返回一个错误。主循环读取目录项以寻找未分配的条目。当找到一个未分配的条目时，它提前终止循环，并将 off 设置为可用条目的偏移量。否则，循环以 dp-&gt;size 的偏移量结束。无论哪种情况，dirlink 都会在偏移量 off 处写入一个新的目录项，从而向目录中添加一个新的条目。\n\n\n\n\n(以下内容由 ChatGPT 生成）\n这段文本描述了在文件系统中执行路径名查找（path name lookup）的过程，以及其中涉及的一系列函数。\n\nnamei 函数： namei 函数路径并返回相应的 inode。它通过一系列对 dirlookup 的调用来实现路径名的解析，每次调用都对应路径中的一个路径组件。如果路径中存在多个路径组件，namei 会连续调用 dirlookup，直到找到最终的目标 inode。\nnameiparent 函数： nameiparent 函数是 namei 函数的一个变体，但它在最后一个元素之前停止，返回父目录的 inode，并将最后一个元素复制到名称中。它也调用了通用函数 namex 来执行实际的工作。\nnamex 函数： namex 函数开始决定路径解析从哪里开始。如果路径以斜杠开头，则从根目录开始解析；否则，从当前目录开始。然后，它使用 skipelem 逐个考虑路径的每个元素。每次循环迭代都必须在当前 inode ip 中查找名称。循环的每一次迭代开始时，会锁定 ip 并检查其是否为目录。如果不是，查找将失败。如果调用是 nameiparent 并且这是最后一个路径元素，则循环会提前停止。最后，循环使用 dirlookup 查找路径元素，并为下一次迭代做准备。当循环用尽路径元素时，它返回 ip。\n\n这段文本还提到了并发问题，即在进行路径名查找时，可能有多个内核线程同时执行。为了确保并发安全，xv6 采取了一些措施，例如在查找过程中保持对目录的锁定，并在释放锁定之前获取新的锁定。此外，xv6 通过维护 inode 的引用计数来避免在查找过程中删除目录或文件的风险，从而防止由此引起的不一致性。\n\n\n\n每个进程以文件描述符的形式维护自己打开的文件，这是一个 struct file，中间封装了 inode 或者管道。\nftable 是系统维护的一个全局打开的文件表。还定义了一些读写文件的方法，略过。\n\n\n\n冗长的细节，略过。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec13 File System"
+      "Lec4 Page Tables"
     ]
   },
   {
@@ -475,411 +293,360 @@
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lab1.html",
-    "href": "CS/61810/6.1810Lab1.html",
-    "title": "Lab1 util: Xv6 and Unix utilities",
+    "objectID": "CS/CS144/CS144Unit3.html",
+    "href": "CS/CS144/CS144Unit3.html",
+    "title": "Unit3: Packet Switching",
     "section": "",
-    "text": "整个 lab 总计耗时大概在 7 个小时（不算开始配置环境的时间），还得继续努力。",
+    "text": "数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab1 util: Xv6 and Unix utilities"
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lab1.html#boot-xv6-easy",
-    "href": "CS/61810/6.1810Lab1.html#boot-xv6-easy",
-    "title": "Lab1 util: Xv6 and Unix utilities",
-    "section": "1 Boot xv6 (easy)",
-    "text": "1 Boot xv6 (easy)\n搞了半天，令人感慨。主要原因是 qemu 怎么升级都到不了 5.1+，刚开始以为是源的问题，折腾了半天，无果。后面把 Ubuntu 从 20.04 升到 22.041，终于好了。后面查了查，似乎想在低版本 Ubuntu 使用比较高版本的软件需要配置 PPA 源。\n1 后面为了搞 CS144 的 lab，又升级到 24.04 了，真折腾。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab1 util: Xv6 and Unix utilities"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lab1.html#sleep-easy",
-    "href": "CS/61810/6.1810Lab1.html#sleep-easy",
-    "title": "Lab1 util: Xv6 and Unix utilities",
-    "section": "2 sleep (easy)",
-    "text": "2 sleep (easy)\n\nImplement a user-level sleep program for xv6, along the lines of the UNIX sleep command. Your sleep should pause for a user-specified number of ticks. A tick is a notion of time defined by the xv6 kernel, namely the time between two interrupts from the timer chip. Your solution should be in the file user/sleep.c.\n\n根据提示进行即可。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab1 util: Xv6 and Unix utilities"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lab1.html#pingpong-easy",
-    "href": "CS/61810/6.1810Lab1.html#pingpong-easy",
-    "title": "Lab1 util: Xv6 and Unix utilities",
-    "section": "3 pingpong (easy)",
-    "text": "3 pingpong (easy)\n\nWrite a user-level program that uses xv6 system calls to ‘’ping-pong’’ a byte between two processes over a pair of pipes, one for each direction. The parent should send a byte to the child; the child should print “&lt;pid&gt;: received ping”, where &lt;pid&gt; is its process ID, write the byte on the pipe to the parent, and exit; the parent should read the byte from the child, print “&lt;pid&gt;: received pong”, and exit. Your solution should be in the file user/pingpong.c.\n\n根据提示进行即可。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab1 util: Xv6 and Unix utilities"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lab1.html#primes-moderatehard",
-    "href": "CS/61810/6.1810Lab1.html#primes-moderatehard",
-    "title": "Lab1 util: Xv6 and Unix utilities",
-    "section": "4 primes (moderate)/(hard)",
-    "text": "4 primes (moderate)/(hard)\n\nWrite a concurrent prime sieve program for xv6 using pipes and the design illustrated in the picture halfway down this page and the surrounding text. This idea is due to Doug McIlroy, inventor of Unix pipes. Your solution should be in the file user/primes.c.\n\n这道题确实有点难度。开始时，我是在父进程中计算筛法，子进程用来继续 fork。但是子进程不能等父进程，我希望可以将一轮筛完后再进行下一轮，所以最终在子进程中计算。下一个问题是，如果不关掉写端，读端在没数据时就会堵塞。所以你必须关掉写端，或者知道确切要读入多少个数字。解决办法要么用两个管道，要么用数组，然后把总数也塞进管道里。我选择了后者，但是似乎这样背离了题目的初衷。后面去吃饭的路上突然明白了，只需要给最后塞个 -1 标志结束不就完美解决了？\n\n\nCode\n\nint main(int argc, char *argv[])\n{\n    int p[2], n = -1;\n    pipe(p);\n    for(int i = 2; i &lt;= 35; ++i)\n        write(p[1], &i, sizeof(int));\n    write(p[1], &n, sizeof(int));\n\n    for(;;) {\n        if(fork() == 0) {\n            read(p[0], &n, sizeof(int));\n            if(n == -1) exit(1);\n            fprintf(1, \"prime %d\\n\", n);\n            int m;\n            while(read(p[0], &m, sizeof(int))) {\n                if(m == -1) break;\n                if(m % n != 0) write(p[1], &m, sizeof(int));\n            }\n            m = -1;\n            write(p[1], &m, sizeof(int));\n            break;\n        } else {\n            int end;\n            wait(&end);\n            if(end) break;\n        }\n    }\n    exit(0);\n}",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab1 util: Xv6 and Unix utilities"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lab1.html#find-moderate",
-    "href": "CS/61810/6.1810Lab1.html#find-moderate",
-    "title": "Lab1 util: Xv6 and Unix utilities",
-    "section": "5 find (moderate)",
-    "text": "5 find (moderate)\n\nWrite a simple version of the UNIX find program for xv6: find all the files in a directory tree with a specific name. Your solution should be in the file user/find.c.\n\n对于文件夹类型的 fd，现在只需要知道 kernel/fs.h 里的那句注释\n\nDirectory is a file containing a sequence of dirent structures.\n\n就足以通过这道题，仿照 user/ls.h 里的做法进行读取即可。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab1 util: Xv6 and Unix utilities"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lab1.html#xargs-moderate",
-    "href": "CS/61810/6.1810Lab1.html#xargs-moderate",
-    "title": "Lab1 util: Xv6 and Unix utilities",
-    "section": "6 xargs (moderate)",
-    "text": "6 xargs (moderate)\n\nWrite a simple version of the UNIX xargs program for xv6: its arguments describe a command to run, it reads lines from the standard input, and it runs the command for each line, appending the line to the command’s arguments. Your solution should be in the file user/xargs.c.\n\n我感觉这道应该算 easy。只需要调整一下参数顺序就行了。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab1 util: Xv6 and Unix utilities"
-    ]
-  },
-  {
-    "objectID": "CS/3d-reconstruction/colmap-notes.html",
-    "href": "CS/3d-reconstruction/colmap-notes.html",
-    "title": "colmap 源码阅读",
+    "objectID": "CS/CS144/CS144Unit3.html#what-is-packet-switching",
+    "href": "CS/CS144/CS144Unit3.html#what-is-packet-switching",
+    "title": "Unit3: Packet Switching",
     "section": "",
-    "text": "首先，建立工作文件夹，在工作文件夹中新建一个 images 文件夹来存图片。当然也可以把图片放在另一个目录。\n重建命令：\ncolmap automatic_reconstructor --workspace_path 3dwk --image_path 3dwk/images\n会生成稀疏点云、稠密点云和泊松重建的三维网格体，同时还有存有图片特征点的数据库。\n\n\n\ncolmap.cc -&gt; sfm.cc -&gt; automatic_reconstruction.cc -&gt; feature_extraction.cc -&gt; feature_matching.cc -&gt; incremental_mapper.cc\ncamera_model 默认为 SIMPLE_RADIAL。重建质量默认为 HIGH。特征匹配的默认匹配器为 ExhaustiveFeatureMatcher。",
+    "text": "数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "三维重建",
-      "colmap 源码阅读"
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
     ]
   },
   {
-    "objectID": "CS/3d-reconstruction/colmap-notes.html#前置准备",
-    "href": "CS/3d-reconstruction/colmap-notes.html#前置准备",
-    "title": "colmap 源码阅读",
+    "objectID": "CS/CS144/CS144Unit3.html#end-to-end-delay",
+    "href": "CS/CS144/CS144Unit3.html#end-to-end-delay",
+    "title": "Unit3: Packet Switching",
+    "section": "2 End-to-End delay",
+    "text": "2 End-to-End delay\n\n2.1 传播延迟（Progagation Delay）\n传播延迟是指信息的一个比特在链路上传输所需的时间，取决于链路的长度和比特传输的速度。在大多数情况下，比特的传播速度接近光速。传播延迟与链路的数据速率无关，而仅取决于比特的传播速度和电缆的长度。\n\n\n2.2 Packetization Delay\npacketization delay 是指从将数据包的第一个比特放入链路到最后一个比特放入链路之间的时间。packetization delay 取决于我们能够将比特放入链路的速度，也就是数据速率。数据包化延迟只与数据包的长度和数据速率有关，而与链路的长度或比特传播速度无关。\n\n\n2.3 端到端延迟\n将一个长为 \\(p\\) 的包从源主机到目的主机，中间经过若干条线路，每条线路的长度为 \\(l_i\\)，数据速率为 \\(r_i\\)，则端到端延迟为\n\\[ t = \\sum_i \\left(\\frac{p}{r_i} + \\frac{l_i}{c}\\right) \\]其中 \\(c\\) 是数据在传播介质（光纤等）中的速度，接近光速。\n这不是故事全部，当多个包同时抵达路由器，它们通过 packet buffer 暂存在一起并以 FCFS（First-Come-First-Served）的顺序送出。因此，我们需要加入每条线路上的排队延迟（Queueing Delay）\\(Q_i\\)，即\n\\[ t = \\sum_i \\left(\\frac{p}{r_i} + \\frac{l_i}{c} + Q_i(t)\\right) \\]排队延迟是不可预测的，取决于网络中其他用户发送的流量，是端到端延迟的唯一随机变量。\n\n\n2.4 Playback Buffers\n这个东西就是平常在网站上看视频时的灰色进度条，表示已经接收到且提前缓冲好但还未播放的数据。这部分比较简单，略过。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit3.html#how-a-packet-switch-works",
+    "href": "CS/CS144/CS144Unit3.html#how-a-packet-switch-works",
+    "title": "Unit3: Packet Switching",
+    "section": "3 How a packet switch works",
+    "text": "3 How a packet switch works\n\n3.1 Output Queued Packet Switch\n下图是一个交换机或路由器内的布局。\n\n\n\n\n\nPacket Queue 用于在拥塞时缓存将要发出去的包，不同颜色的包表示不同的转发端口。当有两个包要从相同的端口转发，其中一个会先在队列中等待。如果所有的 \\(n\\) 个端口都要从相同的端口转发出去，会导致效率的急剧降低。\n\n\n3.2 Input Queued Packet Switch\n\n\n\n\n\ninput queued 将缓存放在了输入端口。相应地，input queued 会产生 Head of Line(HOL) Blocking 问题：当当前队列最前端的数据过大时，将它 switch 出去要花费更多的时间，导致队列后面其他端口的包因为堵塞无法发出。这对效率是一个很大的影响（大概会缩减至 \\(2-\\sqrt{2}\\approx 58\\%\\) ）。解决方法是引入 Virtual Output Queues，对于每个 input queue，把将要发送到同一个端口的包再分到一个 virtual queue 中，这样不同发出端口的包不会相互影响。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit3.html#strict-priorities-and-guaranteed-flow-rates",
+    "href": "CS/CS144/CS144Unit3.html#strict-priorities-and-guaranteed-flow-rates",
+    "title": "Unit3: Packet Switching",
+    "section": "4 Strict Priorities and Guaranteed Flow Rates",
+    "text": "4 Strict Priorities and Guaranteed Flow Rates\n如果有很多流经过队列，它们将按照 FIFO 顺序离开。谁发送的最多，谁的速率就最高。如果流量真的很大，那么一小部分流量可能会被完全挤出。这样鼓励了不良行为——对于一个流来说，最好的做法是尝试通过尽可能快的发送来挤出所有其他流。\n一个方法是引入严格优先级 (Strict Priorities)。一个高优先级队列一个低优先级队列，只有当高优先级队列的处理完了才能到低优先级。但如果高优先级的流完全占据了数量上的优势，低优先级的会被饿死1。\n1 这个描述真的太资本主义了，乐。更通用的做法是，引入带权优先级 (Weighted Priorities)。考虑 \\(n\\) 个优先级队列，每个队列都有一个权重 \\(w_i\\)。我们分若干轮处理所有的包。对于每一轮的每个队列，我们为这个队列处理 \\(w_i\\) bit 的数据（当然在实际中不能）。当第 \\(i\\) 个队列的第 \\(k\\) 个包到达时，我们算出它将在第几轮为完全送出，记为 \\(F_k\\)，有\n\\[\nF_k = \\max\\{F_{k-1}, \\mathrm{now}\\}+\\frac{L_k}{w_i}\n\\]\n\\(\\rm now\\) 是当前的轮数，因为可能会有队列为空的情况。\\(L_k\\) 是包的长度。此时，我们遍历每个队列的 Head of Line，选择最小的 \\(F\\) ，即结束轮数，来服务对应的包。注意，上面所说的按每个 bit 处理的方法只是为了得到最终的结论，实际上还是以每个包为单位来处理的。从长期来看，以上方法的结果可以趋近于 bit-by-bit 处理的结果。\n以上方法称为加权公平排队 (Weighted Fair Queueing, WFQ) 或分组通用处理器共享 (Packetized Generalized Processor Sharing, PGPS)。\n接下来我们用上面的方法做到真正可保证的 \\(Q_i(t)\\)，因为 WFQ 给了我们每个队列效率的上界 \\(B/R\\) ，我们只需要处理一次性数据涌入过多导致 buffer 溢出的情况。\n首先，对于一个队列，如果在任意一个时间段 \\([t,t+T]\\)，它的到达量 \\(A(t)\\) 均满足 \\(A(t+T)-A(t)\\le B+RT\\)，其中 \\(B\\) 为 buffer 的大小，那么我们可以保证队列不会溢出。我们称这种情况是 \\(A(t)\\) 满足 \\((\\sigma,\\rho)\\) regulation，此时 \\(\\sigma = B, \\rho = R\\)。\n因此，我们可以保证在 \\(B\\ge \\sigma, R\\ge \\rho\\) 的情况下，延迟 \\(Q(t)\\le B/R\\)。\n如果流使用了 leaky-bucket (实现 \\((\\sigma, \\rho)\\) constraint)，路由使用了 WFQ，那么端到端延迟就可以保证。RSVP (Resource Reservation Protocol) 就是实现了端到端保证的协议 [IETF RFC 2205]。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit3: Packet Switching"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit2.html",
+    "href": "CS/CS144/CS144Unit2.html",
+    "title": "Unit2: The Transport Layer",
     "section": "",
-    "text": "首先，建立工作文件夹，在工作文件夹中新建一个 images 文件夹来存图片。当然也可以把图片放在另一个目录。\n重建命令：\ncolmap automatic_reconstructor --workspace_path 3dwk --image_path 3dwk/images\n会生成稀疏点云、稠密点云和泊松重建的三维网格体，同时还有存有图片特征点的数据库。\n\n\n\ncolmap.cc -&gt; sfm.cc -&gt; automatic_reconstruction.cc -&gt; feature_extraction.cc -&gt; feature_matching.cc -&gt; incremental_mapper.cc\ncamera_model 默认为 SIMPLE_RADIAL。重建质量默认为 HIGH。特征匹配的默认匹配器为 ExhaustiveFeatureMatcher。",
+    "text": "TCP 提供两个应用进程之间顺序、可靠的字节流传输。\n\n\n见上一节。在主机 A 和 B 建立联系时，A 会生成一个 ISN（Initial Sequence Number）随 SYN 一同传递给 B，同理，B 也会随 SYN+ACK 一同传输自己的 ISN。ISN 可以一定程度上保证 TCP 在全因特网范围内 ID 的唯一性。\n\n\n\n建立完连接后，A 将字节流中的数据放入 TCP 段（TCP Segment）中，交给 IP 层进一步封装，之后交给 B。B 提取 TCP 段并重建字节流，传递给应用层。\n\n\n\nA 向 B 传输 FIN 消息，表示结束（finish）。B 返回 ACK 消息并不再从 A 读取数据，但是 B 仍可以向 A 传输数据。当 B 结束传输数据时，向 A 发送 FIN 消息，A 回复 ACK 消息。此时，连接完全关闭。\n\n\n\n\n字节流：可靠的字节传输服务。\n可靠传输：\n\nACK 信息来确认数据传输正确。\n校验和（Checksums）检测损坏数据。\n序列号检测丢失数据。\n流量控制（flow-control）来防止接收方过载。\n\n按顺序：从 A 发送的数据以相同的顺序倍被 B 的应用层接收。如果 B 接收的 TCP 段是无序的，TCP 层会重新排出正确的顺序。\n拥塞控制（congestion control）：TCP 试图将网络上的所有 TCP 连接的负载均衡。后面会细讲。\n\n\n\n\n可以参考这篇文章：TCP 报文段格式。\n\n\n\n\n\n\n\n\nID 的唯一性由五个属性保证：TCP 段的源端口和目的端口、IP 段的源地址（IPSA）和目的地址（IPDA），以及协议 ID（即 Protocol ID = “TCP”）。主机 A 对每个新连接会增加源端口的编号，同时生成 ISN 来尽量保证唯一性。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "三维重建",
-      "colmap 源码阅读"
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit2: The Transport Layer"
     ]
   },
   {
-    "objectID": "CS/3d-reconstruction/colmap-notes.html#模块分析",
-    "href": "CS/3d-reconstruction/colmap-notes.html#模块分析",
-    "title": "colmap 源码阅读",
-    "section": "2 模块分析",
-    "text": "2 模块分析\n\n2.1 特征提取\n相关文件位于 src\\colmap\\controllers\\feature_extraction.cc。分为两种：extractor 和 importer。\n// Reads images from a folder, extracts features, and writes them to database.\nstd::unique_ptr&lt;Thread&gt; CreateFeatureExtractorController(\n    const ImageReaderOptions& reader_options,\n    const SiftExtractionOptions& sift_options);\n\n// Import features from text files. Each image must have a corresponding text\n// file with the same name and an additional \".txt\" suffix.\nstd::unique_ptr&lt;Thread&gt; CreateFeatureImporterController(\n    const ImageReaderOptions& reader_options, const std::string& import_path);",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "三维重建",
-      "colmap 源码阅读"
-    ]
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
+    "objectID": "CS/CS144/CS144Unit2.html#tcp-服务模型",
+    "href": "CS/CS144/CS144Unit2.html#tcp-服务模型",
+    "title": "Unit2: The Transport Layer",
     "section": "",
-    "text": "About this site"
+    "text": "TCP 提供两个应用进程之间顺序、可靠的字节流传输。\n\n\n见上一节。在主机 A 和 B 建立联系时，A 会生成一个 ISN（Initial Sequence Number）随 SYN 一同传递给 B，同理，B 也会随 SYN+ACK 一同传输自己的 ISN。ISN 可以一定程度上保证 TCP 在全因特网范围内 ID 的唯一性。\n\n\n\n建立完连接后，A 将字节流中的数据放入 TCP 段（TCP Segment）中，交给 IP 层进一步封装，之后交给 B。B 提取 TCP 段并重建字节流，传递给应用层。\n\n\n\nA 向 B 传输 FIN 消息，表示结束（finish）。B 返回 ACK 消息并不再从 A 读取数据，但是 B 仍可以向 A 传输数据。当 B 结束传输数据时，向 A 发送 FIN 消息，A 回复 ACK 消息。此时，连接完全关闭。\n\n\n\n\n字节流：可靠的字节传输服务。\n可靠传输：\n\nACK 信息来确认数据传输正确。\n校验和（Checksums）检测损坏数据。\n序列号检测丢失数据。\n流量控制（flow-control）来防止接收方过载。\n\n按顺序：从 A 发送的数据以相同的顺序倍被 B 的应用层接收。如果 B 接收的 TCP 段是无序的，TCP 层会重新排出正确的顺序。\n拥塞控制（congestion control）：TCP 试图将网络上的所有 TCP 连接的负载均衡。后面会细讲。\n\n\n\n\n可以参考这篇文章：TCP 报文段格式。\n\n\n\n\n\n\n\n\nID 的唯一性由五个属性保证：TCP 段的源端口和目的端口、IP 段的源地址（IPSA）和目的地址（IPDA），以及协议 ID（即 Protocol ID = “TCP”）。主机 A 对每个新连接会增加源端口的编号，同时生成 ISN 来尽量保证唯一性。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit2: The Transport Layer"
+    ]
   },
   {
-    "objectID": "CS/3d-reconstruction/sfm-revisited.html",
-    "href": "CS/3d-reconstruction/sfm-revisited.html",
-    "title": "Structure-from-Motion Revisited 阅读笔记",
+    "objectID": "CS/CS144/CS144Unit2.html#udp-服务模型",
+    "href": "CS/CS144/CS144Unit2.html#udp-服务模型",
+    "title": "Unit2: The Transport Layer",
+    "section": "2 UDP 服务模型",
+    "text": "2 UDP 服务模型\nUDP 提供更简单的传输服务。\n\n2.1 UDP 的特点\n\n无连接：不保证连接建立。\n数据报：包会以任何顺序传输。\nSelf-contained datagrams\n不可靠传输：\n\n没有确认消息。\n没有检测丢失或顺序错乱的机制。\n没有流量控制。\n\n\n\n\n2.2 UDP 段格式\n\n\n\n\n\n设计 UDP 的意图是为了更快的传输速率，或者应用层自己对数据传输的可靠性做规定，方便扩展。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit2: The Transport Layer"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit2.html#icmpinternet-control-message-protocol服务模型",
+    "href": "CS/CS144/CS144Unit2.html#icmpinternet-control-message-protocol服务模型",
+    "title": "Unit2: The Transport Layer",
+    "section": "3 ICMP（Internet Control Message Protocol）服务模型",
+    "text": "3 ICMP（Internet Control Message Protocol）服务模型\nICMP 给终端主机和路由器提供网络层的信息，比如错误和诊断信息。ICMP 也属于传输层。ping 和 traceroute 指令就是使用 ICMP 的例子。\nIP 数据报在终端主机间逐跳（hop-by-hop）传递，每个路由器都会生成 forwarding table 来指示数据报的下一个目的地。当出现错误时，比如 forwarding table 上没有对应的 IP 地址，路由器会生成一个 ICMP 包传回主机，表明 “Destination Network Unreachable”。同样，ICMP 也有对应的格式，这里略过。\n\n3.1 ICMP 的特点\n\n报告消息：self-contained 的报告错误的消息。\n不可靠。不会重新发送。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit2: The Transport Layer"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit2.html#end-to-end-principle",
+    "href": "CS/CS144/CS144Unit2.html#end-to-end-principle",
+    "title": "Unit2: The Transport Layer",
+    "section": "4 End-to-End Principle",
+    "text": "4 End-to-End Principle\n端到端原则：\n\nThe function in question can completely and correctly be implemented only with the knowledge and help of the application standing at the end points of the communication system. Therefore, providing that questioned function as a feature of the communication system itself is not possible. (Sometimes an incomplete version of the function provided by the communication system may be useful as a performance enhancement.) We call this line of reasoning … “the end-to-end argument.1\n问题中涉及的功能只有在通信系统末端的应用程序的知识和帮助下才能完全且正确地实现。因此，将该功能作为通信系统本身的特性提供是不可能的。（有时，由通信系统提供的该功能的不完整版本可能对性能有所提升。）我们称这种推理为……“端到端论证”。\n1 Saltzer, Reed, and Clark, End-to-end Arguments in System Design, 1984\n强端到端：\n\nThe network’s job is to transmit datagrams as efficiently and flexibly as possible. Everything else should be done at the fringes …2\n2 [RFC 1958]",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit2: The Transport Layer"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit2.html#错误检测checksumcrc-和-mac",
+    "href": "CS/CS144/CS144Unit2.html#错误检测checksumcrc-和-mac",
+    "title": "Unit2: The Transport Layer",
+    "section": "5 错误检测：Checksum，CRC 和 MAC",
+    "text": "5 错误检测：Checksum，CRC 和 MAC\n\nChecksum 把包中每个 16 位的数据加在一起（IP，TCP）\n\n软件计算快速、低开销\n不是很健壮\n\n循环冗余校验（CRC，Cyclic Redundancy Check）计算模一个多项式的余数（以太网）\n\n比 Checksum 开销更大，但是在今天的硬件上非常容易实现\n保证检测出任意 2 位错误、任意 \\(\\le c\\) 位的突发错误、任意奇数位错误。\n\n消息认证码（MAC，Message Authentication Code）安全传输数据（传输层安全协议（TLS，Transport Layer Security））\n\n检测恶意修改。\n任意两条消息有 \\(2^{-n}\\) 的概率有相同的 MAC。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit2: The Transport Layer"
+    ]
+  },
+  {
+    "objectID": "CS/CS144/CS144Unit2.html#流量控制",
+    "href": "CS/CS144/CS144Unit2.html#流量控制",
+    "title": "Unit2: The Transport Layer",
+    "section": "6 流量控制",
+    "text": "6 流量控制\n\n6.1 Stop and Wait\n如果接收方的吞吐量小于传送方，则需要流量控制。最简单的方式就是 Stop and Wait，即发送方每次只传送一个包，直到收到了 ACK 消息再发送下一个；否则在等待一段时间后认定超时，重新发送这个包。这种方法可能存在问题，这里略过。\n\n\n6.2 滑动窗口\nStop and Wait 方式效率太低。滑动窗口允许多个包同时在网络上传输，这些包组成了一个“窗口”，当接收到 ACK 消息时，移动这个窗口。具体可以参考《滑动窗口，TCP的流量控制机制》。\n根据收发窗口的大小，会发生 go-back-N 或 selective repeat 两种情况。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "CS144 Introduction to Computer Networking 笔记",
+      "Unit2: The Transport Layer"
+    ]
+  },
+  {
+    "objectID": "CS/ModernCpp/Templates.html",
+    "href": "CS/ModernCpp/Templates.html",
+    "title": "模板与泛型编程",
     "section": "",
-    "text": "Incremental Structure-from-Motion pipeline.\n\n\n\n\n\n\n对于图像集 \\(\\mathcal{I} = \\{ I_i \\mid i = 1\\dots N_I \\}\\) 中的每幅图片 \\(I_i\\) 检测它的局部特征 \\(\\mathcal{F}_i = \\{ (\\mathbf{x}_j, \\mathbf{f}_j) \\mid j = 1\\dots N_{F_i} \\}\\) ，其中 \\(\\mathbf{x}_j\\in\\mathbb{R}^2\\) 并且 \\(\\mathbf{f}_j\\) 是描述子。特征应当是在辐射测量和几何测量的变化下不变的。常用方法：SIFT1 和其变体2。\n1 D. G. Lowe. Distinctive image features from scale-invariant keypoints. IJCV, 2004.2 T. Tuytelaars and K. Mikolajczyk. Local invariant feature detectors: a survey. CGV, 2008.\n\n\nSfM 利用 \\(\\mathcal{F_i}\\) 作为图像的外观描述，发现各个图像中的重叠场景。\n坑，之后再添。\n\n\n\n\n\nIncremental Structure-from-Motion pipeline.",
+    "text": "非常基础的内容会以很少的笔墨稍微提及，我们会迅速聚焦到重要主题上。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "三维重建",
-      "Structure-from-Motion Revisited 阅读笔记"
+      "步入现当代 C++",
+      "模板与泛型编程"
     ]
   },
   {
-    "objectID": "CS/3d-reconstruction/sfm-revisited.html#review-of-structure-from-motion",
-    "href": "CS/3d-reconstruction/sfm-revisited.html#review-of-structure-from-motion",
-    "title": "Structure-from-Motion Revisited 阅读笔记",
+    "objectID": "CS/ModernCpp/Templates.html#函数模板",
+    "href": "CS/ModernCpp/Templates.html#函数模板",
+    "title": "模板与泛型编程",
+    "section": "1 函数模板",
+    "text": "1 函数模板\n假设你需要为很多不同类型的对象写一个 swap 方法，考虑到所有类型的逻辑都相差无几，我们可以使用模板来创建：\ntemplate&lt;typename T&gt;\nvoid swap(T &a, T &b) {\n    T temp {a};\n    a = b;\n    b = temp;\n}\n尖括号包裹的为模板形参，每个 typename 后都跟着一个类型的占位符。在编译时，函数模板会将形参替换并实例化为不同类型的 swap 函数。当然 typename 也可以换成 class，两个词是等价的。当然，参数里也可以写非类型参数。\ntemplate&lt;typename T, size_t N&gt; // non-type parameter",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "步入现当代 C++",
+      "模板与泛型编程"
+    ]
+  },
+  {
+    "objectID": "CS/ModernCpp/Templates.html#特化-v.s.-实例化",
+    "href": "CS/ModernCpp/Templates.html#特化-v.s.-实例化",
+    "title": "模板与泛型编程",
+    "section": "2 特化 v.s. 实例化",
+    "text": "2 特化 v.s. 实例化\n\n特化：将特定组合的实参替换模板形参的过程。\n实例化：从模板定义中生成函数定义的过程称为实例化。\n因此，每一次实例化都是由特化引发的。\n\n\n\n\n\n\ngraph BT\n    spec[\"特化\"]:::expr\n    inst[\"实例化（隐式特化）\"]\n    exp_spec[\"显式特化\"]\n    imp_inst[\"隐式实例化\"]\n    exp_inst[\"显式实例化\"]\n    classDef expr fill:#FFDAB9,stroke:#333,stroke-width:2px;\n    \n    exp_inst --&gt; inst\n    inst --&gt; spec\n    exp_spec --&gt; spec\n    imp_inst --&gt; inst\n\n\n\n\n\n\n默认情况下，模板实例化都是隐式实例化，由编译器自动执行。除非你想进行显式实例化，此时编译器会就地实例化你写的函数：\ntemplate void swap&lt;string&gt;(string &a, string &b);\n// 使用模板参数推导\ntemplate void swap(int &a, int &b);\n显式特化则是（注意并没有实例化）：\ntemplate&lt;&gt; void swap&lt;string&gt;(string &a, string &b);",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "步入现当代 C++",
+      "模板与泛型编程"
+    ]
+  },
+  {
+    "objectID": "CS/ModernCpp/Templates.html#函数模板实参推导",
+    "href": "CS/ModernCpp/Templates.html#函数模板实参推导",
+    "title": "模板与泛型编程",
+    "section": "3 （函数）模板实参推导",
+    "text": "3 （函数）模板实参推导\n模板实参推导是编译器基于函数实参类型决定函数模板实参类型的过程。\ntemplate&lt;typename T&gt; void f(ParameterType t);  f(SomeExpression);\n通过给定的 f 和 SomeExpression，编译需要决定 ParameterType 和 T，注意到它们两个不一定相同，如 PararmeterType 取 const string& 时，T 取 string。\n最简单的情况是显式指定模板实参 f&lt;SomeTemplateArgument&gt;(SomeExpression);，此时推导是平凡的：\n\n\n\n\n\n\n\ntemplate&lt;class T&gt;\nvoid f(T t);\n// T is double\n// ParameterType is double\ndouble d = 2.78;\nf&lt;double&gt;(d);\ntemplate&lt;class T&gt;\nvoid f(T const& t);\n// T is double\n// ParameterType is double const&\ndouble d = 2.78;\nf&lt;double&gt;(d);\n\n\n\n否则，编译器将同时根据 SomeExpression 和 ParameterType 来决定，有下表：\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nType of ParameterType\n\n\n\n\n\n\n\n\nType of SomeExpression\nT\nT const*\nT const&\nT const&&\nT*\nT&\nT&&\n\n\nint const\nint\n-\nint\n-\n-\nint\nint\n\n\nint const*\nint const*\nint\nint const*\nint const*\nint const\n-\nint const*\n\n\nint const&\nint\n-\nint\n-\n-\nint const\nint const&\n\n\nint const&&\nint\n-\nint\nint\nint const\nint const\nint const\n\n\nint\nint\n-\nint\n-\n-\nint\nint\n\n\nint*\nint*\nint\nint*\nint*\nint\nint*\nint*\n\n\nint&\nint\n-\nint\n-\n-\n-\nint&\n\n\nint&&\nint\n-\nint\nint\nint\nint\nint\n\n\n\n编译器会将二者相互作用的结果直接替换 T。\n注意到，这里面发生了引用折叠，我们在移动语义一章中做了介绍。\n\n3.1 返回值推导\n如果返回值依赖模板参数，可以使用 auto 来让编译器推导，或使用 common_type_t 等 type_traits 来推导。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "步入现当代 C++",
+      "模板与泛型编程"
+    ]
+  },
+  {
+    "objectID": "CS/ModernCpp/Templates.html#类模板",
+    "href": "CS/ModernCpp/Templates.html#类模板",
+    "title": "模板与泛型编程",
+    "section": "4 类模板",
+    "text": "4 类模板\n假设我们想定义一个栈的模板类（注意这里面的模板形参 T 的影响范围）：\ntemplate&lt;class T&gt; // The scope of template parameter T begins here...\nclass Stack{\n    vector&lt;T&gt; m_data;\npublic:\n    bool is_empty() const;\n    T const& top() const;\n    void pop();\n    void push(T const& t);\n    Stack push_all_from(Stack const& other);\n}; // ...and ends here.\n\ntemplate&lt;class T&gt;\nStack&lt;T&gt; Stack&lt;T&gt;::/* Class scope begins here... */push_all_from(Stack const& other)\n{\n    Stack tmp(*this);\n    m_data.insert(m_data.end(), other.begin(), other.end());\n    return tmp;\n} // ...and ends here.\n\n4.1 待决名\n由于我们用 vector 的尾元素模拟栈顶，因此迭代器应当反向。我们现在需要在类模板中定义类型别名，比如\nusing const_iterator = vector&lt;T&gt;::const_reverse_iterator;\n但编译器会报错：error: missing typename prior to dependent type name...。这是因为 vector&lt;T&gt; 是依赖于模板形参 T 的，那么类中别名 const_iterator 也被传递依赖于 T。为了修复，我们需要向编译器“保证”它确实是一个类型名，并一定存在。\nusing const_iterator = typename vector&lt;T&gt;::const_reverse_iterator;\n此时我们可以定义 begin() 和 end()：\ntemplate&lt;class T&gt;\nclass Stack{\n    ...\npublic:\n    using const_iterator = typename vector&lt;T&gt;::const_reverse_iterator;\n    const_iterator begin() const {\n        return m_data.crbegin();\n    }\n    const_iterator end() const;\n    ...\n};\n\n// 注意在类作用域外的函数定义，typename 也是必须的\ntemplate&lt;class T&gt;\ntypename Stack&lt;T&gt;::const_iterator Stack&lt;T&gt;::end() const {\n    return m_data.crend();\n}\n// 当然，可以通过尾置类型返回直接交给编译器推导\ntemplate&lt;class T&gt;\nauto Stack&lt;T&gt;::end() const -&gt; const_iterator {\n    return m_data.crend();\n}\n类模板中的静态变量在 C++17 之后可以直接通过 inline static ... 在模板中定义。\n\n\n4.2 模板全特化\ntemplate&lt;&gt;\nclass stack&lt;int&gt; {\n    vector&lt;int&gt; m_data;\npublic:\n    bool is_empty() const;\n    int top() const;\n    void pop();\n    void push(int t);\n    void push_from( string const& s);\n};\n\nvoid Stack&lt;int&gt;::push_from(string const& s) {\n    m_data.insert(m_data.end(), s.begin(), s.end());\n}\n全特化的类外函数定义没有 template 标识符，意味着它不是 inline 的。\n\n\n4.3 模板偏特化\n//TODO",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "步入现当代 C++",
+      "模板与泛型编程"
+    ]
+  },
+  {
+    "objectID": "CS/ModernCpp/Templates.html#concepts",
+    "href": "CS/ModernCpp/Templates.html#concepts",
+    "title": "模板与泛型编程",
+    "section": "5 Concepts",
+    "text": "5 Concepts\n//TODO",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "步入现当代 C++",
+      "模板与泛型编程"
+    ]
+  },
+  {
+    "objectID": "CS/ModernCpp/Templates.html#参考资料",
+    "href": "CS/ModernCpp/Templates.html#参考资料",
+    "title": "模板与泛型编程",
+    "section": "6 参考资料",
+    "text": "6 参考资料\n\nBack to Basics: Templates (part 2 of 2) - Bob Steagall - CppCon 2021\ncppreference",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "步入现当代 C++",
+      "模板与泛型编程"
+    ]
+  },
+  {
+    "objectID": "CS/MoveToModernCpp.html",
+    "href": "CS/MoveToModernCpp.html",
+    "title": "步入现当代 C++",
     "section": "",
-    "text": "Incremental Structure-from-Motion pipeline.\n\n\n\n\n\n\n对于图像集 \\(\\mathcal{I} = \\{ I_i \\mid i = 1\\dots N_I \\}\\) 中的每幅图片 \\(I_i\\) 检测它的局部特征 \\(\\mathcal{F}_i = \\{ (\\mathbf{x}_j, \\mathbf{f}_j) \\mid j = 1\\dots N_{F_i} \\}\\) ，其中 \\(\\mathbf{x}_j\\in\\mathbb{R}^2\\) 并且 \\(\\mathbf{f}_j\\) 是描述子。特征应当是在辐射测量和几何测量的变化下不变的。常用方法：SIFT1 和其变体2。\n1 D. G. Lowe. Distinctive image features from scale-invariant keypoints. IJCV, 2004.2 T. Tuytelaars and K. Mikolajczyk. Local invariant feature detectors: a survey. CGV, 2008.\n\n\nSfM 利用 \\(\\mathcal{F_i}\\) 作为图像的外观描述，发现各个图像中的重叠场景。\n坑，之后再添。\n\n\n\n\n\nIncremental Structure-from-Motion pipeline.",
+    "text": "从今天开始，我要把从 C++11 开始的语言新特性正式地梳理一遍，整合为一系列笔记。习惯上，大家将从 C++11 之后的 C++ 称为“现代 C++”，相对于 C++98/03 的“古代 C++”而言。但在语言标准已经发布到 C++23 的今天，仅说“现代”可能不足于涵盖时间的跨度了，因此本系列最终决定叫“现当代 C++”，以示 C++17 与 C++20 等亦在讨论范围之内。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "三维重建",
-      "Structure-from-Motion Revisited 阅读笔记"
+      "步入现当代 C++"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lab2.html",
-    "href": "CS/61810/6.1810Lab2.html",
-    "title": "Lab2 system calls: system calls",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Thought “Temp” Container",
     "section": "",
-    "text": "按照提示来。\n\nLooking at the backtrace output, which function called syscall?\n\n通过 bt 命令，知道 kernel/trap.c 的 usertrap() 调用了 syscall 。\n\nWhat is the value of p-&gt;trapframe-&gt;a7 and what does that value represent? (Hint: look user/initcode.S, the first user program xv6 starts.)\n\n值为 SYS_exec ，代表 exec 在函数指针数组中的下标。\n\nWhat was the previous mode that the CPU was in?\n\n我猜在 user mode。\n\nWrite down the assembly instruction the kernel is panicing at. Which register corresponds to the variable num?\n\n通过搜索 sepc 数字（我这里是 800020b6），看到命令为 lw a3,0(zero) 。所以 num 对应寄存器 a3 。\n\nWhy does the kernel crash? Hint: look at figure 3-3 in the text; is address 0 mapped in the kernel address space? Is that confirmed by the value in scause above? (See description of scause in RISC-V privileged instructions)\n\n从书上的图看出地址 0 在内核空间是没有定义的，因此无法加载这页的内存。scause 代码查询手册得知代表“load page fault”，这印证了上面的想法。\n\nWhat is the name of the binary that was running when the kernel paniced? What is its process id (pid)?\n\ninitcode 。pid 为 1。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab2 system calls: system calls"
-    ]
+    "text": "这个网站用来记录我学习的知识和思考的东西。"
   },
   {
-    "objectID": "CS/61810/6.1810Lab2.html#using-gdb-easy",
-    "href": "CS/61810/6.1810Lab2.html#using-gdb-easy",
-    "title": "Lab2 system calls: system calls",
+    "objectID": "CS/ModernCpp/MoveSemantics.html",
+    "href": "CS/ModernCpp/MoveSemantics.html",
+    "title": "移动语义 (Move Semantics)",
     "section": "",
-    "text": "按照提示来。\n\nLooking at the backtrace output, which function called syscall?\n\n通过 bt 命令，知道 kernel/trap.c 的 usertrap() 调用了 syscall 。\n\nWhat is the value of p-&gt;trapframe-&gt;a7 and what does that value represent? (Hint: look user/initcode.S, the first user program xv6 starts.)\n\n值为 SYS_exec ，代表 exec 在函数指针数组中的下标。\n\nWhat was the previous mode that the CPU was in?\n\n我猜在 user mode。\n\nWrite down the assembly instruction the kernel is panicing at. Which register corresponds to the variable num?\n\n通过搜索 sepc 数字（我这里是 800020b6），看到命令为 lw a3,0(zero) 。所以 num 对应寄存器 a3 。\n\nWhy does the kernel crash? Hint: look at figure 3-3 in the text; is address 0 mapped in the kernel address space? Is that confirmed by the value in scause above? (See description of scause in RISC-V privileged instructions)\n\n从书上的图看出地址 0 在内核空间是没有定义的，因此无法加载这页的内存。scause 代码查询手册得知代表“load page fault”，这印证了上面的想法。\n\nWhat is the name of the binary that was running when the kernel paniced? What is its process id (pid)?\n\ninitcode 。pid 为 1。",
+    "text": "C++ 中的每一个表达式都有一个类型 (type)，同时，它还属于一种值类别。二者是相互独立的两个概念。随着移动语义引入到 C++11 之中，值类别被重新进行了定义，以区别表达式的两种独立的性质：\n\n拥有身份 (identity)：可以确定表达式是否与另一表达式指代同一实体，例如通过比较它们所标识的对象或函数的（直接或间接获得的）地址；\n可被移动：实现了移动语义的函数能够绑定于这个表达式。\n\n\n\n\n\n\ngraph TB\n    expression[\"表达式\"]:::expr\n    glvalue[\"泛左值 (glvalue)\"]\n    rvalue[\"右值 (rvalue)\"]\n    lvalue[\"左值 (lvalue)\"]\n    xvalue[\"亡值 (xvalue)\"]\n    prvalue[\"纯右值 (prvalue)\"]\n\n    classDef expr fill:#FFDAB9,stroke:#333,stroke-width:2px;\n\n    expression --&gt; glvalue\n    expression --&gt; rvalue\n    glvalue --&gt; lvalue\n    glvalue --&gt; xvalue\n    rvalue --&gt; xvalue\n    rvalue --&gt; prvalue\n\n\n\n\n\n\n泛左值是一个求值可确定某个对象或函数的标识的表达式。它：\n\n在内存中存储；\n有名字（直接或间接）；\n有可以取址的地址；\n非常量泛左值可以被赋值。\n\n纯右值是计算某个运算符的操作数或初始化某个对象的表达式，它：\n\n没有名字；\n没有存储。\n\n亡值是代表它的资源能够被重新使用的对象或位域的泛左值。std::move(v) 就是将左值 v 转化为亡值，表明马上这个值我不再关心（因为它的资源被移走了）。左值是非亡值的泛左值。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab2 system calls: system calls"
+      "步入现当代 C++",
+      "移动语义 (Move Semantics)"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lab2.html#system-call-tracing-moderate",
-    "href": "CS/61810/6.1810Lab2.html#system-call-tracing-moderate",
-    "title": "Lab2 system calls: system calls",
-    "section": "2 System call tracing (moderate)",
-    "text": "2 System call tracing (moderate)\n\nIn this assignment you will add a system call tracing feature that may help you when debugging later labs. You’ll create a new trace system call that will control tracing. It should take one argument, an integer “mask”, whose bits specify which system calls to trace. For example, to trace the fork system call, a program calls trace(1 &lt;&lt; SYS_fork), where SYS_fork is a syscall number from kernel/syscall.h. You have to modify the xv6 kernel to print out a line when each system call is about to return, if the system call’s number is set in the mask. The line should contain the process id, the name of the system call and the return value; you don’t need to print the system call arguments. The trace system call should enable tracing for the process that calls it and any children that it subsequently forks, but should not affect other processes.\n\n跟着提示来就行。注意到新的变量 proc-&gt;trace_mask 应该初始化的，但是由于整个结构体是定义在全局空间内的，不初始化也不会影响结果。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab2 system calls: system calls"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lab2.html#sysinfo-moderate",
-    "href": "CS/61810/6.1810Lab2.html#sysinfo-moderate",
-    "title": "Lab2 system calls: system calls",
-    "section": "3 Sysinfo (moderate)",
-    "text": "3 Sysinfo (moderate)\n\nIn this assignment you will add a system call, sysinfo, that collects information about the running system. The system call takes one argument: a pointer to a struct sysinfo (see kernel/sysinfo.h). The kernel should fill out the fields of this struct: the freemem field should be set to the number of bytes of free memory, and the nproc field should be set to the number of processes whose state is not UNUSED. We provide a test program sysinfotest; you pass this assignment if it prints “sysinfotest: OK”.\n\n按照提示来就行。只需注意一点，工程将需要用到的内核函数统一声明在 defs.h 中，符合 monolithic 的思想。因此你新定义的函数也需要加进 defs.h 。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lab2 system calls: system calls"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec10.html",
-    "href": "CS/61810/6.1810Lec10.html",
-    "title": "Lec10 Locking",
+    "objectID": "CS/ModernCpp/MoveSemantics.html#完美转发",
+    "href": "CS/ModernCpp/MoveSemantics.html#完美转发",
+    "title": "移动语义 (Move Semantics)",
     "section": "",
-    "text": "Read “Locking” with kernel/spinlock.h and kernel/spinlock.c .\n\n\n\n当一个内存位置被并发访问并至少有一次访问写入了数据时，就发生了竞争 (race)。通常的解决办法是使用锁，锁保证了互斥 (mutual exclusion)，因此每次只有一个 CPU 会访问被保护的部分，这个部分称为临界区段 (critical section)。\n当我们说锁保护了数据时，我们真正想说的是锁保护了适用于数据的不变量集合。在临界区段中对数据的修改临时破坏了数据的不变量，此时竞争就会发生。\n也可认为锁序列化了并发的临界区段以使它们一次一个地执行；或者临界区段被锁保护使其原子化，因此其他部分每次只能看到完整的更改，而非部分更改。\n虽然锁可以修正问题，但它导致了效率的低下。如果多个处理器同时想拥有相同的锁，便导致了冲突 (conflict)，或者说这个锁被争用 (contention)。现代内核都会有复杂的组织结构和算法来避免锁争用，但 xv6 做得不多。\n\n\n\nxv6 有两种锁：自旋锁 (spinlock) 和睡眠锁 (sleep-lock)。先介绍自旋锁。核心是在 struct spinlock 中的 locked 变量，它为 0 时表示空闲，非零时表示被持有。于是获取一个锁可以这么写：\nvoid acquire(struct spinlock *lk) // dose not work!\n{\n    for(;;) {\n        if(lk-&gt;locked == 0) {\n            lk-&gt;locked = 1;\n            break;\n        }\n    }\n}\n但是第 4 和第 5 行并不是原子的：有可能多个处理器同时访问了第 4 行，并都执行了第 5 行，此时两个处理器都获得了锁。我们希望将这一步变为原子操作，即不可再分的1。\n1 你说得对，但是原子现在是可分的了，可以改名叫夸克操作了。多核处理器一般都提供了上述所需的原子指令。RISC-V 有 amoswap r, a.amoswap，它从内存地址 a 读取值，将寄存器 r 的值写到这个地址，然后将读取的值写入 r。即，它交换了寄存器和地址上的值。它在硬件上保证了操作是原子的。\nxv6 在 acquire 中使用的 __sync_lock_test_and_set 最终就是由 amoswap 实现的。它会不断地向 lk-&gt;locked 交换 1，并查看交换出来的值：如果交换出来的值是 0，代表锁是空闲的并且 1 被写入，CPU 成功持有了这个锁；否则锁仍被占用。我们持续不断地重试这个步骤，直到成功，这就是为什么被称为自旋。同时，lk-cpu 记录了哪个 CPU 持有了锁，方便调试。\n与 acquire 相对的 release 也是同样的策略。从概念上讲，释放锁只需要将 lk-&gt;locked 置为零即可，但 C 编译器有可能将赋值转为多条 store 指令，因此它有可能不是原子的。所以我们使用 __sync_lock_release 来进行原子赋值，它的底层仍然是 amoswap。\n\n\n\n对锁粒度的设计是在性能和编码复杂度之间的平衡。xv6 同时有粗粒度（比如 kalloc 对单独的链表设置一个单独的锁）和细粒度（比如对每个文件分别加锁）的锁。一个简单的内核可能会只设置一个线程然后完全不关心锁，将这个单核处理器上的系统移植到多核处理器上只需为整个内核设置一个锁，通常称为大内核锁 (big kernel lock)。\n\n\n\n如果一条代码路径需要同时持有不同的锁，那么所有代码路径都应该以相同的顺序获取这些锁，否则可能会导致死锁。比如两条代码路径需要锁 A 和 B，第一条先获取 A 再获取 B，第二条相反。那么在第一条获取 A 时，第二条获取了 B。此时第一条需要获取 B，但 B 已经被第二条持有；第二条想获取 A 但已被第一条持有。双方僵持不下，系统永久阻塞。全局锁获取顺序的必要性意味着锁实际上是每个函数规范的一部分：调用者必须以一种使得锁按照约定的顺序被获取的方式来调用函数。\nxv6 有许多 lock ordering 的实例。比如 consoleintr，作为处理输入字符的中断例程，需要在一行接收到时唤醒所有等待控制台输入的进程，所以它按顺序持有了 cons.lock 和进程的锁。另一个例子是文件系统，它按顺序持有了每个目录、每个文件的 inode、每个硬盘块缓冲区、硬盘驱动的 vdisk_lock 和每个进程的锁。\n对避免全局死锁的 lock ordering 的遵循可能会出乎意料地困难。同时，死锁的危险通常是对 locking scheme 粒度的一个限制，因为更多的锁通常意味着更多的死锁机会。避免死锁的需求通常是内核实现中的一个重要因素。\n\n\n\n如果一个进程尝试获取它已经得到的锁，内核允许这样做而不是引发 panic，那么这种锁就是可重入锁。可重入锁会引入问题，比如：\nstruct spinlock lock;\nint data = 0; // protected by lock\nf() {\n    acquire(&lock);\n    if(data == 0){\n        call_once();\n        h();\n        data = 1;\n    }\n    release(&lock);\n}\ng() {\n    aquire(&lock);\n    if(data == 0){\n        call_once();\n        data = 1;\n    }\n    release(&lock);\n}\n上述代码中，call_once() 只能被执行一次，要么被 f 要么被 g。但是引入了可重入锁后，如果 h 调用了 g 的话，实际上被执行了两次。由于可重入锁增加了定位问题的困难，xv6 没有使用。\n\n\n\n在 xv6 中，有一些自旋锁用于保护同时被线程和中断处理程序使用的数据。例如，tickslock 自旋锁用于保护系统中的时钟滴答数 ticks，该数据既可能被定时器中断处理程序 clockintr 访问（用于增加时钟滴答数），也可能被内核线程在 sys_sleep 中读取（用于等待一段时间）。如果一个内核线程（例如 sys_sleep）持有了 tickslock 自旋锁，并且在此期间被定时器中断触发，那么定时器中断处理程序 clockintr 也会尝试获取 tickslock 自旋锁。然而，由于自旋锁是被线程持有的，clockintr 会发现自旋锁已经被持有，并等待自旋锁被释放。但是，由于线程持有自旋锁的同时又被中断，线程无法继续执行并释放自旋锁，这就导致了死锁。为了避免这种情况，如果一个中断处理程序持有了自旋锁，CPU 上的中断必须被禁用。xv6 做得更加保守：当一个 CPU 获取任何自旋锁时，xv6 会在该 CPU 上禁用中断。这样，中断处理程序在获取自旋锁时会等待线程释放锁，但不会在同一个 CPU 上出现死锁情况。\n\n\n\n在当下的编译器和处理器下，指令并不一定按源代码写就的顺序执行。为了性能，指令的处理可能会被拆分和打乱，这有可能导致并发程序出错。为此，编译器和 CPU 通过遵循一系列规则，称为内存模型 (memory model) 来帮助程序员控制指令定序。\nxv6 在 acquire 和 release 中使用 __sync_synchronze() 来告诉硬件和编译器不要重新定序。__sync_synchronze() 是一个内存屏障 (memory barrier)，它告诉编译器和 CPU 不要将 load 和 store 定序到超过屏障的位置。\n\n\n\n在一些操作中，比如文件系统的文件读写操作，需要在磁盘上读取或写入数据，这可能需要花费数十毫秒的时间。在这种情况下，持有自旋锁会导致资源的浪费，因为如果另一个进程想要获取这个锁，那么获取过程中会一直占用 CPU。自旋锁的另一个缺点是，持有锁的进程无法在持有锁的同时让出 CPU。我们希望能够在持有锁的同时让出 CPU，以便其他进程可以使用 CPU，而持有锁的进程可以等待磁盘等操作完成。然而，如果一个线程在持有自旋锁的时候让出 CPU，而另一个线程试图获取这个锁，由于自旋锁的获取过程不会让出 CPU，因此第二个线程会一直在自旋等待，可能会阻止第一个线程重新获得 CPU 资源并继续执行释放锁的操作。因此，我们希望有一种新的锁类型，它在等待获取锁的过程中可以让出 CPU，同时在持有锁的时候也可以让出 CPU（允许中断）。\nxv6 引入了睡眠锁。它在等待获取锁的过程中可以让出 CPU，从而允许其他线程执行。acquiresleep 函数负责获取睡眠锁，它在等待期间可以让出 CPU。睡眠锁由两个部分组成：一个是 locked 字段，它用于表示锁的状态；另一个是一个用于保护 locked 字段的自旋锁。当一个线程调用 acquiresleep 函数时，它会尝试获取自旋锁，如果获取成功，它会原子地释放自旋锁并让出 CPU。这样其他线程就有机会执行了。 由于睡眠锁允许中断，因此不能在中断处理程序中使用。此外，由于 acquiresleep 可能会让出 CPU，因此不能在自旋锁的临界区内使用睡眠锁。\n\n\n\n多数操作系统支持 POSIX 线程 (Pthreads)，它提供了用户级锁、屏障等功能，并且允许程序员选择锁是否可重入。在操作系统层面支持 Pthreads 需要相应的支持。例如，当一个线程阻塞在系统调用时，同一进程的另一个线程应该能够在同一个 CPU 上运行。\n如果多个 CPU 尝试同时获取同一个锁，那么锁可能会变得非常昂贵。这是因为锁的更新可能涉及缓存行的迁移和失效，从而导致额外的开销。为了避免锁带来的开销，许多操作系统使用无锁数据结构和算法。无锁编程更为复杂，因为需要考虑指令和内存重排序等问题，但可以减少锁带来的开销。xv6 避免了无锁编程的额外复杂性，而是使用了传统的锁机制，尽管在某些情况下可能会导致性能下降。",
+    "text": "C++ 中的每一个表达式都有一个类型 (type)，同时，它还属于一种值类别。二者是相互独立的两个概念。随着移动语义引入到 C++11 之中，值类别被重新进行了定义，以区别表达式的两种独立的性质：\n\n拥有身份 (identity)：可以确定表达式是否与另一表达式指代同一实体，例如通过比较它们所标识的对象或函数的（直接或间接获得的）地址；\n可被移动：实现了移动语义的函数能够绑定于这个表达式。\n\n\n\n\n\n\ngraph TB\n    expression[\"表达式\"]:::expr\n    glvalue[\"泛左值 (glvalue)\"]\n    rvalue[\"右值 (rvalue)\"]\n    lvalue[\"左值 (lvalue)\"]\n    xvalue[\"亡值 (xvalue)\"]\n    prvalue[\"纯右值 (prvalue)\"]\n\n    classDef expr fill:#FFDAB9,stroke:#333,stroke-width:2px;\n\n    expression --&gt; glvalue\n    expression --&gt; rvalue\n    glvalue --&gt; lvalue\n    glvalue --&gt; xvalue\n    rvalue --&gt; xvalue\n    rvalue --&gt; prvalue\n\n\n\n\n\n\n泛左值是一个求值可确定某个对象或函数的标识的表达式。它：\n\n在内存中存储；\n有名字（直接或间接）；\n有可以取址的地址；\n非常量泛左值可以被赋值。\n\n纯右值是计算某个运算符的操作数或初始化某个对象的表达式，它：\n\n没有名字；\n没有存储。\n\n亡值是代表它的资源能够被重新使用的对象或位域的泛左值。std::move(v) 就是将左值 v 转化为亡值，表明马上这个值我不再关心（因为它的资源被移走了）。左值是非亡值的泛左值。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec10 Locking"
+      "步入现当代 C++",
+      "移动语义 (Move Semantics)"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lec10.html#课前准备",
-    "href": "CS/61810/6.1810Lec10.html#课前准备",
-    "title": "Lec10 Locking",
+    "objectID": "CS/ModernCpp/NonVirtualPoly.html",
+    "href": "CS/ModernCpp/NonVirtualPoly.html",
+    "title": "C++ 中的（非虚）多态",
     "section": "",
-    "text": "Read “Locking” with kernel/spinlock.h and kernel/spinlock.c .\n\n\n\n当一个内存位置被并发访问并至少有一次访问写入了数据时，就发生了竞争 (race)。通常的解决办法是使用锁，锁保证了互斥 (mutual exclusion)，因此每次只有一个 CPU 会访问被保护的部分，这个部分称为临界区段 (critical section)。\n当我们说锁保护了数据时，我们真正想说的是锁保护了适用于数据的不变量集合。在临界区段中对数据的修改临时破坏了数据的不变量，此时竞争就会发生。\n也可认为锁序列化了并发的临界区段以使它们一次一个地执行；或者临界区段被锁保护使其原子化，因此其他部分每次只能看到完整的更改，而非部分更改。\n虽然锁可以修正问题，但它导致了效率的低下。如果多个处理器同时想拥有相同的锁，便导致了冲突 (conflict)，或者说这个锁被争用 (contention)。现代内核都会有复杂的组织结构和算法来避免锁争用，但 xv6 做得不多。\n\n\n\nxv6 有两种锁：自旋锁 (spinlock) 和睡眠锁 (sleep-lock)。先介绍自旋锁。核心是在 struct spinlock 中的 locked 变量，它为 0 时表示空闲，非零时表示被持有。于是获取一个锁可以这么写：\nvoid acquire(struct spinlock *lk) // dose not work!\n{\n    for(;;) {\n        if(lk-&gt;locked == 0) {\n            lk-&gt;locked = 1;\n            break;\n        }\n    }\n}\n但是第 4 和第 5 行并不是原子的：有可能多个处理器同时访问了第 4 行，并都执行了第 5 行，此时两个处理器都获得了锁。我们希望将这一步变为原子操作，即不可再分的1。\n1 你说得对，但是原子现在是可分的了，可以改名叫夸克操作了。多核处理器一般都提供了上述所需的原子指令。RISC-V 有 amoswap r, a.amoswap，它从内存地址 a 读取值，将寄存器 r 的值写到这个地址，然后将读取的值写入 r。即，它交换了寄存器和地址上的值。它在硬件上保证了操作是原子的。\nxv6 在 acquire 中使用的 __sync_lock_test_and_set 最终就是由 amoswap 实现的。它会不断地向 lk-&gt;locked 交换 1，并查看交换出来的值：如果交换出来的值是 0，代表锁是空闲的并且 1 被写入，CPU 成功持有了这个锁；否则锁仍被占用。我们持续不断地重试这个步骤，直到成功，这就是为什么被称为自旋。同时，lk-cpu 记录了哪个 CPU 持有了锁，方便调试。\n与 acquire 相对的 release 也是同样的策略。从概念上讲，释放锁只需要将 lk-&gt;locked 置为零即可，但 C 编译器有可能将赋值转为多条 store 指令，因此它有可能不是原子的。所以我们使用 __sync_lock_release 来进行原子赋值，它的底层仍然是 amoswap。\n\n\n\n对锁粒度的设计是在性能和编码复杂度之间的平衡。xv6 同时有粗粒度（比如 kalloc 对单独的链表设置一个单独的锁）和细粒度（比如对每个文件分别加锁）的锁。一个简单的内核可能会只设置一个线程然后完全不关心锁，将这个单核处理器上的系统移植到多核处理器上只需为整个内核设置一个锁，通常称为大内核锁 (big kernel lock)。\n\n\n\n如果一条代码路径需要同时持有不同的锁，那么所有代码路径都应该以相同的顺序获取这些锁，否则可能会导致死锁。比如两条代码路径需要锁 A 和 B，第一条先获取 A 再获取 B，第二条相反。那么在第一条获取 A 时，第二条获取了 B。此时第一条需要获取 B，但 B 已经被第二条持有；第二条想获取 A 但已被第一条持有。双方僵持不下，系统永久阻塞。全局锁获取顺序的必要性意味着锁实际上是每个函数规范的一部分：调用者必须以一种使得锁按照约定的顺序被获取的方式来调用函数。\nxv6 有许多 lock ordering 的实例。比如 consoleintr，作为处理输入字符的中断例程，需要在一行接收到时唤醒所有等待控制台输入的进程，所以它按顺序持有了 cons.lock 和进程的锁。另一个例子是文件系统，它按顺序持有了每个目录、每个文件的 inode、每个硬盘块缓冲区、硬盘驱动的 vdisk_lock 和每个进程的锁。\n对避免全局死锁的 lock ordering 的遵循可能会出乎意料地困难。同时，死锁的危险通常是对 locking scheme 粒度的一个限制，因为更多的锁通常意味着更多的死锁机会。避免死锁的需求通常是内核实现中的一个重要因素。\n\n\n\n如果一个进程尝试获取它已经得到的锁，内核允许这样做而不是引发 panic，那么这种锁就是可重入锁。可重入锁会引入问题，比如：\nstruct spinlock lock;\nint data = 0; // protected by lock\nf() {\n    acquire(&lock);\n    if(data == 0){\n        call_once();\n        h();\n        data = 1;\n    }\n    release(&lock);\n}\ng() {\n    aquire(&lock);\n    if(data == 0){\n        call_once();\n        data = 1;\n    }\n    release(&lock);\n}\n上述代码中，call_once() 只能被执行一次，要么被 f 要么被 g。但是引入了可重入锁后，如果 h 调用了 g 的话，实际上被执行了两次。由于可重入锁增加了定位问题的困难，xv6 没有使用。\n\n\n\n在 xv6 中，有一些自旋锁用于保护同时被线程和中断处理程序使用的数据。例如，tickslock 自旋锁用于保护系统中的时钟滴答数 ticks，该数据既可能被定时器中断处理程序 clockintr 访问（用于增加时钟滴答数），也可能被内核线程在 sys_sleep 中读取（用于等待一段时间）。如果一个内核线程（例如 sys_sleep）持有了 tickslock 自旋锁，并且在此期间被定时器中断触发，那么定时器中断处理程序 clockintr 也会尝试获取 tickslock 自旋锁。然而，由于自旋锁是被线程持有的，clockintr 会发现自旋锁已经被持有，并等待自旋锁被释放。但是，由于线程持有自旋锁的同时又被中断，线程无法继续执行并释放自旋锁，这就导致了死锁。为了避免这种情况，如果一个中断处理程序持有了自旋锁，CPU 上的中断必须被禁用。xv6 做得更加保守：当一个 CPU 获取任何自旋锁时，xv6 会在该 CPU 上禁用中断。这样，中断处理程序在获取自旋锁时会等待线程释放锁，但不会在同一个 CPU 上出现死锁情况。\n\n\n\n在当下的编译器和处理器下，指令并不一定按源代码写就的顺序执行。为了性能，指令的处理可能会被拆分和打乱，这有可能导致并发程序出错。为此，编译器和 CPU 通过遵循一系列规则，称为内存模型 (memory model) 来帮助程序员控制指令定序。\nxv6 在 acquire 和 release 中使用 __sync_synchronze() 来告诉硬件和编译器不要重新定序。__sync_synchronze() 是一个内存屏障 (memory barrier)，它告诉编译器和 CPU 不要将 load 和 store 定序到超过屏障的位置。\n\n\n\n在一些操作中，比如文件系统的文件读写操作，需要在磁盘上读取或写入数据，这可能需要花费数十毫秒的时间。在这种情况下，持有自旋锁会导致资源的浪费，因为如果另一个进程想要获取这个锁，那么获取过程中会一直占用 CPU。自旋锁的另一个缺点是，持有锁的进程无法在持有锁的同时让出 CPU。我们希望能够在持有锁的同时让出 CPU，以便其他进程可以使用 CPU，而持有锁的进程可以等待磁盘等操作完成。然而，如果一个线程在持有自旋锁的时候让出 CPU，而另一个线程试图获取这个锁，由于自旋锁的获取过程不会让出 CPU，因此第二个线程会一直在自旋等待，可能会阻止第一个线程重新获得 CPU 资源并继续执行释放锁的操作。因此，我们希望有一种新的锁类型，它在等待获取锁的过程中可以让出 CPU，同时在持有锁的时候也可以让出 CPU（允许中断）。\nxv6 引入了睡眠锁。它在等待获取锁的过程中可以让出 CPU，从而允许其他线程执行。acquiresleep 函数负责获取睡眠锁，它在等待期间可以让出 CPU。睡眠锁由两个部分组成：一个是 locked 字段，它用于表示锁的状态；另一个是一个用于保护 locked 字段的自旋锁。当一个线程调用 acquiresleep 函数时，它会尝试获取自旋锁，如果获取成功，它会原子地释放自旋锁并让出 CPU。这样其他线程就有机会执行了。 由于睡眠锁允许中断，因此不能在中断处理程序中使用。此外，由于 acquiresleep 可能会让出 CPU，因此不能在自旋锁的临界区内使用睡眠锁。\n\n\n\n多数操作系统支持 POSIX 线程 (Pthreads)，它提供了用户级锁、屏障等功能，并且允许程序员选择锁是否可重入。在操作系统层面支持 Pthreads 需要相应的支持。例如，当一个线程阻塞在系统调用时，同一进程的另一个线程应该能够在同一个 CPU 上运行。\n如果多个 CPU 尝试同时获取同一个锁，那么锁可能会变得非常昂贵。这是因为锁的更新可能涉及缓存行的迁移和失效，从而导致额外的开销。为了避免锁带来的开销，许多操作系统使用无锁数据结构和算法。无锁编程更为复杂，因为需要考虑指令和内存重排序等问题，但可以减少锁带来的开销。xv6 避免了无锁编程的额外复杂性，而是使用了传统的锁机制，尽管在某些情况下可能会导致性能下降。",
+    "text": "多态 (Polymorphic) 即“多种形态”，这可以理解为：\n\n用一个标识符来表示多个不同的类型，我们称这个标识符为多态变量。\n为不同类型的实体提供一个统一的接口，称为多态调用。\n\n多态，是一种基于类型的分发器。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec10 Locking"
+      "步入现当代 C++",
+      "C++ 中的（非虚）多态"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lec10.html#lecture",
-    "href": "CS/61810/6.1810Lec10.html#lecture",
-    "title": "Lec10 Locking",
-    "section": "2 Lecture",
-    "text": "2 Lecture\n没有讲什么新东西。课上讲了 UART 中的锁的一个例子，这里不重复了。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec10 Locking"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec12.html",
-    "href": "CS/61810/6.1810Lec12.html",
-    "title": "Lec12 Coordination",
+    "objectID": "CS/ModernCpp/NonVirtualPoly.html#什么是多态",
+    "href": "CS/ModernCpp/NonVirtualPoly.html#什么是多态",
+    "title": "C++ 中的（非虚）多态",
     "section": "",
-    "text": "Read remainder of “Scheduling”, and corresponding parts of kernel/proc.c, kernel/sleeplock.c.\n\n\n\n进程睡眠允许内核线程等待特定事件，让出的 CPU 可以去做其他的工作，待事件回复时唤醒进程。\n考虑生产者-消费者问题，使用锁的实现为：\nstruct semaphore {\n    struct spinlock lock;\n    int count;\n};\n\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    while(s-&gt;count == 0);\n    acquire(&s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n以上的实现是开销很大的，当生产者生产效率很低时，持续高速的询问会耗费很多资源。我们引入 sleep 和 wakeup 机制：\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    wakeup(s);\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    while(s-&gt;count == 0)\n        sleep(s);\n    acquire(&s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n当消费者没有得到资源时，睡觉，等到生产者生产了资源再唤醒消费者。但这样有一个问题：lost wakeup。考虑刚刚执行完第 11 行，正准备执行下一行时，第二个线程在消费者上执行，它唤醒了一个不存在的信号量，因此无事发生。但实际上这个信号量正是第 12 行将要送去睡觉的那个。此时第 12 行被执行，但是它由于已经在睡觉之前被唤醒过，再也无法被唤醒，系统停摆。\n为了修复这个错误，我们需要将第 11 到 12 行变为一个原子操作。一个可能的想法是，将消费者的 acquire 提前到最开始，但这又会导致死锁的问题：睡眠的线程由于一直持有锁，唤醒线程无法获取锁。因此我们需要在线程睡眠时同时释放锁，这导出了我们最终的实现：\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    wakeup(s);\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    while(s-&gt;count == 0)\n        sleep(s, &s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n\n\n\n基本思想是让 sleep 将当前进程标记为 SLEEPING，然后调用 sched 释放 CPU；wakeup 查找在给定等待 channel 上休眠的进程并将其标记为 RUNNABLE。睡眠和唤醒的呼叫者可以使用任何彼此方便的号码作为 channel，xv6 经常使用参与等待的内核数据结构的地址。\n有时会出现多个进程在同一个通道上休眠的情况；例如，多个进程从管道读取数据。一次唤醒调用即可将它们全部唤醒。其中一个将首先运行并获取调用 sleep 所用的锁，并且读取管道中等待的任何数据。其他进程会发现，尽管被唤醒，却没有数据可读取。从他们的角度来看，这次唤醒是“虚假的”，他们必须再次入睡。因此，总是在检查条件的循环内调用 sleep。\n\n\n\n子进程在 exit 会被设置为 ZOMBIE 状态，待父进程的 wait 重新发现它时恢复为 UNUSED，如果父进程在子进程退出之前就先退出，则子进程会被交给 init 进程，它会永久调用 wait，因此每个子进程都需要一个父进程来清理。\nwait 通过获取 wait_lock 开始，wait_lock 充当条件锁，有助于确保父级不会错过退出子级的唤醒。然后 wait 扫描进程表。如果它发现一个处于 ZOMBIE 状态的子进程，它会释放该子进程的资源及其 proc 结构，将子进程的退出状态复制到提供给 wait 的地址（如果不为 0），并返回子进程的进程 ID。如果 wait 找到子进程但没有退出，它会调用 sleep 来等待它们中的任何一个退出，然后再次扫描。 wait 经常持有两个锁，wait_lock 和某些进程的 pp-&gt;lock；避免死锁的顺序是先 wait_lock，然后 pp-&gt;lock。\nexit 记录退出状态，释放一些资源，调用 reparent 把子进程给 init 进程，唤醒父进程，然后将调用者标记为僵尸，然后永久让出 CPU。在将其状态设置为 ZOMBIE 之前，exit 就唤醒父进程可能看起来不正确，但这是安全的：虽然唤醒可能会导致父进程运行，但 wait 中的循环因为没有获取到 p-&gt;lock 而无法进行检查，直到 p-&gt;lock 被 scheduler 释放。\nexit 允许进程自行终止，而 kill 则允许一个进程请求另一个进程终止。如果直接销毁受害者进程，kill 会太复杂，因为受害者可能正在另一个 CPU 上执行，也许正在对内核数据结构进行敏感的更新。因此，kill 做的事情很少：它只是设置受害者的 p-&gt;killed，如果它正在睡觉，则将其唤醒。最终，受害者将进入或离开内核，此时，如果设置了 p-&gt;killed，usertrap 中的代码将调用 exit（它通过调用 killed 进行检查）。如果受害者运行在用户空间，它很快就会通过系统调用或因为计时器（或其他设备）中断而进入内核。\n如果受害者进程处于睡眠状态，kill 的 wakeup 调用将导致受害者从睡眠中恢复。这具有潜在的危险，因为正在等待的条件可能不成立。但是，xv6 对 sleep 的调用始终包含在 while 循环中，该循环在 sleep 返回后重新测试条件。一些对 sleep 的调用还会在循环中测试 p-&gt;killed，如果设置了，则放弃当前活动。只有当这种放弃是正确的时候才会这样做。\n一些特定的情况下，xv6 中的 sleep 循环不会检查进程控制块中的 killed 标志。这是因为这些代码位于一个多步系统调用的中间阶段，而这些阶段应该是原子性的。其中一个例子是 virtio 驱动程序，它没有检查 p-&gt;killed，因为磁盘操作可能是一组写操作中的一个，而这些写操作都是为了使文件系统处于正确状态而必要的。如果一个进程在等待磁盘 I/O 时被终止，它将不会退出，直到完成当前的系统调用，并且用户 trap 发现了 killed 标志。\n\n\n\n与每个进程关联的锁 (p-&gt;lock) 是 xv6 中最复杂的锁。考虑 p-&gt;lock 的一个简单方法是，在读取或写入以下任何 struct proc 字段时必须保持它：p-&gt;state、p-&gt;chan、p-&gt;killed、p-&gt;xstate 和 p -&gt;pid。这些字段可以由其他进程或其他核心上的调度程序线程使用，因此它们很自然地必须受到锁的保护。\n然而，p-&gt;lock 的大多数用途都是保护 xv6 进程数据结构和算法的更高级别方面。这是 p-&gt;lock 所做的全套事情：\n\n防止进程槽位分配竞争：p-&gt;lock 与 p-&gt;state 一起，防止在为新进程分配 proc[] 槽位时出现竞争。\n隐藏进程：在进程创建或销毁期间，p-&gt;lock 将进程隐藏起来，防止外部观察到它的存在。\n防止父进程等待收集僵尸进程：防止父进程的 wait 调用收集到已经将状态设置为 ZOMBIE 但尚未让出 CPU 的进程。\n防止另一个内核调度器在进程调用 swtch 之前运行 RUNNABLE 进程。\n防止定时器中断导致进程在调用 swtch 时让出 CPU。\n与条件锁一起防止 wakeup 忽略正在调用 sleep 但尚未让出 CPU 的进程。\n防止 kill 的受害进程退出，并可能在 kill 检查 p-&gt;pid 和设置 p-&gt;killed 之间重新分配。\n使 kill 的检查和写入 p-&gt;state 具有原子性。\n\n此外，p-&gt;parent 字段由全局锁 wait_lock 保护，而不是由 p-&gt;lock 保护。只有进程的父进程修改 p-&gt;parent，尽管该字段既由进程自身读取，也由其他搜索其子进程的进程读取。wait_lock 的作用是在 wait 等待任何子进程退出时作为条件锁。退出的子进程会持有 wait_lock 或 p-&gt;lock，直到将其状态设置为 ZOMBIE，唤醒其父进程并让出 CPU 之后才会释放。wait_lock 还串行化了父进程和子进程的并发退出，以确保 init 进程能够从其等待中被唤醒。wait_lock 是一个全局锁，而不是每个父进程的单独锁，因为在一个进程获得它之前，它无法知道谁是其父进程。\n\n\n\nxv6调度器实现了一个简单的调度策略，它依次运行每个进程。此策略称为 round robin。真实的操作系统实施更复杂的策略，例如允许进程具有优先级。这个想法是，调度程序将优先选择可运行的高优先级进程，而非可运行的低优先级进程。这些策略可能很快就会变得复杂，因为经常存在相互竞争的目标：例如，操作系统可能还希望保证公平性和高吞吐量。此外，复杂的策略可能会导致意外的交互，例如优先级反转 (priority inversion) 和 convoys。当低优先级进程和高优先级进程都使用特定的锁时，就会发生优先级反转，当低优先级进程获取该锁时，会阻止高优先级进程取得进展。当许多高优先级进程正在等待获取共享锁的低优先级进程时，就会形成一长串等待进程；convoys 一旦形成，就可以持续很长时间。为了避免此类问题，复杂的调度程序需要额外的机制。\nsleep 和 wakeup 是一种简单而有效的同步方法，但还有很多其他方法。所有这些挑战中的第一个挑战是避免我们在本章开头看到的 lost wakeup 问题。最初的 UNIX 内核的 sleep 只是禁用中断，这已经足够了，因为 UNIX 运行在单 CPU 系统上。由于 xv6 在多处理器上运行，因此它添加了显式的睡眠锁。 FreeBSD 的 msleep 采用了相同的方法。 Plan 9 的 sleep 使用回调函数，该函数在睡眠前持有调度锁的情况下运行；该功能用作睡眠状况的最后一刻检查，以避免丢失唤醒。 Linux 内核的 sleep 使用显式进程队列，称为等待队列；队列有自己的内部锁。\n替代在 wakeup 中扫描整个进程集合的低效方法是使用等待队列。Plan 9 中的 sleep 和 wakeup 称之为 rendezvous point。许多线程库将这种结构称为条件变量 (condition variable)，在这种上下文中，sleep 操作和 wakeup 操作被称为 wait 和 signal。所有这些机制都共享相同的特征：在等待过程中，睡眠条件受到某种锁的保护，在睡眠期间原子地释放。\n当有多个进程等待唤醒时，操作系统会调度所有这些进程，它们会竞争检查睡眠条件。这种行为的进程有时被称为 thundering herd，最好避免。大多数条件变量都有两个方法来唤醒等待的进程：signal 唤醒一个进程，broadcast 唤醒所有等待的进程。\n信号量通常用于同步。计数通常对应于诸如管道缓冲区中可用字节的数量或进程拥有的僵尸子进程的数量。使用显式计数作为抽象的一部分可以避免 lost wakeup 问题，因为有一个显式的计数记录唤醒的次数。\n在操作系统中终止和清理进程引入了许多复杂性。处理深度睡眠中的受害进程的栈取消回溯需要小心，因为调用栈上的每个函数可能需要进行一些清理工作。一些语言通过提供异常机制来简化这个过程，但 C 语言不提供这种机制。\nxv6 对 kill 的支持并不完全令人满意。相关的问题是，在一个线程即将进入睡眠状态时，kill 可能会设置 p-&gt;killed 并尝试唤醒此受害者。如果受害者在检查完 p-&gt;killed 之后但在调用 sleep 之前被尝试唤醒，那么受害者可能直到等待的条件发生后才会注意到 p-&gt;killed。这个时间可能很长，甚至到永远（比如受害者进程等待 console 输入，但是用户一直不输入）。\n真正的操作系统会在常数时间内找到具有空闲列表的空闲 proc 结构，而不是在 allocproc 中进行线性时间搜索；xv6 只是为了简单起见。",
+    "text": "多态 (Polymorphic) 即“多种形态”，这可以理解为：\n\n用一个标识符来表示多个不同的类型，我们称这个标识符为多态变量。\n为不同类型的实体提供一个统一的接口，称为多态调用。\n\n多态，是一种基于类型的分发器。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec12 Coordination"
+      "步入现当代 C++",
+      "C++ 中的（非虚）多态"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lec12.html#课前准备",
-    "href": "CS/61810/6.1810Lec12.html#课前准备",
-    "title": "Lec12 Coordination",
-    "section": "",
-    "text": "Read remainder of “Scheduling”, and corresponding parts of kernel/proc.c, kernel/sleeplock.c.\n\n\n\n进程睡眠允许内核线程等待特定事件，让出的 CPU 可以去做其他的工作，待事件回复时唤醒进程。\n考虑生产者-消费者问题，使用锁的实现为：\nstruct semaphore {\n    struct spinlock lock;\n    int count;\n};\n\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    while(s-&gt;count == 0);\n    acquire(&s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n以上的实现是开销很大的，当生产者生产效率很低时，持续高速的询问会耗费很多资源。我们引入 sleep 和 wakeup 机制：\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    wakeup(s);\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    while(s-&gt;count == 0)\n        sleep(s);\n    acquire(&s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n当消费者没有得到资源时，睡觉，等到生产者生产了资源再唤醒消费者。但这样有一个问题：lost wakeup。考虑刚刚执行完第 11 行，正准备执行下一行时，第二个线程在消费者上执行，它唤醒了一个不存在的信号量，因此无事发生。但实际上这个信号量正是第 12 行将要送去睡觉的那个。此时第 12 行被执行，但是它由于已经在睡觉之前被唤醒过，再也无法被唤醒，系统停摆。\n为了修复这个错误，我们需要将第 11 到 12 行变为一个原子操作。一个可能的想法是，将消费者的 acquire 提前到最开始，但这又会导致死锁的问题：睡眠的线程由于一直持有锁，唤醒线程无法获取锁。因此我们需要在线程睡眠时同时释放锁，这导出了我们最终的实现：\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    wakeup(s);\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    while(s-&gt;count == 0)\n        sleep(s, &s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n\n\n\n基本思想是让 sleep 将当前进程标记为 SLEEPING，然后调用 sched 释放 CPU；wakeup 查找在给定等待 channel 上休眠的进程并将其标记为 RUNNABLE。睡眠和唤醒的呼叫者可以使用任何彼此方便的号码作为 channel，xv6 经常使用参与等待的内核数据结构的地址。\n有时会出现多个进程在同一个通道上休眠的情况；例如，多个进程从管道读取数据。一次唤醒调用即可将它们全部唤醒。其中一个将首先运行并获取调用 sleep 所用的锁，并且读取管道中等待的任何数据。其他进程会发现，尽管被唤醒，却没有数据可读取。从他们的角度来看，这次唤醒是“虚假的”，他们必须再次入睡。因此，总是在检查条件的循环内调用 sleep。\n\n\n\n子进程在 exit 会被设置为 ZOMBIE 状态，待父进程的 wait 重新发现它时恢复为 UNUSED，如果父进程在子进程退出之前就先退出，则子进程会被交给 init 进程，它会永久调用 wait，因此每个子进程都需要一个父进程来清理。\nwait 通过获取 wait_lock 开始，wait_lock 充当条件锁，有助于确保父级不会错过退出子级的唤醒。然后 wait 扫描进程表。如果它发现一个处于 ZOMBIE 状态的子进程，它会释放该子进程的资源及其 proc 结构，将子进程的退出状态复制到提供给 wait 的地址（如果不为 0），并返回子进程的进程 ID。如果 wait 找到子进程但没有退出，它会调用 sleep 来等待它们中的任何一个退出，然后再次扫描。 wait 经常持有两个锁，wait_lock 和某些进程的 pp-&gt;lock；避免死锁的顺序是先 wait_lock，然后 pp-&gt;lock。\nexit 记录退出状态，释放一些资源，调用 reparent 把子进程给 init 进程，唤醒父进程，然后将调用者标记为僵尸，然后永久让出 CPU。在将其状态设置为 ZOMBIE 之前，exit 就唤醒父进程可能看起来不正确，但这是安全的：虽然唤醒可能会导致父进程运行，但 wait 中的循环因为没有获取到 p-&gt;lock 而无法进行检查，直到 p-&gt;lock 被 scheduler 释放。\nexit 允许进程自行终止，而 kill 则允许一个进程请求另一个进程终止。如果直接销毁受害者进程，kill 会太复杂，因为受害者可能正在另一个 CPU 上执行，也许正在对内核数据结构进行敏感的更新。因此，kill 做的事情很少：它只是设置受害者的 p-&gt;killed，如果它正在睡觉，则将其唤醒。最终，受害者将进入或离开内核，此时，如果设置了 p-&gt;killed，usertrap 中的代码将调用 exit（它通过调用 killed 进行检查）。如果受害者运行在用户空间，它很快就会通过系统调用或因为计时器（或其他设备）中断而进入内核。\n如果受害者进程处于睡眠状态，kill 的 wakeup 调用将导致受害者从睡眠中恢复。这具有潜在的危险，因为正在等待的条件可能不成立。但是，xv6 对 sleep 的调用始终包含在 while 循环中，该循环在 sleep 返回后重新测试条件。一些对 sleep 的调用还会在循环中测试 p-&gt;killed，如果设置了，则放弃当前活动。只有当这种放弃是正确的时候才会这样做。\n一些特定的情况下，xv6 中的 sleep 循环不会检查进程控制块中的 killed 标志。这是因为这些代码位于一个多步系统调用的中间阶段，而这些阶段应该是原子性的。其中一个例子是 virtio 驱动程序，它没有检查 p-&gt;killed，因为磁盘操作可能是一组写操作中的一个，而这些写操作都是为了使文件系统处于正确状态而必要的。如果一个进程在等待磁盘 I/O 时被终止，它将不会退出，直到完成当前的系统调用，并且用户 trap 发现了 killed 标志。\n\n\n\n与每个进程关联的锁 (p-&gt;lock) 是 xv6 中最复杂的锁。考虑 p-&gt;lock 的一个简单方法是，在读取或写入以下任何 struct proc 字段时必须保持它：p-&gt;state、p-&gt;chan、p-&gt;killed、p-&gt;xstate 和 p -&gt;pid。这些字段可以由其他进程或其他核心上的调度程序线程使用，因此它们很自然地必须受到锁的保护。\n然而，p-&gt;lock 的大多数用途都是保护 xv6 进程数据结构和算法的更高级别方面。这是 p-&gt;lock 所做的全套事情：\n\n防止进程槽位分配竞争：p-&gt;lock 与 p-&gt;state 一起，防止在为新进程分配 proc[] 槽位时出现竞争。\n隐藏进程：在进程创建或销毁期间，p-&gt;lock 将进程隐藏起来，防止外部观察到它的存在。\n防止父进程等待收集僵尸进程：防止父进程的 wait 调用收集到已经将状态设置为 ZOMBIE 但尚未让出 CPU 的进程。\n防止另一个内核调度器在进程调用 swtch 之前运行 RUNNABLE 进程。\n防止定时器中断导致进程在调用 swtch 时让出 CPU。\n与条件锁一起防止 wakeup 忽略正在调用 sleep 但尚未让出 CPU 的进程。\n防止 kill 的受害进程退出，并可能在 kill 检查 p-&gt;pid 和设置 p-&gt;killed 之间重新分配。\n使 kill 的检查和写入 p-&gt;state 具有原子性。\n\n此外，p-&gt;parent 字段由全局锁 wait_lock 保护，而不是由 p-&gt;lock 保护。只有进程的父进程修改 p-&gt;parent，尽管该字段既由进程自身读取，也由其他搜索其子进程的进程读取。wait_lock 的作用是在 wait 等待任何子进程退出时作为条件锁。退出的子进程会持有 wait_lock 或 p-&gt;lock，直到将其状态设置为 ZOMBIE，唤醒其父进程并让出 CPU 之后才会释放。wait_lock 还串行化了父进程和子进程的并发退出，以确保 init 进程能够从其等待中被唤醒。wait_lock 是一个全局锁，而不是每个父进程的单独锁，因为在一个进程获得它之前，它无法知道谁是其父进程。\n\n\n\nxv6调度器实现了一个简单的调度策略，它依次运行每个进程。此策略称为 round robin。真实的操作系统实施更复杂的策略，例如允许进程具有优先级。这个想法是，调度程序将优先选择可运行的高优先级进程，而非可运行的低优先级进程。这些策略可能很快就会变得复杂，因为经常存在相互竞争的目标：例如，操作系统可能还希望保证公平性和高吞吐量。此外，复杂的策略可能会导致意外的交互，例如优先级反转 (priority inversion) 和 convoys。当低优先级进程和高优先级进程都使用特定的锁时，就会发生优先级反转，当低优先级进程获取该锁时，会阻止高优先级进程取得进展。当许多高优先级进程正在等待获取共享锁的低优先级进程时，就会形成一长串等待进程；convoys 一旦形成，就可以持续很长时间。为了避免此类问题，复杂的调度程序需要额外的机制。\nsleep 和 wakeup 是一种简单而有效的同步方法，但还有很多其他方法。所有这些挑战中的第一个挑战是避免我们在本章开头看到的 lost wakeup 问题。最初的 UNIX 内核的 sleep 只是禁用中断，这已经足够了，因为 UNIX 运行在单 CPU 系统上。由于 xv6 在多处理器上运行，因此它添加了显式的睡眠锁。 FreeBSD 的 msleep 采用了相同的方法。 Plan 9 的 sleep 使用回调函数，该函数在睡眠前持有调度锁的情况下运行；该功能用作睡眠状况的最后一刻检查，以避免丢失唤醒。 Linux 内核的 sleep 使用显式进程队列，称为等待队列；队列有自己的内部锁。\n替代在 wakeup 中扫描整个进程集合的低效方法是使用等待队列。Plan 9 中的 sleep 和 wakeup 称之为 rendezvous point。许多线程库将这种结构称为条件变量 (condition variable)，在这种上下文中，sleep 操作和 wakeup 操作被称为 wait 和 signal。所有这些机制都共享相同的特征：在等待过程中，睡眠条件受到某种锁的保护，在睡眠期间原子地释放。\n当有多个进程等待唤醒时，操作系统会调度所有这些进程，它们会竞争检查睡眠条件。这种行为的进程有时被称为 thundering herd，最好避免。大多数条件变量都有两个方法来唤醒等待的进程：signal 唤醒一个进程，broadcast 唤醒所有等待的进程。\n信号量通常用于同步。计数通常对应于诸如管道缓冲区中可用字节的数量或进程拥有的僵尸子进程的数量。使用显式计数作为抽象的一部分可以避免 lost wakeup 问题，因为有一个显式的计数记录唤醒的次数。\n在操作系统中终止和清理进程引入了许多复杂性。处理深度睡眠中的受害进程的栈取消回溯需要小心，因为调用栈上的每个函数可能需要进行一些清理工作。一些语言通过提供异常机制来简化这个过程，但 C 语言不提供这种机制。\nxv6 对 kill 的支持并不完全令人满意。相关的问题是，在一个线程即将进入睡眠状态时，kill 可能会设置 p-&gt;killed 并尝试唤醒此受害者。如果受害者在检查完 p-&gt;killed 之后但在调用 sleep 之前被尝试唤醒，那么受害者可能直到等待的条件发生后才会注意到 p-&gt;killed。这个时间可能很长，甚至到永远（比如受害者进程等待 console 输入，但是用户一直不输入）。\n真正的操作系统会在常数时间内找到具有空闲列表的空闲 proc 结构，而不是在 allocproc 中进行线性时间搜索；xv6 只是为了简单起见。",
+    "objectID": "CS/ModernCpp/NonVirtualPoly.html#多态的非虚实现方法",
+    "href": "CS/ModernCpp/NonVirtualPoly.html#多态的非虚实现方法",
+    "title": "C++ 中的（非虚）多态",
+    "section": "2 多态的（非虚）实现方法",
+    "text": "2 多态的（非虚）实现方法\n\n2.1 std::any\nstruct A {\n    int a{};\n    string msg;\n    void outA() const { cout &lt;&lt; msg &lt;&lt; endl; }\n};\n\nstruct B {\n    double t{};\n    string msg;\n    void outB() const { cout &lt;&lt; msg &lt;&lt; endl; }\n};\n\nstatic const type_info& AType{typeid(A)};\nstatic const type_info& BType{typeid(B)};\n\nint main()\n{\n    vector&lt;any&gt; vec;\n    vec.emplace_back(A{1, \"I'm A!\"});\n    vec.emplace_back(B{2.0, \"I'm B!\"});\n    for(auto&& i : vec) {\n        if(i.type() == AType)\n            any_cast&lt;A&gt;(i).outA();\n        else if(i.type() == BType)\n            any_cast&lt;B&gt;(i).outB();\n    }\n    return 0;\n}",
     "crumbs": [
       "CS",
       "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec12 Coordination"
+      "步入现当代 C++",
+      "C++ 中的（非虚）多态"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lec12.html#lecture",
-    "href": "CS/61810/6.1810Lec12.html#lecture",
-    "title": "Lec12 Coordination",
-    "section": "2 Lecture",
-    "text": "2 Lecture\n并无新鲜事。",
+    "objectID": "CS/CS144/CS144Lab.html#checkpoint-1",
+    "href": "CS/CS144/CS144Lab.html#checkpoint-1",
+    "title": "CS144 Lab 记录",
+    "section": "2 Checkpoint 1",
+    "text": "2 Checkpoint 1",
     "crumbs": [
       "CS",
       "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec12 Coordination"
+      "CS144 Introduction to Computer Networking 笔记",
+      "CS144 Lab 记录"
     ]
   },
   {
-    "objectID": "CS/61810/6.1810Lec14.html",
-    "href": "CS/61810/6.1810Lec14.html",
-    "title": "Lec13 Crash Recovery",
-    "section": "",
-    "text": "logging 主要是为了解决故障恢复的问题。logging 确保了文件系统的系统调用是原子性的。其次，它支持快速恢复。最后从原则上来说他应该非常高效。\n将磁盘分割为两个部分，其中一个部分是 log，另一个部分是文件系统。logging 主要分为以下四个步骤：\n\nlog write。当需要更新文件系统时，我们并不更新系统本身，而是将数据写入到 log 中，log 中记录了这个更新的内容，比如写入到 block 45 等等。\ncommit op。之后某个时间，当文件系统的操作都结束了，我们会 commit 文件系统的操作。这意味着我们需要在 log 的某个位置记录属于同一个文件系统的操作的个数。\ninstall log。当我们在 log 中存储了所有写 block 的内容时，我们想要真正执行这些操作，只需将 block 从 log 分区移到文件系统分区。\nclean log。一旦完成，就可以清除 log。实际上就是将属于同一个文件系统的操作的个数设为 0。\n\nxv6 的 log 结构比较简单，我们最开始有一个 header block，也就是 commit record，里面包含了：\n\nn 代表有效的 log block 数量；\n每个 log block 实际对应的 block 编号。\n\n之后就是 log 的数据，也就是每个 block 的数据。\n我们用事务作为磁盘操作原子性的保证。在 xv6 中，所有的事务操作会在开头和结尾分别被 begin_op 和 end_op 保护。其中 end_op 会实现 commit 操作。\n\nbegin_op() 函数在等待日志系统当前没有在执行提交操作，并且有足够的未保留的日志空间来容纳本次调用的写操作。log.outstanding 记录了已经保留日志空间的系统调用数量；总共保留的空间是 log.outstanding 乘以 MAXOPBLOCKS。每增加一个 log.outstanding 既保留了空间，也阻止了在此系统调用期间的提交。这段代码假设每个系统调用可能写入最多 MAXOPBLOCKS 个不同的块。\nlog_write() 函数作为 bwrite 的代理。它在内存中记录了块的扇区号，为其在磁盘上的日志中预留了一个位置，并将缓冲区固定在块缓存中，以防止块缓存将其驱逐。直到提交之前，该块必须保留在缓存中：在此期间，缓存中的副本是修改的唯一记录；只有在提交之后才能将其写入磁盘上的位置；同一事务中的其他读取必须看到修改。log_write 注意到在单个事务中多次写入块时，并将该块分配给日志中的同一位置。这种优化通常称为吸收。通常情况下，例如，事务中可能多次写入包含多个文件的 inode 的磁盘块。通过将几个磁盘写入吸收到一个中，文件系统可以节省日志空间，并且可以获得更好的性能，因为只需要将磁盘块的一个副本写入磁盘。\nend_op() 函数首先减少了未完成的系统调用的计数。如果计数现在为零，则通过调用 commit() 提交当前事务。这个过程有四个阶段。write_log() 函数将事务中修改的每个块从缓冲区缓存复制到日志中的相应位置。write_head() 函数将头块写入磁盘：这是提交点，如果在写入后发生崩溃，则会导致恢复从日志中重新执行事务的写入。install_trans 函数从日志中读取每个块，并将其写入文件系统中的适当位置。最后，end_op 写入日志头，并将计数设为零；这必须在下一个事务开始写入日志块之前发生，以防止在恢复时使用一个事务的头与后续事务的日志块。\nrecover_from_log() 函数是从 initlog() 函数中调用的，而 initlog() 函数在引导过程中在第一个用户进程运行之前（在 fsinit() 中调用）调用。它读取日志头，并在日志指示包含已提交事务时模拟 end_op 的操作。",
+    "objectID": "CS/CS144/CS144Lab.html#checkpoint-2the-tcp-receiver",
+    "href": "CS/CS144/CS144Lab.html#checkpoint-2the-tcp-receiver",
+    "title": "CS144 Lab 记录",
+    "section": "3 Checkpoint 2：The TCP Receiver",
+    "text": "3 Checkpoint 2：The TCP Receiver",
     "crumbs": [
       "CS",
       "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec13 Crash Recovery"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec14.html#lecture",
-    "href": "CS/61810/6.1810Lec14.html#lecture",
-    "title": "Lec13 Crash Recovery",
-    "section": "",
-    "text": "logging 主要是为了解决故障恢复的问题。logging 确保了文件系统的系统调用是原子性的。其次，它支持快速恢复。最后从原则上来说他应该非常高效。\n将磁盘分割为两个部分，其中一个部分是 log，另一个部分是文件系统。logging 主要分为以下四个步骤：\n\nlog write。当需要更新文件系统时，我们并不更新系统本身，而是将数据写入到 log 中，log 中记录了这个更新的内容，比如写入到 block 45 等等。\ncommit op。之后某个时间，当文件系统的操作都结束了，我们会 commit 文件系统的操作。这意味着我们需要在 log 的某个位置记录属于同一个文件系统的操作的个数。\ninstall log。当我们在 log 中存储了所有写 block 的内容时，我们想要真正执行这些操作，只需将 block 从 log 分区移到文件系统分区。\nclean log。一旦完成，就可以清除 log。实际上就是将属于同一个文件系统的操作的个数设为 0。\n\nxv6 的 log 结构比较简单，我们最开始有一个 header block，也就是 commit record，里面包含了：\n\nn 代表有效的 log block 数量；\n每个 log block 实际对应的 block 编号。\n\n之后就是 log 的数据，也就是每个 block 的数据。\n我们用事务作为磁盘操作原子性的保证。在 xv6 中，所有的事务操作会在开头和结尾分别被 begin_op 和 end_op 保护。其中 end_op 会实现 commit 操作。\n\nbegin_op() 函数在等待日志系统当前没有在执行提交操作，并且有足够的未保留的日志空间来容纳本次调用的写操作。log.outstanding 记录了已经保留日志空间的系统调用数量；总共保留的空间是 log.outstanding 乘以 MAXOPBLOCKS。每增加一个 log.outstanding 既保留了空间，也阻止了在此系统调用期间的提交。这段代码假设每个系统调用可能写入最多 MAXOPBLOCKS 个不同的块。\nlog_write() 函数作为 bwrite 的代理。它在内存中记录了块的扇区号，为其在磁盘上的日志中预留了一个位置，并将缓冲区固定在块缓存中，以防止块缓存将其驱逐。直到提交之前，该块必须保留在缓存中：在此期间，缓存中的副本是修改的唯一记录；只有在提交之后才能将其写入磁盘上的位置；同一事务中的其他读取必须看到修改。log_write 注意到在单个事务中多次写入块时，并将该块分配给日志中的同一位置。这种优化通常称为吸收。通常情况下，例如，事务中可能多次写入包含多个文件的 inode 的磁盘块。通过将几个磁盘写入吸收到一个中，文件系统可以节省日志空间，并且可以获得更好的性能，因为只需要将磁盘块的一个副本写入磁盘。\nend_op() 函数首先减少了未完成的系统调用的计数。如果计数现在为零，则通过调用 commit() 提交当前事务。这个过程有四个阶段。write_log() 函数将事务中修改的每个块从缓冲区缓存复制到日志中的相应位置。write_head() 函数将头块写入磁盘：这是提交点，如果在写入后发生崩溃，则会导致恢复从日志中重新执行事务的写入。install_trans 函数从日志中读取每个块，并将其写入文件系统中的适当位置。最后，end_op 写入日志头，并将计数设为零；这必须在下一个事务开始写入日志块之前发生，以防止在恢复时使用一个事务的头与后续事务的日志块。\nrecover_from_log() 函数是从 initlog() 函数中调用的，而 initlog() 函数在引导过程中在第一个用户进程运行之前（在 fsinit() 中调用）调用。它读取日志头，并在日志指示包含已提交事务时模拟 end_op 的操作。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec13 Crash Recovery"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec4.html",
-    "href": "CS/61810/6.1810Lec4.html",
-    "title": "Lec4 Page Tables",
-    "section": "",
-    "text": "Read Chapter 3 and kernel/memlayout.h.\n\n\n\nRISC-V 指令操纵虚拟地址，机器的 RAM 操纵物理地址。页表将虚拟地址映射到物理地址。\nxv6 运行在 Sv39 RISC-V 上，即 64 位中的低 39 位被用于虚拟地址。在 Sv39 配置中，一个页表是由 \\(2^{27}\\) 的页表项（page table entries，PTE）组成的。每个 PTE 由 physical page number（PPN）与一些标志位组成，共 44 位。每个 PTE 低 39 位中的高 27 位用做指向页表中的 PTE 的下标。一个 56 位的物理地址的高 44 位由 PTE 的 PPN 提供，低 12 位拷贝自对应虚拟地址的低 12 位。如下图。Sv39 并未将 64 位地址全部用满，这样做是出于当时对技术的预测。后面还有 Sv48 提供更多的内存空间。\n\n\n\n\n\n上面只是一个简单表示，不是故事的全部。在实际的 Sv39 结构中，如下图，页表实际由一个三层深的完全 512 叉树组成。根结点是一个 512 项的页，每个 PTE 指向下一层一个 512 项的页，这个页的每个 PTE 又指向下一层一个 512 项的 PTE。这个结构对应了虚拟地址用于定位的 27 位，均分为三部分，每个部分分配给一层。这种分层结构的好处是在多数情况下只有一小部分虚拟地址被使用时，操作系统无需为其他的分支分配页。\n\n\n\n\n\n在实际执行读取/储存指令时，CPU 必须从内存加载三个 PTE，这可能有拖慢速度的隐患。为此 RISC-V CPU 将页表缓存在页表缓存（Translation Look-aside Buffer，TLB）中。\n每个 PTE 的 flag 的含义：PTE_V 表示 PTE 是否存在；PTE_R 控制是否允许被读取；PTE_W 控制是否允许被写入，PTE_X 控制是否 CPU 要将该页的内容解释为指令并执行它们；PTE_U 控制是否允许用户模式下的指令访问该页，默认只能在监督模式下访问。\nstap 寄存器给 CPU 提供了根页表页的基址。每个 CPU 都有各自的 satp 寄存器。\n由于页目录位于物理内存中，因此内核可以通过使用标准存储指令写入 PTE 的虚拟地址来对页目录中的 PTE 内容进行编程。\n关于术语的一些注释。与物理内存和虚拟地址不同，虚拟内存不是物理对象， 而是指内核提供的用于管理物理内存和虚拟地址的抽象和机制的集合。\n\n\n\n\n\n\n\n\n内核地址从 0x80000000（KERNBASE）开始，至少延续到 0x88000000（PHYSTOP）。这段地址采取直接映射，即虚拟地址和物理地址相同。有些地址不遵循直接映射，比如 trampoline 和内核栈分页。trampoline 在虚拟地址的顶端，有趣的是，对应这段内容的物理地址被映射了两次，一次在顶端，一次是直接映射。内核栈分页是每个进程拥有的内核栈的地址，每个分页上有 guard page，这个 page 的 PTE_V 是没有设置的，因此栈溢出会导致引起异常。这样的设计可以防止栈溢出覆盖其他内核栈的数据。\n内核将 trampoline 和内核内容授予 PTE_R 和 PTE_X 权限。其他页授予 PTE_R 和 PTE_W 权限。guard pages 的映射无效。\n书上讲了如何分配地址空间的代码和流程，这里略过。\n\n\n\nxv6 用内核结束到 PHYSTOP 的空间为运行时分配内存。它使用一个链表来追踪空闲空间。后面讲了这部分的代码。\n个人觉得有意思的点是，内核在释放空间时是将内容全部填为垃圾值而非零，这样可以让悬空指针因为读取到无用内容从而尽早被发现。\n\n\n\n每个进程有一个页表，当 xv6 切换进程时，同时切换页表。下图是一个用户地址空间的细节。从 0 到 MAXVA，原则上允许进程寻址 256GB 内存。\n\n\n\n\n\n用户的栈被下方的 guard page 保护，当栈溢出时，会引起分页错误异常。当进程申请更多用户内存时，xv6 先使用 kalloc 分配物理页，然后将那些地址的 PTE 加入进程页表。\n我们在这里看到一些使用页表的很好的例子。首先，不同进程的页表将用户地址转换为不同的物理内存页，从而每个进程都拥有私有的用户内存。其次，每个进程将其内存视为具有从零开始的连续虚拟地址，而进程的物理内存可以是不连续的。第三，内核用 trampoline 代码映射一个页面到用户地址空间的顶部（没有 PTE_U 权限），因此单页物理内存显示在所有地址空间中，但只能由内核使用。\n\n\n\nexec 从二进制或可执行文件中读取数据并替换进程的地址空间。它读取二进制文件的 ELF 标头。一个 ELF 二进制由 ELF 标头和一系列程序段标头组成。xv6 的程序有两段程序段标头：一个是指令，另一个是数据。\n首先 xv6 会快速检查一个文件是否是 ELF 二进制文件。它通常由四个字节的 “magic number” 0x7F, 'E', 'L', 'F' 组成，在程序里设为 ELF_MAGIC 。\n（后面的内容不是很有关联的感觉，就先不写了）\n\n\n\nxv6 的简化是通过内核使用虚拟地址和物理地址之间的直接映射，并假设在地址 0x8000000 处存在物理 RAM。但真实硬件将 RAM 和设备放置在不可预测的物理地址处。更严格的内核设计利用页表将任意硬件物理内存布局转换为可预测的内核虚拟地址布局。\nRISC-V 支持物理地址级别的保护，但 xv6 没有使用该功能。\n在具有大量内存的计算机上，使用 RISC-V 对“super pages”的支持可能很有意义。较大的页面对于具有大量 RAM 的机器来说是有意义的，并且可以减少页表操作的开销。\nxv6 缺少可以为小对象提供内存的类似 malloc 的分配器，因此较难使用需要动态分配的复杂数据结构。更复杂的内核可能会分配许多不同大小的小块，而不是（在 xv6 中）仅 4096 字节块；真正的内核分配器需要处理小分配和大分配。内存分配是一个长期的热门话题，基本问题是有效利用有限的内存并为未知的未来请求做好准备。如今，人们更关心速度而不是空间效率。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec4 Page Tables"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec4.html#课前准备",
-    "href": "CS/61810/6.1810Lec4.html#课前准备",
-    "title": "Lec4 Page Tables",
-    "section": "",
-    "text": "Read Chapter 3 and kernel/memlayout.h.\n\n\n\nRISC-V 指令操纵虚拟地址，机器的 RAM 操纵物理地址。页表将虚拟地址映射到物理地址。\nxv6 运行在 Sv39 RISC-V 上，即 64 位中的低 39 位被用于虚拟地址。在 Sv39 配置中，一个页表是由 \\(2^{27}\\) 的页表项（page table entries，PTE）组成的。每个 PTE 由 physical page number（PPN）与一些标志位组成，共 44 位。每个 PTE 低 39 位中的高 27 位用做指向页表中的 PTE 的下标。一个 56 位的物理地址的高 44 位由 PTE 的 PPN 提供，低 12 位拷贝自对应虚拟地址的低 12 位。如下图。Sv39 并未将 64 位地址全部用满，这样做是出于当时对技术的预测。后面还有 Sv48 提供更多的内存空间。\n\n\n\n\n\n上面只是一个简单表示，不是故事的全部。在实际的 Sv39 结构中，如下图，页表实际由一个三层深的完全 512 叉树组成。根结点是一个 512 项的页，每个 PTE 指向下一层一个 512 项的页，这个页的每个 PTE 又指向下一层一个 512 项的 PTE。这个结构对应了虚拟地址用于定位的 27 位，均分为三部分，每个部分分配给一层。这种分层结构的好处是在多数情况下只有一小部分虚拟地址被使用时，操作系统无需为其他的分支分配页。\n\n\n\n\n\n在实际执行读取/储存指令时，CPU 必须从内存加载三个 PTE，这可能有拖慢速度的隐患。为此 RISC-V CPU 将页表缓存在页表缓存（Translation Look-aside Buffer，TLB）中。\n每个 PTE 的 flag 的含义：PTE_V 表示 PTE 是否存在；PTE_R 控制是否允许被读取；PTE_W 控制是否允许被写入，PTE_X 控制是否 CPU 要将该页的内容解释为指令并执行它们；PTE_U 控制是否允许用户模式下的指令访问该页，默认只能在监督模式下访问。\nstap 寄存器给 CPU 提供了根页表页的基址。每个 CPU 都有各自的 satp 寄存器。\n由于页目录位于物理内存中，因此内核可以通过使用标准存储指令写入 PTE 的虚拟地址来对页目录中的 PTE 内容进行编程。\n关于术语的一些注释。与物理内存和虚拟地址不同，虚拟内存不是物理对象， 而是指内核提供的用于管理物理内存和虚拟地址的抽象和机制的集合。\n\n\n\n\n\n\n\n\n内核地址从 0x80000000（KERNBASE）开始，至少延续到 0x88000000（PHYSTOP）。这段地址采取直接映射，即虚拟地址和物理地址相同。有些地址不遵循直接映射，比如 trampoline 和内核栈分页。trampoline 在虚拟地址的顶端，有趣的是，对应这段内容的物理地址被映射了两次，一次在顶端，一次是直接映射。内核栈分页是每个进程拥有的内核栈的地址，每个分页上有 guard page，这个 page 的 PTE_V 是没有设置的，因此栈溢出会导致引起异常。这样的设计可以防止栈溢出覆盖其他内核栈的数据。\n内核将 trampoline 和内核内容授予 PTE_R 和 PTE_X 权限。其他页授予 PTE_R 和 PTE_W 权限。guard pages 的映射无效。\n书上讲了如何分配地址空间的代码和流程，这里略过。\n\n\n\nxv6 用内核结束到 PHYSTOP 的空间为运行时分配内存。它使用一个链表来追踪空闲空间。后面讲了这部分的代码。\n个人觉得有意思的点是，内核在释放空间时是将内容全部填为垃圾值而非零，这样可以让悬空指针因为读取到无用内容从而尽早被发现。\n\n\n\n每个进程有一个页表，当 xv6 切换进程时，同时切换页表。下图是一个用户地址空间的细节。从 0 到 MAXVA，原则上允许进程寻址 256GB 内存。\n\n\n\n\n\n用户的栈被下方的 guard page 保护，当栈溢出时，会引起分页错误异常。当进程申请更多用户内存时，xv6 先使用 kalloc 分配物理页，然后将那些地址的 PTE 加入进程页表。\n我们在这里看到一些使用页表的很好的例子。首先，不同进程的页表将用户地址转换为不同的物理内存页，从而每个进程都拥有私有的用户内存。其次，每个进程将其内存视为具有从零开始的连续虚拟地址，而进程的物理内存可以是不连续的。第三，内核用 trampoline 代码映射一个页面到用户地址空间的顶部（没有 PTE_U 权限），因此单页物理内存显示在所有地址空间中，但只能由内核使用。\n\n\n\nexec 从二进制或可执行文件中读取数据并替换进程的地址空间。它读取二进制文件的 ELF 标头。一个 ELF 二进制由 ELF 标头和一系列程序段标头组成。xv6 的程序有两段程序段标头：一个是指令，另一个是数据。\n首先 xv6 会快速检查一个文件是否是 ELF 二进制文件。它通常由四个字节的 “magic number” 0x7F, 'E', 'L', 'F' 组成，在程序里设为 ELF_MAGIC 。\n（后面的内容不是很有关联的感觉，就先不写了）\n\n\n\nxv6 的简化是通过内核使用虚拟地址和物理地址之间的直接映射，并假设在地址 0x8000000 处存在物理 RAM。但真实硬件将 RAM 和设备放置在不可预测的物理地址处。更严格的内核设计利用页表将任意硬件物理内存布局转换为可预测的内核虚拟地址布局。\nRISC-V 支持物理地址级别的保护，但 xv6 没有使用该功能。\n在具有大量内存的计算机上，使用 RISC-V 对“super pages”的支持可能很有意义。较大的页面对于具有大量 RAM 的机器来说是有意义的，并且可以减少页表操作的开销。\nxv6 缺少可以为小对象提供内存的类似 malloc 的分配器，因此较难使用需要动态分配的复杂数据结构。更复杂的内核可能会分配许多不同大小的小块，而不是（在 xv6 中）仅 4096 字节块；真正的内核分配器需要处理小分配和大分配。内存分配是一个长期的热门话题，基本问题是有效利用有限的内存并为未知的未来请求做好准备。如今，人们更关心速度而不是空间效率。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec4 Page Tables"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec4.html#lecture",
-    "href": "CS/61810/6.1810Lec4.html#lecture",
-    "title": "Lec4 Page Tables",
-    "section": "2 Lecture",
-    "text": "2 Lecture\nlecture 上讲的内容很有用，把我看书时的困惑解答了不少，但整体内容与书上是一致的，主要是完善了细节并且澄清了容易误解的地方。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec4 Page Tables"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec7.html",
-    "href": "CS/61810/6.1810Lec7.html",
-    "title": "Lec7 Page Faults",
-    "section": "",
-    "text": "Read Section 4.6.\n\n任务最少的一集。\nxv6 应对异常的方式比较无聊：如果是应用空间的异常，直接杀掉出错的进程；如果是内核里的异常，内核会 panic。真正的操作系统会有更有趣的方式应对异常。\n一个示例是应用 page faults 实现的 copy-on-write (COW) fork。常规的 fork 会为子进程开辟相同的物理空间并将父进程的内容拷贝进去，如果能让父子进程共用一片内存将是非常高效的。但直接的实现方法是不可行的，因为这会导致父子进程会相互干扰对方的执行，因为它们共用了一个堆栈。\n先来了解一下什么是 page-fault exception。当虚拟地址在页表中没有映射，或者对应的 PTE 标志位不符合当前操作所需的许可，就会引发 page-fault exception。RISC-V 区分三种 page fault：\n\nload page fault：当 load 类指令无法翻译其虚拟地址；\nstore page fault：当 store 类指令无法翻译其虚拟地址；\ninstruction page fault：当 pc 无法翻译；\n\nscause 寄存器会标示 page fault 的类型，stval 寄存器存有无法翻译的地址。\nCOW fork 的基本思想是父子进程在刚开始享有同一片物理内存，但是是只读的（PTE_W 未设置）。当任何一方要向某一页写入数据时，RISC-V CPU 会引发一个 page-fault exception。内核的 trap handler 会分配一个页的物理内存并复制引发异常的页的内容，并修改对应的 PTE 标识。此时恢复并重新执行刚才出错的命令，由于这次有了写权限，命令照常执行。COW fork 需要一个记事簿1（book-keeping）来帮助决定哪个页面可以被释放，因为每个页都有可能被很多进程共享。\n1 其实就是引用计数。另一个广泛应用的是 lazy allocation。当进程通过 sbrk 申请更多空间时，内核注意到了空间的扩张，但并未真正分配内存。当新地址上出现了 page fault，内核才会真正分配内存并在页表上建立映射。\n另一个广泛使用的是 demand page。在 exec 中，xv6 加载应用程序的所有文本和数据都 eagerly2 存入内存。由于应用程序可能很大并且从磁盘读取数据的成本很高，这种启动成本可能会引起用户的注意：当用户从 shell 启动大型应用程序，可能需要很长时间才能看到响应。现代内核为用户地址空间创建页表，但标记页面 PTE 无效。发生 page fault 时，内核从磁盘读取页面内容并将其映射到用户地址空间。\n2 与 lazy 相对。计算机上运行的程序可能需要比计算机 RAM 更多的内存。为了优雅地应对，操作系统可能会实现 paging on disk。这个想法是只将一小部分用户页存储在 RAM 中，并将其余部分存储在磁盘的 paging area 中。内核将与存储在 paging area（因此不在 RAM 中）的内存相对应的 PTE 标记为无效。如果应用程序尝试使用已 paged out 到磁盘的页面之一，则应用程序将引发 page fault，并且必须将页面 paged in：内核 trap handler 将分配物理 RAM 页面，从磁盘写入 RAM，并修改相关 PTE 指向 RAM。\n如果一个页面需要被 paged in，但是没有空闲的物理内存怎么办？在这种情况下，内核必须首先释放一个物理页面，将其 paged out 或者逐出（evicting）到磁盘上的 paging area，并将指向该物理页面的 PTE 标记为无效。逐出操作是昂贵的，因此分页的性能最佳时是它不频繁发生。即，应用程序只使用其内存页面的子集，并且这些子集的并集能够适应内存。这种特性通常被称为具有良好的局部性。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec7 Page Faults"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec7.html#课前准备",
-    "href": "CS/61810/6.1810Lec7.html#课前准备",
-    "title": "Lec7 Page Faults",
-    "section": "",
-    "text": "Read Section 4.6.\n\n任务最少的一集。\nxv6 应对异常的方式比较无聊：如果是应用空间的异常，直接杀掉出错的进程；如果是内核里的异常，内核会 panic。真正的操作系统会有更有趣的方式应对异常。\n一个示例是应用 page faults 实现的 copy-on-write (COW) fork。常规的 fork 会为子进程开辟相同的物理空间并将父进程的内容拷贝进去，如果能让父子进程共用一片内存将是非常高效的。但直接的实现方法是不可行的，因为这会导致父子进程会相互干扰对方的执行，因为它们共用了一个堆栈。\n先来了解一下什么是 page-fault exception。当虚拟地址在页表中没有映射，或者对应的 PTE 标志位不符合当前操作所需的许可，就会引发 page-fault exception。RISC-V 区分三种 page fault：\n\nload page fault：当 load 类指令无法翻译其虚拟地址；\nstore page fault：当 store 类指令无法翻译其虚拟地址；\ninstruction page fault：当 pc 无法翻译；\n\nscause 寄存器会标示 page fault 的类型，stval 寄存器存有无法翻译的地址。\nCOW fork 的基本思想是父子进程在刚开始享有同一片物理内存，但是是只读的（PTE_W 未设置）。当任何一方要向某一页写入数据时，RISC-V CPU 会引发一个 page-fault exception。内核的 trap handler 会分配一个页的物理内存并复制引发异常的页的内容，并修改对应的 PTE 标识。此时恢复并重新执行刚才出错的命令，由于这次有了写权限，命令照常执行。COW fork 需要一个记事簿1（book-keeping）来帮助决定哪个页面可以被释放，因为每个页都有可能被很多进程共享。\n1 其实就是引用计数。另一个广泛应用的是 lazy allocation。当进程通过 sbrk 申请更多空间时，内核注意到了空间的扩张，但并未真正分配内存。当新地址上出现了 page fault，内核才会真正分配内存并在页表上建立映射。\n另一个广泛使用的是 demand page。在 exec 中，xv6 加载应用程序的所有文本和数据都 eagerly2 存入内存。由于应用程序可能很大并且从磁盘读取数据的成本很高，这种启动成本可能会引起用户的注意：当用户从 shell 启动大型应用程序，可能需要很长时间才能看到响应。现代内核为用户地址空间创建页表，但标记页面 PTE 无效。发生 page fault 时，内核从磁盘读取页面内容并将其映射到用户地址空间。\n2 与 lazy 相对。计算机上运行的程序可能需要比计算机 RAM 更多的内存。为了优雅地应对，操作系统可能会实现 paging on disk。这个想法是只将一小部分用户页存储在 RAM 中，并将其余部分存储在磁盘的 paging area 中。内核将与存储在 paging area（因此不在 RAM 中）的内存相对应的 PTE 标记为无效。如果应用程序尝试使用已 paged out 到磁盘的页面之一，则应用程序将引发 page fault，并且必须将页面 paged in：内核 trap handler 将分配物理 RAM 页面，从磁盘写入 RAM，并修改相关 PTE 指向 RAM。\n如果一个页面需要被 paged in，但是没有空闲的物理内存怎么办？在这种情况下，内核必须首先释放一个物理页面，将其 paged out 或者逐出（evicting）到磁盘上的 paging area，并将指向该物理页面的 PTE 标记为无效。逐出操作是昂贵的，因此分页的性能最佳时是它不频繁发生。即，应用程序只使用其内存页面的子集，并且这些子集的并集能够适应内存。这种特性通常被称为具有良好的局部性。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec7 Page Faults"
-    ]
-  },
-  {
-    "objectID": "CS/61810/6.1810Lec7.html#lecture",
-    "href": "CS/61810/6.1810Lec7.html#lecture",
-    "title": "Lec7 Page Faults",
-    "section": "2 Lecture",
-    "text": "2 Lecture\n\n2.1 Memory Mapped Files\n将完整或者部分文件加载到内存中，这样就可以通过内存地址相关的 load 或者 store 指令来操纵文件。为了支持这个功能，现代的操作系统会提供一个叫做 mmap 的系统调用，比如会长成这样：\nmmap(va, len, protection, flags, fd, offset);\n这里的语义就是，从文件描述符对应的文件的偏移量的位置开始，映射长度为 len 的内容到虚拟内存地址 va，同时我们需要加上一些保护，比如只读或者读写。flags 表示该文件是否可以在多个进程之间共享。\n假设文件内容是读写并且内核实现 mmap 的方式是 eager 方式（不过大部分系统都不会这么做），内核会从文件的 offset 位置开始，将数据拷贝到内存，设置好 PTE 指向物理内存的位置。之后应用程序就可以使用 load 或者 store 指令来修改内存中对应的文件内容。当完成操作之后，会有一个对应的 unmap 系统调用，来表明应用程序已经完成了对文件的操作，在 unmap 时间点，我们需要将 dirty block 写回到文件中。我们可以很容易的找到哪些 block 是 dirty 的，因为它们在 PTE 中的 dirty bit 为 1。\n当然，在任何聪明的内存管理机制中，所有的这些都是以 lazy 的方式实现。你不会立即将文件内容拷贝到内存中，而是先记录一下这个 PTE 属于这个文件描述符。相应的信息通常在 VMA (Virtual Memory Area) 结构体中保存。在 VMA 中我们会记录文件描述符，偏移量等等，这些信息用来表示对应的内存虚拟地址的实际内容在哪，这样当我们得到一个位于 VMA 地址范围的 page fault时，内核可以从磁盘中读数据，并加载到内存中。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "6.1810 Operating System Engineering 笔记",
-      "Lec7 Page Faults"
-    ]
-  },
-  {
-    "objectID": "CS/CS.html",
-    "href": "CS/CS.html",
-    "title": "导航页",
-    "section": "",
-    "text": "这是导航页，可以写介绍性文字。",
-    "crumbs": [
-      "CS",
-      "Computer Science"
+      "CS144 Introduction to Computer Networking 笔记",
+      "CS144 Lab 记录"
     ]
   },
   {
@@ -1000,119 +767,287 @@
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit3.html",
-    "href": "CS/CS144/CS144Unit3.html",
-    "title": "Unit3: Packet Switching",
+    "objectID": "CS/61810/6.1810Lec7.html",
+    "href": "CS/61810/6.1810Lec7.html",
+    "title": "Lec7 Page Faults",
     "section": "",
-    "text": "数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。",
+    "text": "Read Section 4.6.\n\n任务最少的一集。\nxv6 应对异常的方式比较无聊：如果是应用空间的异常，直接杀掉出错的进程；如果是内核里的异常，内核会 panic。真正的操作系统会有更有趣的方式应对异常。\n一个示例是应用 page faults 实现的 copy-on-write (COW) fork。常规的 fork 会为子进程开辟相同的物理空间并将父进程的内容拷贝进去，如果能让父子进程共用一片内存将是非常高效的。但直接的实现方法是不可行的，因为这会导致父子进程会相互干扰对方的执行，因为它们共用了一个堆栈。\n先来了解一下什么是 page-fault exception。当虚拟地址在页表中没有映射，或者对应的 PTE 标志位不符合当前操作所需的许可，就会引发 page-fault exception。RISC-V 区分三种 page fault：\n\nload page fault：当 load 类指令无法翻译其虚拟地址；\nstore page fault：当 store 类指令无法翻译其虚拟地址；\ninstruction page fault：当 pc 无法翻译；\n\nscause 寄存器会标示 page fault 的类型，stval 寄存器存有无法翻译的地址。\nCOW fork 的基本思想是父子进程在刚开始享有同一片物理内存，但是是只读的（PTE_W 未设置）。当任何一方要向某一页写入数据时，RISC-V CPU 会引发一个 page-fault exception。内核的 trap handler 会分配一个页的物理内存并复制引发异常的页的内容，并修改对应的 PTE 标识。此时恢复并重新执行刚才出错的命令，由于这次有了写权限，命令照常执行。COW fork 需要一个记事簿1（book-keeping）来帮助决定哪个页面可以被释放，因为每个页都有可能被很多进程共享。\n1 其实就是引用计数。另一个广泛应用的是 lazy allocation。当进程通过 sbrk 申请更多空间时，内核注意到了空间的扩张，但并未真正分配内存。当新地址上出现了 page fault，内核才会真正分配内存并在页表上建立映射。\n另一个广泛使用的是 demand page。在 exec 中，xv6 加载应用程序的所有文本和数据都 eagerly2 存入内存。由于应用程序可能很大并且从磁盘读取数据的成本很高，这种启动成本可能会引起用户的注意：当用户从 shell 启动大型应用程序，可能需要很长时间才能看到响应。现代内核为用户地址空间创建页表，但标记页面 PTE 无效。发生 page fault 时，内核从磁盘读取页面内容并将其映射到用户地址空间。\n2 与 lazy 相对。计算机上运行的程序可能需要比计算机 RAM 更多的内存。为了优雅地应对，操作系统可能会实现 paging on disk。这个想法是只将一小部分用户页存储在 RAM 中，并将其余部分存储在磁盘的 paging area 中。内核将与存储在 paging area（因此不在 RAM 中）的内存相对应的 PTE 标记为无效。如果应用程序尝试使用已 paged out 到磁盘的页面之一，则应用程序将引发 page fault，并且必须将页面 paged in：内核 trap handler 将分配物理 RAM 页面，从磁盘写入 RAM，并修改相关 PTE 指向 RAM。\n如果一个页面需要被 paged in，但是没有空闲的物理内存怎么办？在这种情况下，内核必须首先释放一个物理页面，将其 paged out 或者逐出（evicting）到磁盘上的 paging area，并将指向该物理页面的 PTE 标记为无效。逐出操作是昂贵的，因此分页的性能最佳时是它不频繁发生。即，应用程序只使用其内存页面的子集，并且这些子集的并集能够适应内存。这种特性通常被称为具有良好的局部性。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit3: Packet Switching"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec7 Page Faults"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit3.html#what-is-packet-switching",
-    "href": "CS/CS144/CS144Unit3.html#what-is-packet-switching",
-    "title": "Unit3: Packet Switching",
+    "objectID": "CS/61810/6.1810Lec7.html#课前准备",
+    "href": "CS/61810/6.1810Lec7.html#课前准备",
+    "title": "Lec7 Page Faults",
     "section": "",
-    "text": "数据被塞进包里，通过路由逐跳从源主机送到目标主机。中间路由或网关或以太网交换机负责转发包。",
+    "text": "Read Section 4.6.\n\n任务最少的一集。\nxv6 应对异常的方式比较无聊：如果是应用空间的异常，直接杀掉出错的进程；如果是内核里的异常，内核会 panic。真正的操作系统会有更有趣的方式应对异常。\n一个示例是应用 page faults 实现的 copy-on-write (COW) fork。常规的 fork 会为子进程开辟相同的物理空间并将父进程的内容拷贝进去，如果能让父子进程共用一片内存将是非常高效的。但直接的实现方法是不可行的，因为这会导致父子进程会相互干扰对方的执行，因为它们共用了一个堆栈。\n先来了解一下什么是 page-fault exception。当虚拟地址在页表中没有映射，或者对应的 PTE 标志位不符合当前操作所需的许可，就会引发 page-fault exception。RISC-V 区分三种 page fault：\n\nload page fault：当 load 类指令无法翻译其虚拟地址；\nstore page fault：当 store 类指令无法翻译其虚拟地址；\ninstruction page fault：当 pc 无法翻译；\n\nscause 寄存器会标示 page fault 的类型，stval 寄存器存有无法翻译的地址。\nCOW fork 的基本思想是父子进程在刚开始享有同一片物理内存，但是是只读的（PTE_W 未设置）。当任何一方要向某一页写入数据时，RISC-V CPU 会引发一个 page-fault exception。内核的 trap handler 会分配一个页的物理内存并复制引发异常的页的内容，并修改对应的 PTE 标识。此时恢复并重新执行刚才出错的命令，由于这次有了写权限，命令照常执行。COW fork 需要一个记事簿1（book-keeping）来帮助决定哪个页面可以被释放，因为每个页都有可能被很多进程共享。\n1 其实就是引用计数。另一个广泛应用的是 lazy allocation。当进程通过 sbrk 申请更多空间时，内核注意到了空间的扩张，但并未真正分配内存。当新地址上出现了 page fault，内核才会真正分配内存并在页表上建立映射。\n另一个广泛使用的是 demand page。在 exec 中，xv6 加载应用程序的所有文本和数据都 eagerly2 存入内存。由于应用程序可能很大并且从磁盘读取数据的成本很高，这种启动成本可能会引起用户的注意：当用户从 shell 启动大型应用程序，可能需要很长时间才能看到响应。现代内核为用户地址空间创建页表，但标记页面 PTE 无效。发生 page fault 时，内核从磁盘读取页面内容并将其映射到用户地址空间。\n2 与 lazy 相对。计算机上运行的程序可能需要比计算机 RAM 更多的内存。为了优雅地应对，操作系统可能会实现 paging on disk。这个想法是只将一小部分用户页存储在 RAM 中，并将其余部分存储在磁盘的 paging area 中。内核将与存储在 paging area（因此不在 RAM 中）的内存相对应的 PTE 标记为无效。如果应用程序尝试使用已 paged out 到磁盘的页面之一，则应用程序将引发 page fault，并且必须将页面 paged in：内核 trap handler 将分配物理 RAM 页面，从磁盘写入 RAM，并修改相关 PTE 指向 RAM。\n如果一个页面需要被 paged in，但是没有空闲的物理内存怎么办？在这种情况下，内核必须首先释放一个物理页面，将其 paged out 或者逐出（evicting）到磁盘上的 paging area，并将指向该物理页面的 PTE 标记为无效。逐出操作是昂贵的，因此分页的性能最佳时是它不频繁发生。即，应用程序只使用其内存页面的子集，并且这些子集的并集能够适应内存。这种特性通常被称为具有良好的局部性。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit3: Packet Switching"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec7 Page Faults"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit3.html#end-to-end-delay",
-    "href": "CS/CS144/CS144Unit3.html#end-to-end-delay",
-    "title": "Unit3: Packet Switching",
-    "section": "2 End-to-End delay",
-    "text": "2 End-to-End delay\n\n2.1 传播延迟（Progagation Delay）\n传播延迟是指信息的一个比特在链路上传输所需的时间，取决于链路的长度和比特传输的速度。在大多数情况下，比特的传播速度接近光速。传播延迟与链路的数据速率无关，而仅取决于比特的传播速度和电缆的长度。\n\n\n2.2 Packetization Delay\npacketization delay 是指从将数据包的第一个比特放入链路到最后一个比特放入链路之间的时间。packetization delay 取决于我们能够将比特放入链路的速度，也就是数据速率。数据包化延迟只与数据包的长度和数据速率有关，而与链路的长度或比特传播速度无关。\n\n\n2.3 端到端延迟\n将一个长为 \\(p\\) 的包从源主机到目的主机，中间经过若干条线路，每条线路的长度为 \\(l_i\\)，数据速率为 \\(r_i\\)，则端到端延迟为\n\\[ t = \\sum_i \\left(\\frac{p}{r_i} + \\frac{l_i}{c}\\right) \\]其中 \\(c\\) 是数据在传播介质（光纤等）中的速度，接近光速。\n这不是故事全部，当多个包同时抵达路由器，它们通过 packet buffer 暂存在一起并以 FCFS（First-Come-First-Served）的顺序送出。因此，我们需要加入每条线路上的排队延迟（Queueing Delay）\\(Q_i\\)，即\n\\[ t = \\sum_i \\left(\\frac{p}{r_i} + \\frac{l_i}{c} + Q_i(t)\\right) \\]排队延迟是不可预测的，取决于网络中其他用户发送的流量，是端到端延迟的唯一随机变量。\n\n\n2.4 Playback Buffers\n这个东西就是平常在网站上看视频时的灰色进度条，表示已经接收到且提前缓冲好但还未播放的数据。这部分比较简单，略过。",
+    "objectID": "CS/61810/6.1810Lec7.html#lecture",
+    "href": "CS/61810/6.1810Lec7.html#lecture",
+    "title": "Lec7 Page Faults",
+    "section": "2 Lecture",
+    "text": "2 Lecture\n\n2.1 Memory Mapped Files\n将完整或者部分文件加载到内存中，这样就可以通过内存地址相关的 load 或者 store 指令来操纵文件。为了支持这个功能，现代的操作系统会提供一个叫做 mmap 的系统调用，比如会长成这样：\nmmap(va, len, protection, flags, fd, offset);\n这里的语义就是，从文件描述符对应的文件的偏移量的位置开始，映射长度为 len 的内容到虚拟内存地址 va，同时我们需要加上一些保护，比如只读或者读写。flags 表示该文件是否可以在多个进程之间共享。\n假设文件内容是读写并且内核实现 mmap 的方式是 eager 方式（不过大部分系统都不会这么做），内核会从文件的 offset 位置开始，将数据拷贝到内存，设置好 PTE 指向物理内存的位置。之后应用程序就可以使用 load 或者 store 指令来修改内存中对应的文件内容。当完成操作之后，会有一个对应的 unmap 系统调用，来表明应用程序已经完成了对文件的操作，在 unmap 时间点，我们需要将 dirty block 写回到文件中。我们可以很容易的找到哪些 block 是 dirty 的，因为它们在 PTE 中的 dirty bit 为 1。\n当然，在任何聪明的内存管理机制中，所有的这些都是以 lazy 的方式实现。你不会立即将文件内容拷贝到内存中，而是先记录一下这个 PTE 属于这个文件描述符。相应的信息通常在 VMA (Virtual Memory Area) 结构体中保存。在 VMA 中我们会记录文件描述符，偏移量等等，这些信息用来表示对应的内存虚拟地址的实际内容在哪，这样当我们得到一个位于 VMA 地址范围的 page fault时，内核可以从磁盘中读数据，并加载到内存中。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit3: Packet Switching"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec7 Page Faults"
     ]
   },
   {
-    "objectID": "CS/CS144/CS144Unit3.html#how-a-packet-switch-works",
-    "href": "CS/CS144/CS144Unit3.html#how-a-packet-switch-works",
-    "title": "Unit3: Packet Switching",
-    "section": "3 How a packet switch works",
-    "text": "3 How a packet switch works\n\n3.1 Output Queued Packet Switch\n下图是一个交换机或路由器内的布局。\n\n\n\n\n\nPacket Queue 用于在拥塞时缓存将要发出去的包，不同颜色的包表示不同的转发端口。当有两个包要从相同的端口转发，其中一个会先在队列中等待。如果所有的 \\(n\\) 个端口都要从相同的端口转发出去，会导致效率的急剧降低。\n\n\n3.2 Input Queued Packet Switch\n\n\n\n\n\ninput queued 将缓存放在了输入端口。相应地，input queued 会产生 Head of Line(HOL) Blocking 问题：当当前队列最前端的数据过大时，将它 switch 出去要花费更多的时间，导致队列后面其他端口的包因为堵塞无法发出。这对效率是一个很大的影响（大概会缩减至 \\(2-\\sqrt{2}\\approx 58\\%\\) ）。解决方法是引入 Virtual Output Queues，对于每个 input queue，把将要发送到同一个端口的包再分到一个 virtual queue 中，这样不同发出端口的包不会相互影响。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit3: Packet Switching"
-    ]
-  },
-  {
-    "objectID": "CS/CS144/CS144Unit3.html#strict-priorities-and-guaranteed-flow-rates",
-    "href": "CS/CS144/CS144Unit3.html#strict-priorities-and-guaranteed-flow-rates",
-    "title": "Unit3: Packet Switching",
-    "section": "4 Strict Priorities and Guaranteed Flow Rates",
-    "text": "4 Strict Priorities and Guaranteed Flow Rates\n如果有很多流经过队列，它们将按照 FIFO 顺序离开。谁发送的最多，谁的速率就最高。如果流量真的很大，那么一小部分流量可能会被完全挤出。这样鼓励了不良行为——对于一个流来说，最好的做法是尝试通过尽可能快的发送来挤出所有其他流。\n一个方法是引入严格优先级 (Strict Priorities)。一个高优先级队列一个低优先级队列，只有当高优先级队列的处理完了才能到低优先级。但如果高优先级的流完全占据了数量上的优势，低优先级的会被饿死1。\n1 这个描述真的太资本主义了，乐。更通用的做法是，引入带权优先级 (Weighted Priorities)。考虑 \\(n\\) 个优先级队列，每个队列都有一个权重 \\(w_i\\)。我们分若干轮处理所有的包。对于每一轮的每个队列，我们为这个队列处理 \\(w_i\\) bit 的数据（当然在实际中不能）。当第 \\(i\\) 个队列的第 \\(k\\) 个包到达时，我们算出它将在第几轮为完全送出，记为 \\(F_k\\)，有\n\\[\nF_k = \\max\\{F_{k-1}, \\mathrm{now}\\}+\\frac{L_k}{w_i}\n\\]\n\\(\\rm now\\) 是当前的轮数，因为可能会有队列为空的情况。\\(L_k\\) 是包的长度。此时，我们遍历每个队列的 Head of Line，选择最小的 \\(F\\) ，即结束轮数，来服务对应的包。注意，上面所说的按每个 bit 处理的方法只是为了得到最终的结论，实际上还是以每个包为单位来处理的。从长期来看，以上方法的结果可以趋近于 bit-by-bit 处理的结果。\n以上方法称为加权公平排队 (Weighted Fair Queueing, WFQ) 或分组通用处理器共享 (Packetized Generalized Processor Sharing, PGPS)。\n接下来我们用上面的方法做到真正可保证的 \\(Q_i(t)\\)，因为 WFQ 给了我们每个队列效率的上界 \\(B/R\\) ，我们只需要处理一次性数据涌入过多导致 buffer 溢出的情况。\n首先，对于一个队列，如果在任意一个时间段 \\([t,t+T]\\)，它的到达量 \\(A(t)\\) 均满足 \\(A(t+T)-A(t)\\le B+RT\\)，其中 \\(B\\) 为 buffer 的大小，那么我们可以保证队列不会溢出。我们称这种情况是 \\(A(t)\\) 满足 \\((\\sigma,\\rho)\\) regulation，此时 \\(\\sigma = B, \\rho = R\\)。\n因此，我们可以保证在 \\(B\\ge \\sigma, R\\ge \\rho\\) 的情况下，延迟 \\(Q(t)\\le B/R\\)。\n如果流使用了 leaky-bucket (实现 \\((\\sigma, \\rho)\\) constraint)，路由使用了 WFQ，那么端到端延迟就可以保证。RSVP (Resource Reservation Protocol) 就是实现了端到端保证的协议 [IETF RFC 2205]。",
-    "crumbs": [
-      "CS",
-      "Computer Science",
-      "CS144 Introduction to Computer Networking 笔记",
-      "Unit3: Packet Switching"
-    ]
-  },
-  {
-    "objectID": "CS/ModernCpp/NonVirtualPoly.html",
-    "href": "CS/ModernCpp/NonVirtualPoly.html",
-    "title": "C++ 中的（非虚）多态",
+    "objectID": "CS/61810/6.1810Lab1.html",
+    "href": "CS/61810/6.1810Lab1.html",
+    "title": "Lab1 util: Xv6 and Unix utilities",
     "section": "",
-    "text": "多态 (Polymorphic) 即“多种形态”，这可以理解为：\n\n用一个标识符来表示多个不同的类型，我们称这个标识符为多态变量。\n为不同类型的实体提供一个统一的接口，称为多态调用。\n\n多态，是一种基于类型的分发器。",
+    "text": "整个 lab 总计耗时大概在 7 个小时（不算开始配置环境的时间），还得继续努力。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "步入现当代 C++",
-      "C++ 中的（非虚）多态"
+      "6.1810 Operating System Engineering 笔记",
+      "Lab1 util: Xv6 and Unix utilities"
     ]
   },
   {
-    "objectID": "CS/ModernCpp/NonVirtualPoly.html#什么是多态",
-    "href": "CS/ModernCpp/NonVirtualPoly.html#什么是多态",
-    "title": "C++ 中的（非虚）多态",
+    "objectID": "CS/61810/6.1810Lab1.html#boot-xv6-easy",
+    "href": "CS/61810/6.1810Lab1.html#boot-xv6-easy",
+    "title": "Lab1 util: Xv6 and Unix utilities",
+    "section": "1 Boot xv6 (easy)",
+    "text": "1 Boot xv6 (easy)\n搞了半天，令人感慨。主要原因是 qemu 怎么升级都到不了 5.1+，刚开始以为是源的问题，折腾了半天，无果。后面把 Ubuntu 从 20.04 升到 22.041，终于好了。后面查了查，似乎想在低版本 Ubuntu 使用比较高版本的软件需要配置 PPA 源。\n1 后面为了搞 CS144 的 lab，又升级到 24.04 了，真折腾。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lab1 util: Xv6 and Unix utilities"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lab1.html#sleep-easy",
+    "href": "CS/61810/6.1810Lab1.html#sleep-easy",
+    "title": "Lab1 util: Xv6 and Unix utilities",
+    "section": "2 sleep (easy)",
+    "text": "2 sleep (easy)\n\nImplement a user-level sleep program for xv6, along the lines of the UNIX sleep command. Your sleep should pause for a user-specified number of ticks. A tick is a notion of time defined by the xv6 kernel, namely the time between two interrupts from the timer chip. Your solution should be in the file user/sleep.c.\n\n根据提示进行即可。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lab1 util: Xv6 and Unix utilities"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lab1.html#pingpong-easy",
+    "href": "CS/61810/6.1810Lab1.html#pingpong-easy",
+    "title": "Lab1 util: Xv6 and Unix utilities",
+    "section": "3 pingpong (easy)",
+    "text": "3 pingpong (easy)\n\nWrite a user-level program that uses xv6 system calls to ‘’ping-pong’’ a byte between two processes over a pair of pipes, one for each direction. The parent should send a byte to the child; the child should print “&lt;pid&gt;: received ping”, where &lt;pid&gt; is its process ID, write the byte on the pipe to the parent, and exit; the parent should read the byte from the child, print “&lt;pid&gt;: received pong”, and exit. Your solution should be in the file user/pingpong.c.\n\n根据提示进行即可。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lab1 util: Xv6 and Unix utilities"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lab1.html#primes-moderatehard",
+    "href": "CS/61810/6.1810Lab1.html#primes-moderatehard",
+    "title": "Lab1 util: Xv6 and Unix utilities",
+    "section": "4 primes (moderate)/(hard)",
+    "text": "4 primes (moderate)/(hard)\n\nWrite a concurrent prime sieve program for xv6 using pipes and the design illustrated in the picture halfway down this page and the surrounding text. This idea is due to Doug McIlroy, inventor of Unix pipes. Your solution should be in the file user/primes.c.\n\n这道题确实有点难度。开始时，我是在父进程中计算筛法，子进程用来继续 fork。但是子进程不能等父进程，我希望可以将一轮筛完后再进行下一轮，所以最终在子进程中计算。下一个问题是，如果不关掉写端，读端在没数据时就会堵塞。所以你必须关掉写端，或者知道确切要读入多少个数字。解决办法要么用两个管道，要么用数组，然后把总数也塞进管道里。我选择了后者，但是似乎这样背离了题目的初衷。后面去吃饭的路上突然明白了，只需要给最后塞个 -1 标志结束不就完美解决了？\n\n\nCode\n\nint main(int argc, char *argv[])\n{\n    int p[2], n = -1;\n    pipe(p);\n    for(int i = 2; i &lt;= 35; ++i)\n        write(p[1], &i, sizeof(int));\n    write(p[1], &n, sizeof(int));\n\n    for(;;) {\n        if(fork() == 0) {\n            read(p[0], &n, sizeof(int));\n            if(n == -1) exit(1);\n            fprintf(1, \"prime %d\\n\", n);\n            int m;\n            while(read(p[0], &m, sizeof(int))) {\n                if(m == -1) break;\n                if(m % n != 0) write(p[1], &m, sizeof(int));\n            }\n            m = -1;\n            write(p[1], &m, sizeof(int));\n            break;\n        } else {\n            int end;\n            wait(&end);\n            if(end) break;\n        }\n    }\n    exit(0);\n}",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lab1 util: Xv6 and Unix utilities"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lab1.html#find-moderate",
+    "href": "CS/61810/6.1810Lab1.html#find-moderate",
+    "title": "Lab1 util: Xv6 and Unix utilities",
+    "section": "5 find (moderate)",
+    "text": "5 find (moderate)\n\nWrite a simple version of the UNIX find program for xv6: find all the files in a directory tree with a specific name. Your solution should be in the file user/find.c.\n\n对于文件夹类型的 fd，现在只需要知道 kernel/fs.h 里的那句注释\n\nDirectory is a file containing a sequence of dirent structures.\n\n就足以通过这道题，仿照 user/ls.h 里的做法进行读取即可。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lab1 util: Xv6 and Unix utilities"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lab1.html#xargs-moderate",
+    "href": "CS/61810/6.1810Lab1.html#xargs-moderate",
+    "title": "Lab1 util: Xv6 and Unix utilities",
+    "section": "6 xargs (moderate)",
+    "text": "6 xargs (moderate)\n\nWrite a simple version of the UNIX xargs program for xv6: its arguments describe a command to run, it reads lines from the standard input, and it runs the command for each line, appending the line to the command’s arguments. Your solution should be in the file user/xargs.c.\n\n我感觉这道应该算 easy。只需要调整一下参数顺序就行了。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lab1 util: Xv6 and Unix utilities"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec3.html",
+    "href": "CS/61810/6.1810Lec3.html",
+    "title": "Lec3 Operating System Organization",
     "section": "",
-    "text": "多态 (Polymorphic) 即“多种形态”，这可以理解为：\n\n用一个标识符来表示多个不同的类型，我们称这个标识符为多态变量。\n为不同类型的实体提供一个统一的接口，称为多态调用。\n\n多态，是一种基于类型的分发器。",
+    "text": "Lec2 是 C 和 gdb，跳过。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "步入现当代 C++",
-      "C++ 中的（非虚）多态"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec3 Operating System Organization"
     ]
   },
   {
-    "objectID": "CS/ModernCpp/NonVirtualPoly.html#多态的非虚实现方法",
-    "href": "CS/ModernCpp/NonVirtualPoly.html#多态的非虚实现方法",
-    "title": "C++ 中的（非虚）多态",
-    "section": "2 多态的（非虚）实现方法",
-    "text": "2 多态的（非虚）实现方法\n\n2.1 std::any\nstruct A {\n    int a{};\n    string msg;\n    void outA() const { cout &lt;&lt; msg &lt;&lt; endl; }\n};\n\nstruct B {\n    double t{};\n    string msg;\n    void outB() const { cout &lt;&lt; msg &lt;&lt; endl; }\n};\n\nstatic const type_info& AType{typeid(A)};\nstatic const type_info& BType{typeid(B)};\n\nint main()\n{\n    vector&lt;any&gt; vec;\n    vec.emplace_back(A{1, \"I'm A!\"});\n    vec.emplace_back(B{2.0, \"I'm B!\"});\n    for(auto&& i : vec) {\n        if(i.type() == AType)\n            any_cast&lt;A&gt;(i).outA();\n        else if(i.type() == BType)\n            any_cast&lt;B&gt;(i).outB();\n    }\n    return 0;\n}",
+    "objectID": "CS/61810/6.1810Lec3.html#课前准备",
+    "href": "CS/61810/6.1810Lec3.html#课前准备",
+    "title": "Lec3 Operating System Organization",
+    "section": "1 课前准备",
+    "text": "1 课前准备\n\nRead chapter 2 and xv6 code: kernel/proc.h, kernel/defs.h, kernel/entry.S, kernel/main.c, user/initcode.S, user/init.c, and skim kernel/proc.c and kernel/exec.c.\n\n操作系统需要满足三个需求：复用、隔离和交互。\n为什么操作系统要设计成现在这样？不仅是为了安全和隔离，也是为了使用的便利。\n\n1.1 用户模式、监督模式和系统调用\nCPU 为强隔离提供硬件支持。RISC-V 有三种 CPU 执行指令的模式：机器模式、监督模式和用户模式。机器模式主要用于配置计算机。xv6 在机器模式下执行几行，后更改为监督模式。\n在监督模式下，CPU 可以执行特权命令：启用或禁用中断、读写持有页表地址的寄存器，等等。如果一个用户模式下的应用试图执行特权命令，CPU 不会执行指令，而是切换为监督模式并终止应用。一个只能执行用户模式命令的应用运行在用户空间中，可以执行监督模式下特权命令的应用运行在内核空间中，这个应用称为内核。\n想要调用内核函数（例如 xv6 中的 read 系统调用）的应用必须转换到内核；应用程序不能直接调用内核函数。CPU 提供了一种特殊的指令，可以将 CPU 从用户模式切换到监督模式，并在内核指定的入口点进入内核（比如 RISC-V 的 ecall）。一旦 CPU 切换到监督模式，内核就可以验证系统调用的参数，决定是否允许应用程序执行请求的操作（例如，检查应用程序是否允许写入指定的文件），然后拒绝或执行它。内核控制转换到管理模式的入口点非常重要；例如，如果应用程序可以决定内核入口点，则恶意应用程序可以在跳过参数验证的点进入内核。\n\n\n1.2 内核组织\n设计的核心问题是，应该把操作系统的哪些部分放在监督模式下运行？一个想法是把整个系统全部放入内核中，这种组织方式称为宏内核（monolithic kernel）。优点是方便设计和不同部分间的合作，缺点是接口复杂且开发人员容易犯错误，而在监督模式下犯错是致命的。\n为了减少犯错的风险，微内核（microkernel）尽量减少在监督模式下运行的操作系统代码，并将大部分作为服务器（server）在用户模式下运行。比如，文件服务器在用户空间里运行，为允许应用与文件服务器交互，内核通过收发信息来提供进程间的通信，如下图。\n\n\n\n\n\n两种方法都是流行的组织方法，并没有哪个完全优于另一个的结论。具体问题，具体分析。在本课程中，我们更关注两种方法共同体现出的关键思想。它们实现系统调用、使用页表、处理中断、支持进程、使用锁进行并发控制、实现文件系统等。\n与大多数 UNIX 操作系统一样，xv6 是 monolithic 的。因此，xv6 的内核接口就对应于整个操作系统的接口，内核实现了完整的操作系统。由于 xv6 没有提供很多服务，因此它的内核比某些微内核要小，但从概念上讲 xv6 仍是宏内核。\nxv6 内核的代码位于 kernel 文件夹下，大致遵循模块化的理念分成各个文件，见书中的表。模块间接口在 kernel/defs.h 中定义。\n\n\n1.3 进程概览\n进程给了程序一个自己仿佛拥有私有机器和私有内存空间（称为地址空间）的幻象。进程同时让程序认为自己拥有了自己的 CPU 来执行命令。这样的设计也是为了保证隔离。\nxv6 使用页表（硬件实现）为每个进程提供自己的地址空间。RISC-V 页表将虚拟地址映射到物理地址。xv6 为每个进程维护一个单独的页表，页表定义了进程的地址空间。如图所示，包含用户内存的地址空间从虚拟地址零开始，首先是指令、全局变量，然后是栈、堆。RISC-V 是 64 位的，但硬件在页表种查找虚拟地址时只用低 39 位的数据，而 xv6 只用这之中的 38 位。因此，最大地址为 \\(2^{38}-1=\\rm{0x3fffffffff}\\)，即 MAXVA。在顶端 xv6 为 trampoline 和映射进程的 trapframe 分别保留了一页空间。xv6 使用这两个页面来转换到内核并返回；trampoline 页包含转换进/出内核的代码，并且映射 trapframe 对于保存/恢复用户进程的状态是必要的，第 4 章会细讲。\n进程的状态储存在一个 struct proc 中，在下文中我们以 p 代之，并以 p-&gt;xxx 代表其中的属性。每个进程都有一个执行线程（或简称线程）执行进程的指令。线程可以挂起并稍后恢复。为了在进程之间透明地切换，内核挂起当前正在运行的线程并恢复另一个进程的线程。线程的大部分状态（局部变量、函数调用返回地址）都存储在线程的栈中。每个进程都有两个栈：用户栈和内核栈 (p-&gt;kstack)。执行用户指令时使用用户栈，进入内核执行内核代码时使用内核栈。进程的线程在这两个栈之间切换。内核栈被用户代码保护。\n进程通过 ecall 执行系统调用，这个指令提升了硬件的权限并将 program counter 改为内核定义的入口点，开始执行指令。结束时，内核调用 sret 返回，它同时也降低了硬件权限。进程的线程可以在内核中“阻塞”以等待 I/O，并在 I/O 完成时从中断处恢复。\np-&gt;state 指示进程是否已分配、准备运行、正在运行、正在等待 I/O 或正在退出。p-&gt;pagetable 是页表。\n总之，进程捆绑了两种设计思想：地址空间给进程提供了自己的内存的假象，线程给进程提供了自己的 CPU 的假象。在 xv6 中，一个进程由一个地址空间和一个线程组成。在实际操作系统中，一个进程可能有多个线程来利用多个 CPU。\n\n\n1.4 Code：starting xv6, the first process and system call\n这一节讲了启动 xv6 的具体代码流程，这里省略了，看书吧。\n\n\n1.5 安全模型\n操作系统如何解决恶意代码？操作系统中典型的安全假设是：操作系统必须假设进程的用户级代码可能尽最大努力破坏内核或其他进程；相反，内核代码被认为是由善意且细心的程序员编写的。内核代码应该没有错误，并且肯定不包含任何恶意内容。在硬件层面，RISC-V CPU、RAM、磁盘等应当按照文档中描述的方式运行，没有硬件错误。\n当然，现实世界是残酷的。系统漏洞和恶意代码是无法完全杜绝的。\n\n\n1.6 Real World\n现代操作系统支持一个进程多个线程。这涉及到 xv6 所没有的大量机制，包括潜在的接口更改（例如 Linux 的 clone ，一个变体 fork ）。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "步入现当代 C++",
-      "C++ 中的（非虚）多态"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec3 Operating System Organization"
     ]
   },
   {
-    "objectID": "CS/MoveToModernCpp.html",
-    "href": "CS/MoveToModernCpp.html",
-    "title": "步入现当代 C++",
+    "objectID": "CS/61810/6.1810Lec3.html#lecture",
+    "href": "CS/61810/6.1810Lec3.html#lecture",
+    "title": "Lec3 Operating System Organization",
+    "section": "2 Lecture",
+    "text": "2 Lecture\n课上详细调试了 xv6 系统的启动过程，对应了上面我省略的部分，这里简单叙述一下。程序从 _entry 处开始，先分配一个栈供执行 C 代码，然后调用 main 函数，main 函数主要做一些东西的初始化工作（虚拟内存、页表、文件系统等等）。之后创建第一个进程 userinit，它更像是一个胶水代码，将执行 initcode 中的内容。而 initcode 则是执行系统调用 syscall_exec ，这个 exec 则执行 init 程序。注意这个 init 与之前不同，是用户级别的初始化程序。它会为用户配置一些东西，如 console，然后 fork 出一个子进程执行 shell。这样 xv6 正式启动，用户可以输入指令了。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec3 Operating System Organization"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec10.html",
+    "href": "CS/61810/6.1810Lec10.html",
+    "title": "Lec10 Locking",
     "section": "",
-    "text": "从今天开始，我要把从 C++11 开始的语言新特性正式地梳理一遍，整合为一系列笔记。习惯上，大家将从 C++11 之后的 C++ 称为“现代 C++”，相对于 C++98/03 的“古代 C++”而言。但在语言标准已经发布到 C++23 的今天，仅说“现代”可能不足于涵盖时间的跨度了，因此本系列最终决定叫“现当代 C++”，以示 C++17 与 C++20 等亦在讨论范围之内。",
+    "text": "Read “Locking” with kernel/spinlock.h and kernel/spinlock.c .\n\n\n\n当一个内存位置被并发访问并至少有一次访问写入了数据时，就发生了竞争 (race)。通常的解决办法是使用锁，锁保证了互斥 (mutual exclusion)，因此每次只有一个 CPU 会访问被保护的部分，这个部分称为临界区段 (critical section)。\n当我们说锁保护了数据时，我们真正想说的是锁保护了适用于数据的不变量集合。在临界区段中对数据的修改临时破坏了数据的不变量，此时竞争就会发生。\n也可认为锁序列化了并发的临界区段以使它们一次一个地执行；或者临界区段被锁保护使其原子化，因此其他部分每次只能看到完整的更改，而非部分更改。\n虽然锁可以修正问题，但它导致了效率的低下。如果多个处理器同时想拥有相同的锁，便导致了冲突 (conflict)，或者说这个锁被争用 (contention)。现代内核都会有复杂的组织结构和算法来避免锁争用，但 xv6 做得不多。\n\n\n\nxv6 有两种锁：自旋锁 (spinlock) 和睡眠锁 (sleep-lock)。先介绍自旋锁。核心是在 struct spinlock 中的 locked 变量，它为 0 时表示空闲，非零时表示被持有。于是获取一个锁可以这么写：\nvoid acquire(struct spinlock *lk) // dose not work!\n{\n    for(;;) {\n        if(lk-&gt;locked == 0) {\n            lk-&gt;locked = 1;\n            break;\n        }\n    }\n}\n但是第 4 和第 5 行并不是原子的：有可能多个处理器同时访问了第 4 行，并都执行了第 5 行，此时两个处理器都获得了锁。我们希望将这一步变为原子操作，即不可再分的1。\n1 你说得对，但是原子现在是可分的了，可以改名叫夸克操作了。多核处理器一般都提供了上述所需的原子指令。RISC-V 有 amoswap r, a.amoswap，它从内存地址 a 读取值，将寄存器 r 的值写到这个地址，然后将读取的值写入 r。即，它交换了寄存器和地址上的值。它在硬件上保证了操作是原子的。\nxv6 在 acquire 中使用的 __sync_lock_test_and_set 最终就是由 amoswap 实现的。它会不断地向 lk-&gt;locked 交换 1，并查看交换出来的值：如果交换出来的值是 0，代表锁是空闲的并且 1 被写入，CPU 成功持有了这个锁；否则锁仍被占用。我们持续不断地重试这个步骤，直到成功，这就是为什么被称为自旋。同时，lk-cpu 记录了哪个 CPU 持有了锁，方便调试。\n与 acquire 相对的 release 也是同样的策略。从概念上讲，释放锁只需要将 lk-&gt;locked 置为零即可，但 C 编译器有可能将赋值转为多条 store 指令，因此它有可能不是原子的。所以我们使用 __sync_lock_release 来进行原子赋值，它的底层仍然是 amoswap。\n\n\n\n对锁粒度的设计是在性能和编码复杂度之间的平衡。xv6 同时有粗粒度（比如 kalloc 对单独的链表设置一个单独的锁）和细粒度（比如对每个文件分别加锁）的锁。一个简单的内核可能会只设置一个线程然后完全不关心锁，将这个单核处理器上的系统移植到多核处理器上只需为整个内核设置一个锁，通常称为大内核锁 (big kernel lock)。\n\n\n\n如果一条代码路径需要同时持有不同的锁，那么所有代码路径都应该以相同的顺序获取这些锁，否则可能会导致死锁。比如两条代码路径需要锁 A 和 B，第一条先获取 A 再获取 B，第二条相反。那么在第一条获取 A 时，第二条获取了 B。此时第一条需要获取 B，但 B 已经被第二条持有；第二条想获取 A 但已被第一条持有。双方僵持不下，系统永久阻塞。全局锁获取顺序的必要性意味着锁实际上是每个函数规范的一部分：调用者必须以一种使得锁按照约定的顺序被获取的方式来调用函数。\nxv6 有许多 lock ordering 的实例。比如 consoleintr，作为处理输入字符的中断例程，需要在一行接收到时唤醒所有等待控制台输入的进程，所以它按顺序持有了 cons.lock 和进程的锁。另一个例子是文件系统，它按顺序持有了每个目录、每个文件的 inode、每个硬盘块缓冲区、硬盘驱动的 vdisk_lock 和每个进程的锁。\n对避免全局死锁的 lock ordering 的遵循可能会出乎意料地困难。同时，死锁的危险通常是对 locking scheme 粒度的一个限制，因为更多的锁通常意味着更多的死锁机会。避免死锁的需求通常是内核实现中的一个重要因素。\n\n\n\n如果一个进程尝试获取它已经得到的锁，内核允许这样做而不是引发 panic，那么这种锁就是可重入锁。可重入锁会引入问题，比如：\nstruct spinlock lock;\nint data = 0; // protected by lock\nf() {\n    acquire(&lock);\n    if(data == 0){\n        call_once();\n        h();\n        data = 1;\n    }\n    release(&lock);\n}\ng() {\n    aquire(&lock);\n    if(data == 0){\n        call_once();\n        data = 1;\n    }\n    release(&lock);\n}\n上述代码中，call_once() 只能被执行一次，要么被 f 要么被 g。但是引入了可重入锁后，如果 h 调用了 g 的话，实际上被执行了两次。由于可重入锁增加了定位问题的困难，xv6 没有使用。\n\n\n\n在 xv6 中，有一些自旋锁用于保护同时被线程和中断处理程序使用的数据。例如，tickslock 自旋锁用于保护系统中的时钟滴答数 ticks，该数据既可能被定时器中断处理程序 clockintr 访问（用于增加时钟滴答数），也可能被内核线程在 sys_sleep 中读取（用于等待一段时间）。如果一个内核线程（例如 sys_sleep）持有了 tickslock 自旋锁，并且在此期间被定时器中断触发，那么定时器中断处理程序 clockintr 也会尝试获取 tickslock 自旋锁。然而，由于自旋锁是被线程持有的，clockintr 会发现自旋锁已经被持有，并等待自旋锁被释放。但是，由于线程持有自旋锁的同时又被中断，线程无法继续执行并释放自旋锁，这就导致了死锁。为了避免这种情况，如果一个中断处理程序持有了自旋锁，CPU 上的中断必须被禁用。xv6 做得更加保守：当一个 CPU 获取任何自旋锁时，xv6 会在该 CPU 上禁用中断。这样，中断处理程序在获取自旋锁时会等待线程释放锁，但不会在同一个 CPU 上出现死锁情况。\n\n\n\n在当下的编译器和处理器下，指令并不一定按源代码写就的顺序执行。为了性能，指令的处理可能会被拆分和打乱，这有可能导致并发程序出错。为此，编译器和 CPU 通过遵循一系列规则，称为内存模型 (memory model) 来帮助程序员控制指令定序。\nxv6 在 acquire 和 release 中使用 __sync_synchronze() 来告诉硬件和编译器不要重新定序。__sync_synchronze() 是一个内存屏障 (memory barrier)，它告诉编译器和 CPU 不要将 load 和 store 定序到超过屏障的位置。\n\n\n\n在一些操作中，比如文件系统的文件读写操作，需要在磁盘上读取或写入数据，这可能需要花费数十毫秒的时间。在这种情况下，持有自旋锁会导致资源的浪费，因为如果另一个进程想要获取这个锁，那么获取过程中会一直占用 CPU。自旋锁的另一个缺点是，持有锁的进程无法在持有锁的同时让出 CPU。我们希望能够在持有锁的同时让出 CPU，以便其他进程可以使用 CPU，而持有锁的进程可以等待磁盘等操作完成。然而，如果一个线程在持有自旋锁的时候让出 CPU，而另一个线程试图获取这个锁，由于自旋锁的获取过程不会让出 CPU，因此第二个线程会一直在自旋等待，可能会阻止第一个线程重新获得 CPU 资源并继续执行释放锁的操作。因此，我们希望有一种新的锁类型，它在等待获取锁的过程中可以让出 CPU，同时在持有锁的时候也可以让出 CPU（允许中断）。\nxv6 引入了睡眠锁。它在等待获取锁的过程中可以让出 CPU，从而允许其他线程执行。acquiresleep 函数负责获取睡眠锁，它在等待期间可以让出 CPU。睡眠锁由两个部分组成：一个是 locked 字段，它用于表示锁的状态；另一个是一个用于保护 locked 字段的自旋锁。当一个线程调用 acquiresleep 函数时，它会尝试获取自旋锁，如果获取成功，它会原子地释放自旋锁并让出 CPU。这样其他线程就有机会执行了。 由于睡眠锁允许中断，因此不能在中断处理程序中使用。此外，由于 acquiresleep 可能会让出 CPU，因此不能在自旋锁的临界区内使用睡眠锁。\n\n\n\n多数操作系统支持 POSIX 线程 (Pthreads)，它提供了用户级锁、屏障等功能，并且允许程序员选择锁是否可重入。在操作系统层面支持 Pthreads 需要相应的支持。例如，当一个线程阻塞在系统调用时，同一进程的另一个线程应该能够在同一个 CPU 上运行。\n如果多个 CPU 尝试同时获取同一个锁，那么锁可能会变得非常昂贵。这是因为锁的更新可能涉及缓存行的迁移和失效，从而导致额外的开销。为了避免锁带来的开销，许多操作系统使用无锁数据结构和算法。无锁编程更为复杂，因为需要考虑指令和内存重排序等问题，但可以减少锁带来的开销。xv6 避免了无锁编程的额外复杂性，而是使用了传统的锁机制，尽管在某些情况下可能会导致性能下降。",
     "crumbs": [
       "CS",
       "Computer Science",
-      "步入现当代 C++"
+      "6.1810 Operating System Engineering 笔记",
+      "Lec10 Locking"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec10.html#课前准备",
+    "href": "CS/61810/6.1810Lec10.html#课前准备",
+    "title": "Lec10 Locking",
+    "section": "",
+    "text": "Read “Locking” with kernel/spinlock.h and kernel/spinlock.c .\n\n\n\n当一个内存位置被并发访问并至少有一次访问写入了数据时，就发生了竞争 (race)。通常的解决办法是使用锁，锁保证了互斥 (mutual exclusion)，因此每次只有一个 CPU 会访问被保护的部分，这个部分称为临界区段 (critical section)。\n当我们说锁保护了数据时，我们真正想说的是锁保护了适用于数据的不变量集合。在临界区段中对数据的修改临时破坏了数据的不变量，此时竞争就会发生。\n也可认为锁序列化了并发的临界区段以使它们一次一个地执行；或者临界区段被锁保护使其原子化，因此其他部分每次只能看到完整的更改，而非部分更改。\n虽然锁可以修正问题，但它导致了效率的低下。如果多个处理器同时想拥有相同的锁，便导致了冲突 (conflict)，或者说这个锁被争用 (contention)。现代内核都会有复杂的组织结构和算法来避免锁争用，但 xv6 做得不多。\n\n\n\nxv6 有两种锁：自旋锁 (spinlock) 和睡眠锁 (sleep-lock)。先介绍自旋锁。核心是在 struct spinlock 中的 locked 变量，它为 0 时表示空闲，非零时表示被持有。于是获取一个锁可以这么写：\nvoid acquire(struct spinlock *lk) // dose not work!\n{\n    for(;;) {\n        if(lk-&gt;locked == 0) {\n            lk-&gt;locked = 1;\n            break;\n        }\n    }\n}\n但是第 4 和第 5 行并不是原子的：有可能多个处理器同时访问了第 4 行，并都执行了第 5 行，此时两个处理器都获得了锁。我们希望将这一步变为原子操作，即不可再分的1。\n1 你说得对，但是原子现在是可分的了，可以改名叫夸克操作了。多核处理器一般都提供了上述所需的原子指令。RISC-V 有 amoswap r, a.amoswap，它从内存地址 a 读取值，将寄存器 r 的值写到这个地址，然后将读取的值写入 r。即，它交换了寄存器和地址上的值。它在硬件上保证了操作是原子的。\nxv6 在 acquire 中使用的 __sync_lock_test_and_set 最终就是由 amoswap 实现的。它会不断地向 lk-&gt;locked 交换 1，并查看交换出来的值：如果交换出来的值是 0，代表锁是空闲的并且 1 被写入，CPU 成功持有了这个锁；否则锁仍被占用。我们持续不断地重试这个步骤，直到成功，这就是为什么被称为自旋。同时，lk-cpu 记录了哪个 CPU 持有了锁，方便调试。\n与 acquire 相对的 release 也是同样的策略。从概念上讲，释放锁只需要将 lk-&gt;locked 置为零即可，但 C 编译器有可能将赋值转为多条 store 指令，因此它有可能不是原子的。所以我们使用 __sync_lock_release 来进行原子赋值，它的底层仍然是 amoswap。\n\n\n\n对锁粒度的设计是在性能和编码复杂度之间的平衡。xv6 同时有粗粒度（比如 kalloc 对单独的链表设置一个单独的锁）和细粒度（比如对每个文件分别加锁）的锁。一个简单的内核可能会只设置一个线程然后完全不关心锁，将这个单核处理器上的系统移植到多核处理器上只需为整个内核设置一个锁，通常称为大内核锁 (big kernel lock)。\n\n\n\n如果一条代码路径需要同时持有不同的锁，那么所有代码路径都应该以相同的顺序获取这些锁，否则可能会导致死锁。比如两条代码路径需要锁 A 和 B，第一条先获取 A 再获取 B，第二条相反。那么在第一条获取 A 时，第二条获取了 B。此时第一条需要获取 B，但 B 已经被第二条持有；第二条想获取 A 但已被第一条持有。双方僵持不下，系统永久阻塞。全局锁获取顺序的必要性意味着锁实际上是每个函数规范的一部分：调用者必须以一种使得锁按照约定的顺序被获取的方式来调用函数。\nxv6 有许多 lock ordering 的实例。比如 consoleintr，作为处理输入字符的中断例程，需要在一行接收到时唤醒所有等待控制台输入的进程，所以它按顺序持有了 cons.lock 和进程的锁。另一个例子是文件系统，它按顺序持有了每个目录、每个文件的 inode、每个硬盘块缓冲区、硬盘驱动的 vdisk_lock 和每个进程的锁。\n对避免全局死锁的 lock ordering 的遵循可能会出乎意料地困难。同时，死锁的危险通常是对 locking scheme 粒度的一个限制，因为更多的锁通常意味着更多的死锁机会。避免死锁的需求通常是内核实现中的一个重要因素。\n\n\n\n如果一个进程尝试获取它已经得到的锁，内核允许这样做而不是引发 panic，那么这种锁就是可重入锁。可重入锁会引入问题，比如：\nstruct spinlock lock;\nint data = 0; // protected by lock\nf() {\n    acquire(&lock);\n    if(data == 0){\n        call_once();\n        h();\n        data = 1;\n    }\n    release(&lock);\n}\ng() {\n    aquire(&lock);\n    if(data == 0){\n        call_once();\n        data = 1;\n    }\n    release(&lock);\n}\n上述代码中，call_once() 只能被执行一次，要么被 f 要么被 g。但是引入了可重入锁后，如果 h 调用了 g 的话，实际上被执行了两次。由于可重入锁增加了定位问题的困难，xv6 没有使用。\n\n\n\n在 xv6 中，有一些自旋锁用于保护同时被线程和中断处理程序使用的数据。例如，tickslock 自旋锁用于保护系统中的时钟滴答数 ticks，该数据既可能被定时器中断处理程序 clockintr 访问（用于增加时钟滴答数），也可能被内核线程在 sys_sleep 中读取（用于等待一段时间）。如果一个内核线程（例如 sys_sleep）持有了 tickslock 自旋锁，并且在此期间被定时器中断触发，那么定时器中断处理程序 clockintr 也会尝试获取 tickslock 自旋锁。然而，由于自旋锁是被线程持有的，clockintr 会发现自旋锁已经被持有，并等待自旋锁被释放。但是，由于线程持有自旋锁的同时又被中断，线程无法继续执行并释放自旋锁，这就导致了死锁。为了避免这种情况，如果一个中断处理程序持有了自旋锁，CPU 上的中断必须被禁用。xv6 做得更加保守：当一个 CPU 获取任何自旋锁时，xv6 会在该 CPU 上禁用中断。这样，中断处理程序在获取自旋锁时会等待线程释放锁，但不会在同一个 CPU 上出现死锁情况。\n\n\n\n在当下的编译器和处理器下，指令并不一定按源代码写就的顺序执行。为了性能，指令的处理可能会被拆分和打乱，这有可能导致并发程序出错。为此，编译器和 CPU 通过遵循一系列规则，称为内存模型 (memory model) 来帮助程序员控制指令定序。\nxv6 在 acquire 和 release 中使用 __sync_synchronze() 来告诉硬件和编译器不要重新定序。__sync_synchronze() 是一个内存屏障 (memory barrier)，它告诉编译器和 CPU 不要将 load 和 store 定序到超过屏障的位置。\n\n\n\n在一些操作中，比如文件系统的文件读写操作，需要在磁盘上读取或写入数据，这可能需要花费数十毫秒的时间。在这种情况下，持有自旋锁会导致资源的浪费，因为如果另一个进程想要获取这个锁，那么获取过程中会一直占用 CPU。自旋锁的另一个缺点是，持有锁的进程无法在持有锁的同时让出 CPU。我们希望能够在持有锁的同时让出 CPU，以便其他进程可以使用 CPU，而持有锁的进程可以等待磁盘等操作完成。然而，如果一个线程在持有自旋锁的时候让出 CPU，而另一个线程试图获取这个锁，由于自旋锁的获取过程不会让出 CPU，因此第二个线程会一直在自旋等待，可能会阻止第一个线程重新获得 CPU 资源并继续执行释放锁的操作。因此，我们希望有一种新的锁类型，它在等待获取锁的过程中可以让出 CPU，同时在持有锁的时候也可以让出 CPU（允许中断）。\nxv6 引入了睡眠锁。它在等待获取锁的过程中可以让出 CPU，从而允许其他线程执行。acquiresleep 函数负责获取睡眠锁，它在等待期间可以让出 CPU。睡眠锁由两个部分组成：一个是 locked 字段，它用于表示锁的状态；另一个是一个用于保护 locked 字段的自旋锁。当一个线程调用 acquiresleep 函数时，它会尝试获取自旋锁，如果获取成功，它会原子地释放自旋锁并让出 CPU。这样其他线程就有机会执行了。 由于睡眠锁允许中断，因此不能在中断处理程序中使用。此外，由于 acquiresleep 可能会让出 CPU，因此不能在自旋锁的临界区内使用睡眠锁。\n\n\n\n多数操作系统支持 POSIX 线程 (Pthreads)，它提供了用户级锁、屏障等功能，并且允许程序员选择锁是否可重入。在操作系统层面支持 Pthreads 需要相应的支持。例如，当一个线程阻塞在系统调用时，同一进程的另一个线程应该能够在同一个 CPU 上运行。\n如果多个 CPU 尝试同时获取同一个锁，那么锁可能会变得非常昂贵。这是因为锁的更新可能涉及缓存行的迁移和失效，从而导致额外的开销。为了避免锁带来的开销，许多操作系统使用无锁数据结构和算法。无锁编程更为复杂，因为需要考虑指令和内存重排序等问题，但可以减少锁带来的开销。xv6 避免了无锁编程的额外复杂性，而是使用了传统的锁机制，尽管在某些情况下可能会导致性能下降。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec10 Locking"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec10.html#lecture",
+    "href": "CS/61810/6.1810Lec10.html#lecture",
+    "title": "Lec10 Locking",
+    "section": "2 Lecture",
+    "text": "2 Lecture\n没有讲什么新东西。课上讲了 UART 中的锁的一个例子，这里不重复了。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec10 Locking"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec14.html",
+    "href": "CS/61810/6.1810Lec14.html",
+    "title": "Lec13 Crash Recovery",
+    "section": "",
+    "text": "logging 主要是为了解决故障恢复的问题。logging 确保了文件系统的系统调用是原子性的。其次，它支持快速恢复。最后从原则上来说他应该非常高效。\n将磁盘分割为两个部分，其中一个部分是 log，另一个部分是文件系统。logging 主要分为以下四个步骤：\n\nlog write。当需要更新文件系统时，我们并不更新系统本身，而是将数据写入到 log 中，log 中记录了这个更新的内容，比如写入到 block 45 等等。\ncommit op。之后某个时间，当文件系统的操作都结束了，我们会 commit 文件系统的操作。这意味着我们需要在 log 的某个位置记录属于同一个文件系统的操作的个数。\ninstall log。当我们在 log 中存储了所有写 block 的内容时，我们想要真正执行这些操作，只需将 block 从 log 分区移到文件系统分区。\nclean log。一旦完成，就可以清除 log。实际上就是将属于同一个文件系统的操作的个数设为 0。\n\nxv6 的 log 结构比较简单，我们最开始有一个 header block，也就是 commit record，里面包含了：\n\nn 代表有效的 log block 数量；\n每个 log block 实际对应的 block 编号。\n\n之后就是 log 的数据，也就是每个 block 的数据。\n我们用事务作为磁盘操作原子性的保证。在 xv6 中，所有的事务操作会在开头和结尾分别被 begin_op 和 end_op 保护。其中 end_op 会实现 commit 操作。\n\nbegin_op() 函数在等待日志系统当前没有在执行提交操作，并且有足够的未保留的日志空间来容纳本次调用的写操作。log.outstanding 记录了已经保留日志空间的系统调用数量；总共保留的空间是 log.outstanding 乘以 MAXOPBLOCKS。每增加一个 log.outstanding 既保留了空间，也阻止了在此系统调用期间的提交。这段代码假设每个系统调用可能写入最多 MAXOPBLOCKS 个不同的块。\nlog_write() 函数作为 bwrite 的代理。它在内存中记录了块的扇区号，为其在磁盘上的日志中预留了一个位置，并将缓冲区固定在块缓存中，以防止块缓存将其驱逐。直到提交之前，该块必须保留在缓存中：在此期间，缓存中的副本是修改的唯一记录；只有在提交之后才能将其写入磁盘上的位置；同一事务中的其他读取必须看到修改。log_write 注意到在单个事务中多次写入块时，并将该块分配给日志中的同一位置。这种优化通常称为吸收。通常情况下，例如，事务中可能多次写入包含多个文件的 inode 的磁盘块。通过将几个磁盘写入吸收到一个中，文件系统可以节省日志空间，并且可以获得更好的性能，因为只需要将磁盘块的一个副本写入磁盘。\nend_op() 函数首先减少了未完成的系统调用的计数。如果计数现在为零，则通过调用 commit() 提交当前事务。这个过程有四个阶段。write_log() 函数将事务中修改的每个块从缓冲区缓存复制到日志中的相应位置。write_head() 函数将头块写入磁盘：这是提交点，如果在写入后发生崩溃，则会导致恢复从日志中重新执行事务的写入。install_trans 函数从日志中读取每个块，并将其写入文件系统中的适当位置。最后，end_op 写入日志头，并将计数设为零；这必须在下一个事务开始写入日志块之前发生，以防止在恢复时使用一个事务的头与后续事务的日志块。\nrecover_from_log() 函数是从 initlog() 函数中调用的，而 initlog() 函数在引导过程中在第一个用户进程运行之前（在 fsinit() 中调用）调用。它读取日志头，并在日志指示包含已提交事务时模拟 end_op 的操作。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec13 Crash Recovery"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec14.html#lecture",
+    "href": "CS/61810/6.1810Lec14.html#lecture",
+    "title": "Lec13 Crash Recovery",
+    "section": "",
+    "text": "logging 主要是为了解决故障恢复的问题。logging 确保了文件系统的系统调用是原子性的。其次，它支持快速恢复。最后从原则上来说他应该非常高效。\n将磁盘分割为两个部分，其中一个部分是 log，另一个部分是文件系统。logging 主要分为以下四个步骤：\n\nlog write。当需要更新文件系统时，我们并不更新系统本身，而是将数据写入到 log 中，log 中记录了这个更新的内容，比如写入到 block 45 等等。\ncommit op。之后某个时间，当文件系统的操作都结束了，我们会 commit 文件系统的操作。这意味着我们需要在 log 的某个位置记录属于同一个文件系统的操作的个数。\ninstall log。当我们在 log 中存储了所有写 block 的内容时，我们想要真正执行这些操作，只需将 block 从 log 分区移到文件系统分区。\nclean log。一旦完成，就可以清除 log。实际上就是将属于同一个文件系统的操作的个数设为 0。\n\nxv6 的 log 结构比较简单，我们最开始有一个 header block，也就是 commit record，里面包含了：\n\nn 代表有效的 log block 数量；\n每个 log block 实际对应的 block 编号。\n\n之后就是 log 的数据，也就是每个 block 的数据。\n我们用事务作为磁盘操作原子性的保证。在 xv6 中，所有的事务操作会在开头和结尾分别被 begin_op 和 end_op 保护。其中 end_op 会实现 commit 操作。\n\nbegin_op() 函数在等待日志系统当前没有在执行提交操作，并且有足够的未保留的日志空间来容纳本次调用的写操作。log.outstanding 记录了已经保留日志空间的系统调用数量；总共保留的空间是 log.outstanding 乘以 MAXOPBLOCKS。每增加一个 log.outstanding 既保留了空间，也阻止了在此系统调用期间的提交。这段代码假设每个系统调用可能写入最多 MAXOPBLOCKS 个不同的块。\nlog_write() 函数作为 bwrite 的代理。它在内存中记录了块的扇区号，为其在磁盘上的日志中预留了一个位置，并将缓冲区固定在块缓存中，以防止块缓存将其驱逐。直到提交之前，该块必须保留在缓存中：在此期间，缓存中的副本是修改的唯一记录；只有在提交之后才能将其写入磁盘上的位置；同一事务中的其他读取必须看到修改。log_write 注意到在单个事务中多次写入块时，并将该块分配给日志中的同一位置。这种优化通常称为吸收。通常情况下，例如，事务中可能多次写入包含多个文件的 inode 的磁盘块。通过将几个磁盘写入吸收到一个中，文件系统可以节省日志空间，并且可以获得更好的性能，因为只需要将磁盘块的一个副本写入磁盘。\nend_op() 函数首先减少了未完成的系统调用的计数。如果计数现在为零，则通过调用 commit() 提交当前事务。这个过程有四个阶段。write_log() 函数将事务中修改的每个块从缓冲区缓存复制到日志中的相应位置。write_head() 函数将头块写入磁盘：这是提交点，如果在写入后发生崩溃，则会导致恢复从日志中重新执行事务的写入。install_trans 函数从日志中读取每个块，并将其写入文件系统中的适当位置。最后，end_op 写入日志头，并将计数设为零；这必须在下一个事务开始写入日志块之前发生，以防止在恢复时使用一个事务的头与后续事务的日志块。\nrecover_from_log() 函数是从 initlog() 函数中调用的，而 initlog() 函数在引导过程中在第一个用户进程运行之前（在 fsinit() 中调用）调用。它读取日志头，并在日志指示包含已提交事务时模拟 end_op 的操作。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec13 Crash Recovery"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec12.html",
+    "href": "CS/61810/6.1810Lec12.html",
+    "title": "Lec12 Coordination",
+    "section": "",
+    "text": "Read remainder of “Scheduling”, and corresponding parts of kernel/proc.c, kernel/sleeplock.c.\n\n\n\n进程睡眠允许内核线程等待特定事件，让出的 CPU 可以去做其他的工作，待事件回复时唤醒进程。\n考虑生产者-消费者问题，使用锁的实现为：\nstruct semaphore {\n    struct spinlock lock;\n    int count;\n};\n\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    while(s-&gt;count == 0);\n    acquire(&s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n以上的实现是开销很大的，当生产者生产效率很低时，持续高速的询问会耗费很多资源。我们引入 sleep 和 wakeup 机制：\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    wakeup(s);\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    while(s-&gt;count == 0)\n        sleep(s);\n    acquire(&s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n当消费者没有得到资源时，睡觉，等到生产者生产了资源再唤醒消费者。但这样有一个问题：lost wakeup。考虑刚刚执行完第 11 行，正准备执行下一行时，第二个线程在消费者上执行，它唤醒了一个不存在的信号量，因此无事发生。但实际上这个信号量正是第 12 行将要送去睡觉的那个。此时第 12 行被执行，但是它由于已经在睡觉之前被唤醒过，再也无法被唤醒，系统停摆。\n为了修复这个错误，我们需要将第 11 到 12 行变为一个原子操作。一个可能的想法是，将消费者的 acquire 提前到最开始，但这又会导致死锁的问题：睡眠的线程由于一直持有锁，唤醒线程无法获取锁。因此我们需要在线程睡眠时同时释放锁，这导出了我们最终的实现：\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    wakeup(s);\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    while(s-&gt;count == 0)\n        sleep(s, &s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n\n\n\n基本思想是让 sleep 将当前进程标记为 SLEEPING，然后调用 sched 释放 CPU；wakeup 查找在给定等待 channel 上休眠的进程并将其标记为 RUNNABLE。睡眠和唤醒的呼叫者可以使用任何彼此方便的号码作为 channel，xv6 经常使用参与等待的内核数据结构的地址。\n有时会出现多个进程在同一个通道上休眠的情况；例如，多个进程从管道读取数据。一次唤醒调用即可将它们全部唤醒。其中一个将首先运行并获取调用 sleep 所用的锁，并且读取管道中等待的任何数据。其他进程会发现，尽管被唤醒，却没有数据可读取。从他们的角度来看，这次唤醒是“虚假的”，他们必须再次入睡。因此，总是在检查条件的循环内调用 sleep。\n\n\n\n子进程在 exit 会被设置为 ZOMBIE 状态，待父进程的 wait 重新发现它时恢复为 UNUSED，如果父进程在子进程退出之前就先退出，则子进程会被交给 init 进程，它会永久调用 wait，因此每个子进程都需要一个父进程来清理。\nwait 通过获取 wait_lock 开始，wait_lock 充当条件锁，有助于确保父级不会错过退出子级的唤醒。然后 wait 扫描进程表。如果它发现一个处于 ZOMBIE 状态的子进程，它会释放该子进程的资源及其 proc 结构，将子进程的退出状态复制到提供给 wait 的地址（如果不为 0），并返回子进程的进程 ID。如果 wait 找到子进程但没有退出，它会调用 sleep 来等待它们中的任何一个退出，然后再次扫描。 wait 经常持有两个锁，wait_lock 和某些进程的 pp-&gt;lock；避免死锁的顺序是先 wait_lock，然后 pp-&gt;lock。\nexit 记录退出状态，释放一些资源，调用 reparent 把子进程给 init 进程，唤醒父进程，然后将调用者标记为僵尸，然后永久让出 CPU。在将其状态设置为 ZOMBIE 之前，exit 就唤醒父进程可能看起来不正确，但这是安全的：虽然唤醒可能会导致父进程运行，但 wait 中的循环因为没有获取到 p-&gt;lock 而无法进行检查，直到 p-&gt;lock 被 scheduler 释放。\nexit 允许进程自行终止，而 kill 则允许一个进程请求另一个进程终止。如果直接销毁受害者进程，kill 会太复杂，因为受害者可能正在另一个 CPU 上执行，也许正在对内核数据结构进行敏感的更新。因此，kill 做的事情很少：它只是设置受害者的 p-&gt;killed，如果它正在睡觉，则将其唤醒。最终，受害者将进入或离开内核，此时，如果设置了 p-&gt;killed，usertrap 中的代码将调用 exit（它通过调用 killed 进行检查）。如果受害者运行在用户空间，它很快就会通过系统调用或因为计时器（或其他设备）中断而进入内核。\n如果受害者进程处于睡眠状态，kill 的 wakeup 调用将导致受害者从睡眠中恢复。这具有潜在的危险，因为正在等待的条件可能不成立。但是，xv6 对 sleep 的调用始终包含在 while 循环中，该循环在 sleep 返回后重新测试条件。一些对 sleep 的调用还会在循环中测试 p-&gt;killed，如果设置了，则放弃当前活动。只有当这种放弃是正确的时候才会这样做。\n一些特定的情况下，xv6 中的 sleep 循环不会检查进程控制块中的 killed 标志。这是因为这些代码位于一个多步系统调用的中间阶段，而这些阶段应该是原子性的。其中一个例子是 virtio 驱动程序，它没有检查 p-&gt;killed，因为磁盘操作可能是一组写操作中的一个，而这些写操作都是为了使文件系统处于正确状态而必要的。如果一个进程在等待磁盘 I/O 时被终止，它将不会退出，直到完成当前的系统调用，并且用户 trap 发现了 killed 标志。\n\n\n\n与每个进程关联的锁 (p-&gt;lock) 是 xv6 中最复杂的锁。考虑 p-&gt;lock 的一个简单方法是，在读取或写入以下任何 struct proc 字段时必须保持它：p-&gt;state、p-&gt;chan、p-&gt;killed、p-&gt;xstate 和 p -&gt;pid。这些字段可以由其他进程或其他核心上的调度程序线程使用，因此它们很自然地必须受到锁的保护。\n然而，p-&gt;lock 的大多数用途都是保护 xv6 进程数据结构和算法的更高级别方面。这是 p-&gt;lock 所做的全套事情：\n\n防止进程槽位分配竞争：p-&gt;lock 与 p-&gt;state 一起，防止在为新进程分配 proc[] 槽位时出现竞争。\n隐藏进程：在进程创建或销毁期间，p-&gt;lock 将进程隐藏起来，防止外部观察到它的存在。\n防止父进程等待收集僵尸进程：防止父进程的 wait 调用收集到已经将状态设置为 ZOMBIE 但尚未让出 CPU 的进程。\n防止另一个内核调度器在进程调用 swtch 之前运行 RUNNABLE 进程。\n防止定时器中断导致进程在调用 swtch 时让出 CPU。\n与条件锁一起防止 wakeup 忽略正在调用 sleep 但尚未让出 CPU 的进程。\n防止 kill 的受害进程退出，并可能在 kill 检查 p-&gt;pid 和设置 p-&gt;killed 之间重新分配。\n使 kill 的检查和写入 p-&gt;state 具有原子性。\n\n此外，p-&gt;parent 字段由全局锁 wait_lock 保护，而不是由 p-&gt;lock 保护。只有进程的父进程修改 p-&gt;parent，尽管该字段既由进程自身读取，也由其他搜索其子进程的进程读取。wait_lock 的作用是在 wait 等待任何子进程退出时作为条件锁。退出的子进程会持有 wait_lock 或 p-&gt;lock，直到将其状态设置为 ZOMBIE，唤醒其父进程并让出 CPU 之后才会释放。wait_lock 还串行化了父进程和子进程的并发退出，以确保 init 进程能够从其等待中被唤醒。wait_lock 是一个全局锁，而不是每个父进程的单独锁，因为在一个进程获得它之前，它无法知道谁是其父进程。\n\n\n\nxv6调度器实现了一个简单的调度策略，它依次运行每个进程。此策略称为 round robin。真实的操作系统实施更复杂的策略，例如允许进程具有优先级。这个想法是，调度程序将优先选择可运行的高优先级进程，而非可运行的低优先级进程。这些策略可能很快就会变得复杂，因为经常存在相互竞争的目标：例如，操作系统可能还希望保证公平性和高吞吐量。此外，复杂的策略可能会导致意外的交互，例如优先级反转 (priority inversion) 和 convoys。当低优先级进程和高优先级进程都使用特定的锁时，就会发生优先级反转，当低优先级进程获取该锁时，会阻止高优先级进程取得进展。当许多高优先级进程正在等待获取共享锁的低优先级进程时，就会形成一长串等待进程；convoys 一旦形成，就可以持续很长时间。为了避免此类问题，复杂的调度程序需要额外的机制。\nsleep 和 wakeup 是一种简单而有效的同步方法，但还有很多其他方法。所有这些挑战中的第一个挑战是避免我们在本章开头看到的 lost wakeup 问题。最初的 UNIX 内核的 sleep 只是禁用中断，这已经足够了，因为 UNIX 运行在单 CPU 系统上。由于 xv6 在多处理器上运行，因此它添加了显式的睡眠锁。 FreeBSD 的 msleep 采用了相同的方法。 Plan 9 的 sleep 使用回调函数，该函数在睡眠前持有调度锁的情况下运行；该功能用作睡眠状况的最后一刻检查，以避免丢失唤醒。 Linux 内核的 sleep 使用显式进程队列，称为等待队列；队列有自己的内部锁。\n替代在 wakeup 中扫描整个进程集合的低效方法是使用等待队列。Plan 9 中的 sleep 和 wakeup 称之为 rendezvous point。许多线程库将这种结构称为条件变量 (condition variable)，在这种上下文中，sleep 操作和 wakeup 操作被称为 wait 和 signal。所有这些机制都共享相同的特征：在等待过程中，睡眠条件受到某种锁的保护，在睡眠期间原子地释放。\n当有多个进程等待唤醒时，操作系统会调度所有这些进程，它们会竞争检查睡眠条件。这种行为的进程有时被称为 thundering herd，最好避免。大多数条件变量都有两个方法来唤醒等待的进程：signal 唤醒一个进程，broadcast 唤醒所有等待的进程。\n信号量通常用于同步。计数通常对应于诸如管道缓冲区中可用字节的数量或进程拥有的僵尸子进程的数量。使用显式计数作为抽象的一部分可以避免 lost wakeup 问题，因为有一个显式的计数记录唤醒的次数。\n在操作系统中终止和清理进程引入了许多复杂性。处理深度睡眠中的受害进程的栈取消回溯需要小心，因为调用栈上的每个函数可能需要进行一些清理工作。一些语言通过提供异常机制来简化这个过程，但 C 语言不提供这种机制。\nxv6 对 kill 的支持并不完全令人满意。相关的问题是，在一个线程即将进入睡眠状态时，kill 可能会设置 p-&gt;killed 并尝试唤醒此受害者。如果受害者在检查完 p-&gt;killed 之后但在调用 sleep 之前被尝试唤醒，那么受害者可能直到等待的条件发生后才会注意到 p-&gt;killed。这个时间可能很长，甚至到永远（比如受害者进程等待 console 输入，但是用户一直不输入）。\n真正的操作系统会在常数时间内找到具有空闲列表的空闲 proc 结构，而不是在 allocproc 中进行线性时间搜索；xv6 只是为了简单起见。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec12 Coordination"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec12.html#课前准备",
+    "href": "CS/61810/6.1810Lec12.html#课前准备",
+    "title": "Lec12 Coordination",
+    "section": "",
+    "text": "Read remainder of “Scheduling”, and corresponding parts of kernel/proc.c, kernel/sleeplock.c.\n\n\n\n进程睡眠允许内核线程等待特定事件，让出的 CPU 可以去做其他的工作，待事件回复时唤醒进程。\n考虑生产者-消费者问题，使用锁的实现为：\nstruct semaphore {\n    struct spinlock lock;\n    int count;\n};\n\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    while(s-&gt;count == 0);\n    acquire(&s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n以上的实现是开销很大的，当生产者生产效率很低时，持续高速的询问会耗费很多资源。我们引入 sleep 和 wakeup 机制：\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    wakeup(s);\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    while(s-&gt;count == 0)\n        sleep(s);\n    acquire(&s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n当消费者没有得到资源时，睡觉，等到生产者生产了资源再唤醒消费者。但这样有一个问题：lost wakeup。考虑刚刚执行完第 11 行，正准备执行下一行时，第二个线程在消费者上执行，它唤醒了一个不存在的信号量，因此无事发生。但实际上这个信号量正是第 12 行将要送去睡觉的那个。此时第 12 行被执行，但是它由于已经在睡觉之前被唤醒过，再也无法被唤醒，系统停摆。\n为了修复这个错误，我们需要将第 11 到 12 行变为一个原子操作。一个可能的想法是，将消费者的 acquire 提前到最开始，但这又会导致死锁的问题：睡眠的线程由于一直持有锁，唤醒线程无法获取锁。因此我们需要在线程睡眠时同时释放锁，这导出了我们最终的实现：\nvoid V(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    s-&gt;count += 1;\n    wakeup(s);\n    release(&s-&gt;lock);\n}\n\nvoid P(struct semaphore *s)\n{\n    acquire(&s-&gt;lock);\n    while(s-&gt;count == 0)\n        sleep(s, &s-&gt;lock);\n    s-&gt;count -= 1;\n    release(&s-&gt;lock);\n}\n\n\n\n基本思想是让 sleep 将当前进程标记为 SLEEPING，然后调用 sched 释放 CPU；wakeup 查找在给定等待 channel 上休眠的进程并将其标记为 RUNNABLE。睡眠和唤醒的呼叫者可以使用任何彼此方便的号码作为 channel，xv6 经常使用参与等待的内核数据结构的地址。\n有时会出现多个进程在同一个通道上休眠的情况；例如，多个进程从管道读取数据。一次唤醒调用即可将它们全部唤醒。其中一个将首先运行并获取调用 sleep 所用的锁，并且读取管道中等待的任何数据。其他进程会发现，尽管被唤醒，却没有数据可读取。从他们的角度来看，这次唤醒是“虚假的”，他们必须再次入睡。因此，总是在检查条件的循环内调用 sleep。\n\n\n\n子进程在 exit 会被设置为 ZOMBIE 状态，待父进程的 wait 重新发现它时恢复为 UNUSED，如果父进程在子进程退出之前就先退出，则子进程会被交给 init 进程，它会永久调用 wait，因此每个子进程都需要一个父进程来清理。\nwait 通过获取 wait_lock 开始，wait_lock 充当条件锁，有助于确保父级不会错过退出子级的唤醒。然后 wait 扫描进程表。如果它发现一个处于 ZOMBIE 状态的子进程，它会释放该子进程的资源及其 proc 结构，将子进程的退出状态复制到提供给 wait 的地址（如果不为 0），并返回子进程的进程 ID。如果 wait 找到子进程但没有退出，它会调用 sleep 来等待它们中的任何一个退出，然后再次扫描。 wait 经常持有两个锁，wait_lock 和某些进程的 pp-&gt;lock；避免死锁的顺序是先 wait_lock，然后 pp-&gt;lock。\nexit 记录退出状态，释放一些资源，调用 reparent 把子进程给 init 进程，唤醒父进程，然后将调用者标记为僵尸，然后永久让出 CPU。在将其状态设置为 ZOMBIE 之前，exit 就唤醒父进程可能看起来不正确，但这是安全的：虽然唤醒可能会导致父进程运行，但 wait 中的循环因为没有获取到 p-&gt;lock 而无法进行检查，直到 p-&gt;lock 被 scheduler 释放。\nexit 允许进程自行终止，而 kill 则允许一个进程请求另一个进程终止。如果直接销毁受害者进程，kill 会太复杂，因为受害者可能正在另一个 CPU 上执行，也许正在对内核数据结构进行敏感的更新。因此，kill 做的事情很少：它只是设置受害者的 p-&gt;killed，如果它正在睡觉，则将其唤醒。最终，受害者将进入或离开内核，此时，如果设置了 p-&gt;killed，usertrap 中的代码将调用 exit（它通过调用 killed 进行检查）。如果受害者运行在用户空间，它很快就会通过系统调用或因为计时器（或其他设备）中断而进入内核。\n如果受害者进程处于睡眠状态，kill 的 wakeup 调用将导致受害者从睡眠中恢复。这具有潜在的危险，因为正在等待的条件可能不成立。但是，xv6 对 sleep 的调用始终包含在 while 循环中，该循环在 sleep 返回后重新测试条件。一些对 sleep 的调用还会在循环中测试 p-&gt;killed，如果设置了，则放弃当前活动。只有当这种放弃是正确的时候才会这样做。\n一些特定的情况下，xv6 中的 sleep 循环不会检查进程控制块中的 killed 标志。这是因为这些代码位于一个多步系统调用的中间阶段，而这些阶段应该是原子性的。其中一个例子是 virtio 驱动程序，它没有检查 p-&gt;killed，因为磁盘操作可能是一组写操作中的一个，而这些写操作都是为了使文件系统处于正确状态而必要的。如果一个进程在等待磁盘 I/O 时被终止，它将不会退出，直到完成当前的系统调用，并且用户 trap 发现了 killed 标志。\n\n\n\n与每个进程关联的锁 (p-&gt;lock) 是 xv6 中最复杂的锁。考虑 p-&gt;lock 的一个简单方法是，在读取或写入以下任何 struct proc 字段时必须保持它：p-&gt;state、p-&gt;chan、p-&gt;killed、p-&gt;xstate 和 p -&gt;pid。这些字段可以由其他进程或其他核心上的调度程序线程使用，因此它们很自然地必须受到锁的保护。\n然而，p-&gt;lock 的大多数用途都是保护 xv6 进程数据结构和算法的更高级别方面。这是 p-&gt;lock 所做的全套事情：\n\n防止进程槽位分配竞争：p-&gt;lock 与 p-&gt;state 一起，防止在为新进程分配 proc[] 槽位时出现竞争。\n隐藏进程：在进程创建或销毁期间，p-&gt;lock 将进程隐藏起来，防止外部观察到它的存在。\n防止父进程等待收集僵尸进程：防止父进程的 wait 调用收集到已经将状态设置为 ZOMBIE 但尚未让出 CPU 的进程。\n防止另一个内核调度器在进程调用 swtch 之前运行 RUNNABLE 进程。\n防止定时器中断导致进程在调用 swtch 时让出 CPU。\n与条件锁一起防止 wakeup 忽略正在调用 sleep 但尚未让出 CPU 的进程。\n防止 kill 的受害进程退出，并可能在 kill 检查 p-&gt;pid 和设置 p-&gt;killed 之间重新分配。\n使 kill 的检查和写入 p-&gt;state 具有原子性。\n\n此外，p-&gt;parent 字段由全局锁 wait_lock 保护，而不是由 p-&gt;lock 保护。只有进程的父进程修改 p-&gt;parent，尽管该字段既由进程自身读取，也由其他搜索其子进程的进程读取。wait_lock 的作用是在 wait 等待任何子进程退出时作为条件锁。退出的子进程会持有 wait_lock 或 p-&gt;lock，直到将其状态设置为 ZOMBIE，唤醒其父进程并让出 CPU 之后才会释放。wait_lock 还串行化了父进程和子进程的并发退出，以确保 init 进程能够从其等待中被唤醒。wait_lock 是一个全局锁，而不是每个父进程的单独锁，因为在一个进程获得它之前，它无法知道谁是其父进程。\n\n\n\nxv6调度器实现了一个简单的调度策略，它依次运行每个进程。此策略称为 round robin。真实的操作系统实施更复杂的策略，例如允许进程具有优先级。这个想法是，调度程序将优先选择可运行的高优先级进程，而非可运行的低优先级进程。这些策略可能很快就会变得复杂，因为经常存在相互竞争的目标：例如，操作系统可能还希望保证公平性和高吞吐量。此外，复杂的策略可能会导致意外的交互，例如优先级反转 (priority inversion) 和 convoys。当低优先级进程和高优先级进程都使用特定的锁时，就会发生优先级反转，当低优先级进程获取该锁时，会阻止高优先级进程取得进展。当许多高优先级进程正在等待获取共享锁的低优先级进程时，就会形成一长串等待进程；convoys 一旦形成，就可以持续很长时间。为了避免此类问题，复杂的调度程序需要额外的机制。\nsleep 和 wakeup 是一种简单而有效的同步方法，但还有很多其他方法。所有这些挑战中的第一个挑战是避免我们在本章开头看到的 lost wakeup 问题。最初的 UNIX 内核的 sleep 只是禁用中断，这已经足够了，因为 UNIX 运行在单 CPU 系统上。由于 xv6 在多处理器上运行，因此它添加了显式的睡眠锁。 FreeBSD 的 msleep 采用了相同的方法。 Plan 9 的 sleep 使用回调函数，该函数在睡眠前持有调度锁的情况下运行；该功能用作睡眠状况的最后一刻检查，以避免丢失唤醒。 Linux 内核的 sleep 使用显式进程队列，称为等待队列；队列有自己的内部锁。\n替代在 wakeup 中扫描整个进程集合的低效方法是使用等待队列。Plan 9 中的 sleep 和 wakeup 称之为 rendezvous point。许多线程库将这种结构称为条件变量 (condition variable)，在这种上下文中，sleep 操作和 wakeup 操作被称为 wait 和 signal。所有这些机制都共享相同的特征：在等待过程中，睡眠条件受到某种锁的保护，在睡眠期间原子地释放。\n当有多个进程等待唤醒时，操作系统会调度所有这些进程，它们会竞争检查睡眠条件。这种行为的进程有时被称为 thundering herd，最好避免。大多数条件变量都有两个方法来唤醒等待的进程：signal 唤醒一个进程，broadcast 唤醒所有等待的进程。\n信号量通常用于同步。计数通常对应于诸如管道缓冲区中可用字节的数量或进程拥有的僵尸子进程的数量。使用显式计数作为抽象的一部分可以避免 lost wakeup 问题，因为有一个显式的计数记录唤醒的次数。\n在操作系统中终止和清理进程引入了许多复杂性。处理深度睡眠中的受害进程的栈取消回溯需要小心，因为调用栈上的每个函数可能需要进行一些清理工作。一些语言通过提供异常机制来简化这个过程，但 C 语言不提供这种机制。\nxv6 对 kill 的支持并不完全令人满意。相关的问题是，在一个线程即将进入睡眠状态时，kill 可能会设置 p-&gt;killed 并尝试唤醒此受害者。如果受害者在检查完 p-&gt;killed 之后但在调用 sleep 之前被尝试唤醒，那么受害者可能直到等待的条件发生后才会注意到 p-&gt;killed。这个时间可能很长，甚至到永远（比如受害者进程等待 console 输入，但是用户一直不输入）。\n真正的操作系统会在常数时间内找到具有空闲列表的空闲 proc 结构，而不是在 allocproc 中进行线性时间搜索；xv6 只是为了简单起见。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec12 Coordination"
+    ]
+  },
+  {
+    "objectID": "CS/61810/6.1810Lec12.html#lecture",
+    "href": "CS/61810/6.1810Lec12.html#lecture",
+    "title": "Lec12 Coordination",
+    "section": "2 Lecture",
+    "text": "2 Lecture\n并无新鲜事。",
+    "crumbs": [
+      "CS",
+      "Computer Science",
+      "6.1810 Operating System Engineering 笔记",
+      "Lec12 Coordination"
+    ]
+  },
+  {
+    "objectID": "CS/CS.html",
+    "href": "CS/CS.html",
+    "title": "导航页",
+    "section": "",
+    "text": "这是导航页，可以写介绍性文字。",
+    "crumbs": [
+      "CS",
+      "Computer Science"
     ]
   }
 ]
