@@ -28,8 +28,6 @@ website:
               contents: "CS/61810/*.qmd"
             - section: CS144 Introduction to Computer Networking 笔记
               contents: "CS/CS144/*.qmd"
-            - section: 三维重建
-              contents: "CS/3d-reconstruction/*.qmd"
   
   page-footer:
       center: |
