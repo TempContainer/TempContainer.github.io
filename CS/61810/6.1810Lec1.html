@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="cn" xml:lang="cn"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
 <meta name="generator" content="quarto-1.5.57">
@@ -161,6 +161,10 @@ window.Quarto = {
   <li class="nav-item">
     <a class="nav-link active" href="../../CS/CS.html" aria-current="page"> 
 <span class="menu-text">CS</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://tempcontainer.github.io/typnotes/"> 
+<span class="menu-text">Math</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="../../about.html"> 
@@ -415,7 +419,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">2024-10-13</p>
+      <p class="date-modified">2024-10-23</p>
     </div>
   </div>
     
@@ -1086,236 +1090,235 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <div class="sourceCode" id="cb10" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Lec1 Introduction and Examples"</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="an">order:</span><span class="co"> 1</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="an">lang:</span><span class="co"> cn</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2024-2-15</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> last-modified</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "操作系统的介绍和例子。"</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">## 课前准备</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; 阅读 xv6 book 第一章。</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>第一章讲操作系统接口。开篇说了 xv6 的宏观结构：一个内核，若干个进程，每个进程就是一个正在运行的程序。进程需要调用内核的服务（service），这就是一次系统调用（system call）。内核提供的所有的系统调用或者服务组成了这个操作系统的接口。xv6 的服务是 Unix 内核的一个子集，包括：</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; ...processes, memory, file descriptors, pipes, and a file system...</span></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="at">&gt;</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; 进程、内存、文件描述符、管道和一个文件系统</span></span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>书中的表 1.2 详细列出了系统调用的函数声明。</span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="fu">### 进程和内存</span></span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>一个 xv6 的进程由 user-space 内存（指令、数据、栈）和内核私有的每个进程状态组成。xv6 的**分时共享**进程在各个等待执行的进程之间（transparently?）切换可用的 CPU。一个进程没有被执行时，xv6 储存进程的 CPU 寄存器并在下次执行时恢复。内核与每个进程由一个 PID（process identifier）联系在一起。</span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>一个进程可能通过 <span class="in">`fork`</span> 创建一个子进程，<span class="in">`fork`</span> 给了跟调用进程的内存完全一致的拷贝。<span class="in">`fork`</span> 在父进程和子进程均会返回。在父进程中返回新进程的 PID，在子进程中返回 0。</span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>书上举了个例子：</span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> pid <span class="op">=</span> fork<span class="op">();</span></span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span><span class="op">(</span>pid <span class="op">&gt;</span> <span class="dv">0</span><span class="op">){</span></span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">"parent: child=</span><span class="sc">%d\n</span><span class="st">"</span><span class="op">,</span> pid<span class="op">);</span></span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    pid <span class="op">=</span> wait<span class="op">((</span><span class="dt">int</span> <span class="op">*)</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">"child </span><span class="sc">%d</span><span class="st"> is done</span><span class="sc">\n</span><span class="st">"</span><span class="op">,</span> pid<span class="op">);</span></span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span><span class="op">(</span>pid <span class="op">==</span> <span class="dv">0</span><span class="op">){</span></span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">"child: exiting</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>    exit<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">"fork error</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
-<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>接下来讨论了这个程序的输出，主要是想说明：</span>
-<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>fork 之后，父进程和子进程的执行顺序不是确定的。</span>
-<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>子进程的内存是对父进程内存的拷贝，因此修改各自进程中的变量并不会影响另一个。</span>
-<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a><span class="in">`exec`</span> 系统调用用一个从文件读取的内存布局替换调用进程的内存。这个文件用特定格式描述了内存的布局方式，xv6 使用 ELF 格式（第三章细讲），这种文件通常是通过编译源代码得到的。当 <span class="in">`exec`</span> 成功时，它不会返回到调用进程，而是从 ELF header 中定义的进入点开始执行从文件中加载的命令。<span class="in">`exec`</span> 有两个参数：包含可执行程序的文件名和字符串数组。例子：</span>
-<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
-<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="op">*</span>argv<span class="op">[</span><span class="dv">3</span><span class="op">];</span></span>
-<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="st">"echo"</span><span class="op">;</span></span>
-<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">=</span> <span class="st">"hello"</span><span class="op">;</span></span>
-<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>exec<span class="op">(</span><span class="st">"/bin/echo"</span><span class="op">,</span> argv<span class="op">);</span></span>
-<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">"exec error</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
-<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>用 <span class="in">`/bin/echo`</span> 程序执行 <span class="in">`echo hello`</span> 指令，通常程序会忽略 <span class="in">`argv[0]`</span> 因为它用来标注程序的名字。</span>
-<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>接下来讲了 xv6 源码这部分的应用，具体细节可以看书。主要过程是：在 shell 中，用户输入的命令被 <span class="in">`getcmd`</span> 接收，然后它会调用 <span class="in">`fork`</span>，子进程交给 <span class="in">`runcmd`</span> 来解析命令，父进程 <span class="in">`wait`</span>。<span class="in">`runcmd`</span> 调用 <span class="in">`exec`</span> 运行这个命令，<span class="in">`exec`</span> 成功时将参数交给对应的程序，之后对应的程序会调用 <span class="in">`exit`</span>，返回到父进程的 <span class="in">`wait`</span>。</span>
-<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>xv6 分配 user-space 的内存基本上都是隐式的，比如 <span class="in">`fork`</span> 和 <span class="in">`exec`</span>。如果运行时需要更多内存可以通过 <span class="in">`sbrk(n)`</span> 来得到 $n$ 字节内存。</span>
-<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a><span class="fu">### I/O 和文件描述符</span></span>
-<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>文件描述符是代表内核管理对象的一个小整数，进程向对象中读写。进程在打开文件、文件夹、设备，或者创建管道和复制已存在的描述符时都会得到一个文件描述符。文件描述符接口抽象了不同的数据获取来源，并将它们都看作字节流。</span>
-<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>xv6 内核将文件描述符用作每个进程表中的下标。依惯例，进程从 file descriptor 0（标准输入）中读入，向 file descriptor 1（标准输出）写出，向 file descriptor 2（标准错误）写错误信息。由此，shell 需确保总有至少三个文件描述符打开，即控制台的三个文件描述符。</span>
-<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>接下来介绍了 I/O 操作：</span>
-<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span><span class="in">`read(fd, buf, n)`</span>：从 <span class="in">`fd`</span> 读最多 <span class="in">`n`</span> 个字节，拷贝到 <span class="in">`buf`</span>，返回实际读入的字节数。</span>
-<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span><span class="in">`write(fd, buf, n)`</span>：从 <span class="in">`buf`</span> 向 <span class="in">`fd`</span> 写 <span class="in">`n`</span> 个字节，只有发生错误时会写少于 <span class="in">`n`</span> 个字节。</span>
-<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>读写操作都是累积的，会从上一次操作的地方开始读写。</span>
-<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>这是一个应用的例子：</span>
-<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
-<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> buf<span class="op">[</span><span class="dv">512</span><span class="op">];</span></span>
-<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> n<span class="op">;</span></span>
-<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span><span class="op">(;;)</span> <span class="op">{</span></span>
-<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> read<span class="op">(</span><span class="dv">0</span><span class="op">,</span> buf<span class="op">,</span> <span class="kw">sizeof</span> buf<span class="op">);</span></span>
-<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span><span class="op">(</span>n <span class="op">==</span> <span class="dv">0</span><span class="op">)</span></span>
-<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span><span class="op">(</span>n <span class="op">&lt;</span> <span class="dv">0</span><span class="op">){</span></span>
-<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a>        fprintf<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="st">"read error</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
-<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a>        exit<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
-<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span><span class="op">(</span>write<span class="op">(</span><span class="dv">1</span><span class="op">,</span> buf<span class="op">,</span> n<span class="op">)</span> <span class="op">!=</span> n<span class="op">){</span></span>
-<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a>        fprintf<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="st">"write error</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
-<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a>        exit<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
-<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a><span class="in">`close`</span> 用来释放一个文件描述符，供下次分配时重用。</span>
-<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a>这样的设计和 <span class="in">`fork`</span> 结合起来可以轻松地完成 I/O 重定向：在子进程时为文件描述符分配新的来源，这样父子进程间就可以互不干扰，书上有具体的例子，同时还说了 <span class="in">`open`</span> 的用法和具体参数。这样就回答了为什么 <span class="in">`fork`</span> 和 <span class="in">`exec`</span> 不能结合为一个函数，就是通过解耦来减少多余的修改。</span>
-<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a>文件描述符本质是指向文件特定位置的指针，所以用 <span class="in">`dup`</span> 复制的时候并没有改变它指向的内容，<span class="in">`fork`</span> 中产生的复制也是同理。这意味着，父子进程共同读写同一个文件，它们的操作也是累积的。</span>
-<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a><span class="in">``` bash</span></span>
-<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> existing-file non-existing-file <span class="op">&gt;</span> tmp1 <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
-<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a>这条命令中的 <span class="in">`2&gt;&amp;1`</span> 给了一个复制了 file descriptor 1 的拷贝 file descriptor 2，这意味着 <span class="in">`non-existing-file`</span> 的错误信息被重定向到了标准输出中，这些信息全部输出到 <span class="in">`tmp1`</span> 文件里。</span>
-<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a><span class="fu">### 管道</span></span>
-<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a>一个管道是暴露给进程的一个小缓存，配备了一对读写文件描述符。向管道一端写数据，另一端就可以读数据，这样进程间便可以通信了。</span>
-<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a>下面是一个运行 <span class="in">`wc`</span> 程序的例子，这个程序的标准输入连接了管道的读入端：</span>
-<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
-<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> p<span class="op">[</span><span class="dv">2</span><span class="op">];</span></span>
-<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="op">*</span>argv<span class="op">[</span><span class="dv">2</span><span class="op">];</span></span>
-<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="st">"wc"</span><span class="op">;</span></span>
-<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a>pipe<span class="op">(</span>p<span class="op">);</span></span>
-<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span><span class="op">(</span>fork<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a>    dup<span class="op">(</span>p<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
-<span id="cb10-130"><a href="#cb10-130" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span>p<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
-<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span>p<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
-<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a>    exec<span class="op">(</span><span class="st">"/bin/wc"</span><span class="op">,</span> argv<span class="op">);</span></span>
-<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span>p<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
-<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a>    write<span class="op">(</span>p<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="st">"hello world</span><span class="sc">\n</span><span class="st">"</span><span class="op">,</span> <span class="dv">12</span><span class="op">);</span></span>
-<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span>p<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
-<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a>程序调用了 <span class="in">`pipe`</span>，它创建了一个新的管道。在 <span class="in">`fork`</span> 之后，父子进程均拥有指向管道的文件描述符。注意到，子进程关掉了 file descriptor 0，并拷贝了 <span class="in">`p[0]`</span>，此时标准输入将从管道进行读取。</span>
-<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a>从管道进行 <span class="in">`read`</span> 时，如果已经没有数据可读，<span class="in">`read`</span> 会等待新的数据写入管道或所有指向管道写入端的文件描述符全部关闭；后者情况下 <span class="in">`read`</span> 会返回 0，如同读到了文件末尾一样。因此子进程要关闭所有的写入端文件描述符是非常重要的：如果 <span class="in">`wc`</span> 的一个文件描述符指向了管道的写入端，<span class="in">`read`</span> 会永远阻塞。</span>
-<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a>xv6 对指令 <span class="in">`grep fork sh.c | wc -l`</span> 的<span class="co">[</span><span class="ot">实现</span><span class="co">](https://github.com/mit-pdos/xv6-riscv/blob/riscv/user/sh.c#L101)</span>和上面说到的差不多。子进程会创建一个管道连接左端和右端，同时运行左边和右边的命令，等待它们执行完毕，这样的进程调用形成了一个二叉树结构。</span>
-<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a>管道相较于创建临时文件的好处：自动垃圾回收、可以传任意长的字节流<span class="ot">[^1]</span>、并行读写。</span>
-<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a><span class="ot">[^1]: </span>当然，不要把所有的数据全存下来。</span>
-<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a><span class="fu">### 文件系统</span></span>
-<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-152"><a href="#cb10-152" aria-hidden="true" tabindex="-1"></a>目录：绝对路径（从 <span class="in">`root`</span> 开始）、相对路径（从当前路径开始）。<span class="in">`chdir`</span> 修改当前路径。</span>
-<span id="cb10-153"><a href="#cb10-153" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a><span class="in">`mkdir`</span> 创建新文件夹，<span class="in">`open`</span> 带上 <span class="in">`O_CREATE`</span> 参数创建新文件，<span class="in">`mknod`</span> 创建新设备文件：</span>
-<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
-<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a>mkdir<span class="op">(</span><span class="st">"/dir"</span><span class="op">);</span></span>
-<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a>fd <span class="op">=</span> open<span class="op">(</span><span class="st">"/dir/file"</span><span class="op">,</span> O_CREATE<span class="op">|</span>O_WRONLY<span class="op">);</span></span>
-<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a>close<span class="op">(</span>fd<span class="op">);</span></span>
-<span id="cb10-160"><a href="#cb10-160" aria-hidden="true" tabindex="-1"></a>mknod<span class="op">(</span><span class="st">"/console"</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb10-161"><a href="#cb10-161" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-162"><a href="#cb10-162" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a><span class="in">`mknod`</span> 第二第三个参数是主要和次要设备编号，唯一确定一个内核服务。当进程之后要打开设备文件时，内核会将 <span class="in">`read`</span> 和 <span class="in">`write`</span> 系统调用转交内核设备实现而不是文件系统。</span>
-<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a>文件名和文件本身是有区别的：相同的底层文件（称为 inode）可以拥有多个名字（称为 links）。每个 link 由都包含一个目录的 entry，它由文件名和对 inode 的引用组成。inode 储存文件的元数据，<span class="in">`fstat`</span> 可以获取一个文件描述符指向的 inode，这个元数据由一个 <span class="in">`struct stat`</span> 组成：</span>
-<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
-<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a><span class="pp">#define T_DIR </span><span class="dv">1</span><span class="pp"> </span><span class="co">// Directory</span></span>
-<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a><span class="pp">#define T_FILE </span><span class="dv">2</span><span class="pp"> </span><span class="co">// File</span></span>
-<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a><span class="pp">#define T_DEVICE </span><span class="dv">3</span><span class="pp"> </span><span class="co">// Device</span></span>
-<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> stat <span class="op">{</span></span>
-<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dev<span class="op">;</span> <span class="co">// File system’s disk device</span></span>
-<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a>    uint ino<span class="op">;</span> <span class="co">// Inode number</span></span>
-<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a>    <span class="dt">short</span> type<span class="op">;</span> <span class="co">// Type of file</span></span>
-<span id="cb10-176"><a href="#cb10-176" aria-hidden="true" tabindex="-1"></a>    <span class="dt">short</span> nlink<span class="op">;</span> <span class="co">// Number of links to file</span></span>
-<span id="cb10-177"><a href="#cb10-177" aria-hidden="true" tabindex="-1"></a>    uint64 size<span class="op">;</span> <span class="co">// Size of file in bytes</span></span>
-<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb10-179"><a href="#cb10-179" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-180"><a href="#cb10-180" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-181"><a href="#cb10-181" aria-hidden="true" tabindex="-1"></a><span class="in">`link`</span> 系统调用可以给文件创建新名字：</span>
-<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
-<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a>open<span class="op">(</span><span class="st">"a"</span><span class="op">,</span> O_CREATE<span class="op">|</span>O_WRONLY<span class="op">);</span></span>
-<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a>link<span class="op">(</span><span class="st">"a"</span><span class="op">,</span> <span class="st">"b"</span><span class="op">);</span></span>
-<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a><span class="in">`unlink`</span> 可以删除一个名字，如果 link 数（<span class="in">`nlink`</span>）变为零，文件的 inode 和硬盘中储存其内容的空间就会被释放掉。因此</span>
-<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-190"><a href="#cb10-190" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
-<span id="cb10-191"><a href="#cb10-191" aria-hidden="true" tabindex="-1"></a>fd <span class="op">=</span> open<span class="op">(</span><span class="st">"/tmp/xyz"</span><span class="op">,</span> O_CREATE<span class="op">|</span>O_RDWR<span class="op">);</span></span>
-<span id="cb10-192"><a href="#cb10-192" aria-hidden="true" tabindex="-1"></a>unlink<span class="op">(</span><span class="st">"/tmp/xyz"</span><span class="op">);</span></span>
-<span id="cb10-193"><a href="#cb10-193" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-194"><a href="#cb10-194" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-195"><a href="#cb10-195" aria-hidden="true" tabindex="-1"></a>是一个惯用手段来创建一个在进程关闭 <span class="in">`fd`</span> 或结束时被清理的临时 inode。</span>
-<span id="cb10-196"><a href="#cb10-196" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-197"><a href="#cb10-197" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Unix provides file utilities callable from the shell as user-level programs, for example </span><span class="in">`mkdir`</span><span class="at">, </span><span class="in">`ln`</span><span class="at">, and </span><span class="in">`rm`</span><span class="at">.</span></span>
-<span id="cb10-198"><a href="#cb10-198" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-199"><a href="#cb10-199" aria-hidden="true" tabindex="-1"></a>上面这一段没看明白，只稍微看懂了后面讲 <span class="in">`cd`</span> 是内建在 shell 中的，因为 fork 后只会改变子进程的当前工作目录，不会影响父进程（shell）的当前工作目录。</span>
-<span id="cb10-200"><a href="#cb10-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-201"><a href="#cb10-201" aria-hidden="true" tabindex="-1"></a><span class="fu">### Real World</span></span>
-<span id="cb10-202"><a href="#cb10-202" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-203"><a href="#cb10-203" aria-hidden="true" tabindex="-1"></a>这节讲了 Unix 的历史和设计哲学，这里就不赘述了。</span>
-<span id="cb10-204"><a href="#cb10-204" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-205"><a href="#cb10-205" aria-hidden="true" tabindex="-1"></a><span class="fu">### 习题</span></span>
-<span id="cb10-206"><a href="#cb10-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-207"><a href="#cb10-207" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Write a program that uses UNIX system calls to "ping-pong" a byte between two processes over a pair of pipes, one for each direction. Measure the program's performance, in exchanges per second.</span></span>
-<span id="cb10-208"><a href="#cb10-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-209"><a href="#cb10-209" aria-hidden="true" tabindex="-1"></a>参见 Lab util。</span>
-<span id="cb10-210"><a href="#cb10-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-211"><a href="#cb10-211" aria-hidden="true" tabindex="-1"></a><span class="fu">## Lecture</span></span>
-<span id="cb10-212"><a href="#cb10-212" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-213"><a href="#cb10-213" aria-hidden="true" tabindex="-1"></a>感觉看了书基本上课就不用怎么听了……课大致还是按照书的内容讲的，并且把我之前看书的很多疑问解除了。不过不确定到底看书和听课到底哪个在先效果更好，书上的内容毫无疑问是一本道，虽然已将重点突出，但仍有陷入细节之可能。这里只记录一些对我来说有帮助的内容，重复的题材直接跳过。</span>
-<span id="cb10-214"><a href="#cb10-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-215"><a href="#cb10-215" aria-hidden="true" tabindex="-1"></a><span class="fu">### Why hard?</span></span>
-<span id="cb10-216"><a href="#cb10-216" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-217"><a href="#cb10-217" aria-hidden="true" tabindex="-1"></a>操作系统设计的困难之处在于平衡一系列矛盾的需求：</span>
-<span id="cb10-218"><a href="#cb10-218" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-219"><a href="#cb10-219" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>高效和易用。越高效意味着越接近底层，但易用又需要尽可能与硬件隔离。</span>
-<span id="cb10-220"><a href="#cb10-220" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>强大的服务和简单的接口。操作系统有强大的功能，同时又不能存在数量庞大、复杂且难以理解的接口。</span>
-<span id="cb10-221"><a href="#cb10-221" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>灵活与安全。灵活意味着给程序员更多的自由，同时又要对自由有所限制，以保证系统的安全。</span>
-<span id="cb10-222"><a href="#cb10-222" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-223"><a href="#cb10-223" aria-hidden="true" tabindex="-1"></a><span class="fu">### 关于文件描述符</span></span>
-<span id="cb10-224"><a href="#cb10-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-225"><a href="#cb10-225" aria-hidden="true" tabindex="-1"></a>文件描述符本质上对应了内核中的一个表单数据。内核维护了每个运行进程的状态，为每一个运行进程保存一个表单，表单的 key 是文件描述符。这个表单让内核知道，每个文件描述符对应的实际内容是什么。关键的是，每个进程都有自己独立的文件描述符空间。所以如果有两个不同的进程，它们都打开一个文件，它们或许可以得到相同数字的文件描述符，但是因为内核为每个进程都维护了一个独立的文件描述符空间，这里相同数字的文件描述符可能会对应到不同的文件。</span>
-<span id="cb10-226"><a href="#cb10-226" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-227"><a href="#cb10-227" aria-hidden="true" tabindex="-1"></a><span class="fu">### 编译器如何处理系统调用？</span></span>
-<span id="cb10-228"><a href="#cb10-228" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-229"><a href="#cb10-229" aria-hidden="true" tabindex="-1"></a>当执行到 <span class="in">`open`</span> 或 <span class="in">`write`</span> 之类系统调用时，RISC-V 会使用 <span class="in">`ecall`</span> 将控制权转交给内核。内核会检查进程内存和寄存器，确定相应的参数。</span>
-<span id="cb10-230"><a href="#cb10-230" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-231"><a href="#cb10-231" aria-hidden="true" tabindex="-1"></a><span class="fu">### forkexec 的优化</span></span>
-<span id="cb10-232"><a href="#cb10-232" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-233"><a href="#cb10-233" aria-hidden="true" tabindex="-1"></a>在调用 <span class="in">`exec`</span> 执行指令时，<span class="in">`exec`</span> 会直接替换相应的内存拷贝，不会返回继续执行进程下面的指令。为了避免 shell 进程直接被杀掉，惯常做法是 <span class="in">`fork`</span> 并在子进程中 <span class="in">`exec`</span>。实际上这里有点浪费，因为之后的执行丢弃了拷贝了整个内存的内容，这在大型程序中的影响会比较明显。课程后面会实现一些优化，比如 copy-on-write fork。使用懒拷贝，可以避免 forkexec 中实际的拷贝。</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> 2024-2-15</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> last-modified</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "操作系统的介绍和例子。"</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## 课前准备</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; 阅读 xv6 book 第一章。</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>第一章讲操作系统接口。开篇说了 xv6 的宏观结构：一个内核，若干个进程，每个进程就是一个正在运行的程序。进程需要调用内核的服务（service），这就是一次系统调用（system call）。内核提供的所有的系统调用或者服务组成了这个操作系统的接口。xv6 的服务是 Unix 内核的一个子集，包括：</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; ...processes, memory, file descriptors, pipes, and a file system...</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="at">&gt;</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; 进程、内存、文件描述符、管道和一个文件系统</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>书中的表 1.2 详细列出了系统调用的函数声明。</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="fu">### 进程和内存</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>一个 xv6 的进程由 user-space 内存（指令、数据、栈）和内核私有的每个进程状态组成。xv6 的**分时共享**进程在各个等待执行的进程之间（transparently?）切换可用的 CPU。一个进程没有被执行时，xv6 储存进程的 CPU 寄存器并在下次执行时恢复。内核与每个进程由一个 PID（process identifier）联系在一起。</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>一个进程可能通过 <span class="in">`fork`</span> 创建一个子进程，<span class="in">`fork`</span> 给了跟调用进程的内存完全一致的拷贝。<span class="in">`fork`</span> 在父进程和子进程均会返回。在父进程中返回新进程的 PID，在子进程中返回 0。</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>书上举了个例子：</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> pid <span class="op">=</span> fork<span class="op">();</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span><span class="op">(</span>pid <span class="op">&gt;</span> <span class="dv">0</span><span class="op">){</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">"parent: child=</span><span class="sc">%d\n</span><span class="st">"</span><span class="op">,</span> pid<span class="op">);</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    pid <span class="op">=</span> wait<span class="op">((</span><span class="dt">int</span> <span class="op">*)</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">"child </span><span class="sc">%d</span><span class="st"> is done</span><span class="sc">\n</span><span class="st">"</span><span class="op">,</span> pid<span class="op">);</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span><span class="op">(</span>pid <span class="op">==</span> <span class="dv">0</span><span class="op">){</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">"child: exiting</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    exit<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">"fork error</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>接下来讨论了这个程序的输出，主要是想说明：</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>fork 之后，父进程和子进程的执行顺序不是确定的。</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>子进程的内存是对父进程内存的拷贝，因此修改各自进程中的变量并不会影响另一个。</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a><span class="in">`exec`</span> 系统调用用一个从文件读取的内存布局替换调用进程的内存。这个文件用特定格式描述了内存的布局方式，xv6 使用 ELF 格式（第三章细讲），这种文件通常是通过编译源代码得到的。当 <span class="in">`exec`</span> 成功时，它不会返回到调用进程，而是从 ELF header 中定义的进入点开始执行从文件中加载的命令。<span class="in">`exec`</span> 有两个参数：包含可执行程序的文件名和字符串数组。例子：</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="op">*</span>argv<span class="op">[</span><span class="dv">3</span><span class="op">];</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="st">"echo"</span><span class="op">;</span></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">=</span> <span class="st">"hello"</span><span class="op">;</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>exec<span class="op">(</span><span class="st">"/bin/echo"</span><span class="op">,</span> argv<span class="op">);</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">"exec error</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>用 <span class="in">`/bin/echo`</span> 程序执行 <span class="in">`echo hello`</span> 指令，通常程序会忽略 <span class="in">`argv[0]`</span> 因为它用来标注程序的名字。</span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>接下来讲了 xv6 源码这部分的应用，具体细节可以看书。主要过程是：在 shell 中，用户输入的命令被 <span class="in">`getcmd`</span> 接收，然后它会调用 <span class="in">`fork`</span>，子进程交给 <span class="in">`runcmd`</span> 来解析命令，父进程 <span class="in">`wait`</span>。<span class="in">`runcmd`</span> 调用 <span class="in">`exec`</span> 运行这个命令，<span class="in">`exec`</span> 成功时将参数交给对应的程序，之后对应的程序会调用 <span class="in">`exit`</span>，返回到父进程的 <span class="in">`wait`</span>。</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>xv6 分配 user-space 的内存基本上都是隐式的，比如 <span class="in">`fork`</span> 和 <span class="in">`exec`</span>。如果运行时需要更多内存可以通过 <span class="in">`sbrk(n)`</span> 来得到 $n$ 字节内存。</span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a><span class="fu">### I/O 和文件描述符</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>文件描述符是代表内核管理对象的一个小整数，进程向对象中读写。进程在打开文件、文件夹、设备，或者创建管道和复制已存在的描述符时都会得到一个文件描述符。文件描述符接口抽象了不同的数据获取来源，并将它们都看作字节流。</span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>xv6 内核将文件描述符用作每个进程表中的下标。依惯例，进程从 file descriptor 0（标准输入）中读入，向 file descriptor 1（标准输出）写出，向 file descriptor 2（标准错误）写错误信息。由此，shell 需确保总有至少三个文件描述符打开，即控制台的三个文件描述符。</span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>接下来介绍了 I/O 操作：</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span><span class="in">`read(fd, buf, n)`</span>：从 <span class="in">`fd`</span> 读最多 <span class="in">`n`</span> 个字节，拷贝到 <span class="in">`buf`</span>，返回实际读入的字节数。</span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span><span class="in">`write(fd, buf, n)`</span>：从 <span class="in">`buf`</span> 向 <span class="in">`fd`</span> 写 <span class="in">`n`</span> 个字节，只有发生错误时会写少于 <span class="in">`n`</span> 个字节。</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>读写操作都是累积的，会从上一次操作的地方开始读写。</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>这是一个应用的例子：</span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> buf<span class="op">[</span><span class="dv">512</span><span class="op">];</span></span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> n<span class="op">;</span></span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span><span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> read<span class="op">(</span><span class="dv">0</span><span class="op">,</span> buf<span class="op">,</span> <span class="kw">sizeof</span> buf<span class="op">);</span></span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span><span class="op">(</span>n <span class="op">==</span> <span class="dv">0</span><span class="op">)</span></span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span><span class="op">(</span>n <span class="op">&lt;</span> <span class="dv">0</span><span class="op">){</span></span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a>        fprintf<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="st">"read error</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a>        exit<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span><span class="op">(</span>write<span class="op">(</span><span class="dv">1</span><span class="op">,</span> buf<span class="op">,</span> n<span class="op">)</span> <span class="op">!=</span> n<span class="op">){</span></span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>        fprintf<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="st">"write error</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a>        exit<span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a><span class="in">`close`</span> 用来释放一个文件描述符，供下次分配时重用。</span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a>这样的设计和 <span class="in">`fork`</span> 结合起来可以轻松地完成 I/O 重定向：在子进程时为文件描述符分配新的来源，这样父子进程间就可以互不干扰，书上有具体的例子，同时还说了 <span class="in">`open`</span> 的用法和具体参数。这样就回答了为什么 <span class="in">`fork`</span> 和 <span class="in">`exec`</span> 不能结合为一个函数，就是通过解耦来减少多余的修改。</span>
+<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a>文件描述符本质是指向文件特定位置的指针，所以用 <span class="in">`dup`</span> 复制的时候并没有改变它指向的内容，<span class="in">`fork`</span> 中产生的复制也是同理。这意味着，父子进程共同读写同一个文件，它们的操作也是累积的。</span>
+<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a><span class="in">``` bash</span></span>
+<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> existing-file non-existing-file <span class="op">&gt;</span> tmp1 <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
+<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a>这条命令中的 <span class="in">`2&gt;&amp;1`</span> 给了一个复制了 file descriptor 1 的拷贝 file descriptor 2，这意味着 <span class="in">`non-existing-file`</span> 的错误信息被重定向到了标准输出中，这些信息全部输出到 <span class="in">`tmp1`</span> 文件里。</span>
+<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a><span class="fu">### 管道</span></span>
+<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a>一个管道是暴露给进程的一个小缓存，配备了一对读写文件描述符。向管道一端写数据，另一端就可以读数据，这样进程间便可以通信了。</span>
+<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a>下面是一个运行 <span class="in">`wc`</span> 程序的例子，这个程序的标准输入连接了管道的读入端：</span>
+<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> p<span class="op">[</span><span class="dv">2</span><span class="op">];</span></span>
+<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="op">*</span>argv<span class="op">[</span><span class="dv">2</span><span class="op">];</span></span>
+<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="st">"wc"</span><span class="op">;</span></span>
+<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a>argv<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a>pipe<span class="op">(</span>p<span class="op">);</span></span>
+<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span><span class="op">(</span>fork<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a>    dup<span class="op">(</span>p<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
+<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span>p<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
+<span id="cb10-130"><a href="#cb10-130" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span>p<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
+<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a>    exec<span class="op">(</span><span class="st">"/bin/wc"</span><span class="op">,</span> argv<span class="op">);</span></span>
+<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span>p<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
+<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a>    write<span class="op">(</span>p<span class="op">[</span><span class="dv">1</span><span class="op">],</span> <span class="st">"hello world</span><span class="sc">\n</span><span class="st">"</span><span class="op">,</span> <span class="dv">12</span><span class="op">);</span></span>
+<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a>    close<span class="op">(</span>p<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
+<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a>程序调用了 <span class="in">`pipe`</span>，它创建了一个新的管道。在 <span class="in">`fork`</span> 之后，父子进程均拥有指向管道的文件描述符。注意到，子进程关掉了 file descriptor 0，并拷贝了 <span class="in">`p[0]`</span>，此时标准输入将从管道进行读取。</span>
+<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a>从管道进行 <span class="in">`read`</span> 时，如果已经没有数据可读，<span class="in">`read`</span> 会等待新的数据写入管道或所有指向管道写入端的文件描述符全部关闭；后者情况下 <span class="in">`read`</span> 会返回 0，如同读到了文件末尾一样。因此子进程要关闭所有的写入端文件描述符是非常重要的：如果 <span class="in">`wc`</span> 的一个文件描述符指向了管道的写入端，<span class="in">`read`</span> 会永远阻塞。</span>
+<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a>xv6 对指令 <span class="in">`grep fork sh.c | wc -l`</span> 的<span class="co">[</span><span class="ot">实现</span><span class="co">](https://github.com/mit-pdos/xv6-riscv/blob/riscv/user/sh.c#L101)</span>和上面说到的差不多。子进程会创建一个管道连接左端和右端，同时运行左边和右边的命令，等待它们执行完毕，这样的进程调用形成了一个二叉树结构。</span>
+<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a>管道相较于创建临时文件的好处：自动垃圾回收、可以传任意长的字节流<span class="ot">[^1]</span>、并行读写。</span>
+<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a><span class="ot">[^1]: </span>当然，不要把所有的数据全存下来。</span>
+<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a><span class="fu">### 文件系统</span></span>
+<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a>目录：绝对路径（从 <span class="in">`root`</span> 开始）、相对路径（从当前路径开始）。<span class="in">`chdir`</span> 修改当前路径。</span>
+<span id="cb10-152"><a href="#cb10-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-153"><a href="#cb10-153" aria-hidden="true" tabindex="-1"></a><span class="in">`mkdir`</span> 创建新文件夹，<span class="in">`open`</span> 带上 <span class="in">`O_CREATE`</span> 参数创建新文件，<span class="in">`mknod`</span> 创建新设备文件：</span>
+<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a>mkdir<span class="op">(</span><span class="st">"/dir"</span><span class="op">);</span></span>
+<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a>fd <span class="op">=</span> open<span class="op">(</span><span class="st">"/dir/file"</span><span class="op">,</span> O_CREATE<span class="op">|</span>O_WRONLY<span class="op">);</span></span>
+<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a>close<span class="op">(</span>fd<span class="op">);</span></span>
+<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a>mknod<span class="op">(</span><span class="st">"/console"</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb10-160"><a href="#cb10-160" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-161"><a href="#cb10-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-162"><a href="#cb10-162" aria-hidden="true" tabindex="-1"></a><span class="in">`mknod`</span> 第二第三个参数是主要和次要设备编号，唯一确定一个内核服务。当进程之后要打开设备文件时，内核会将 <span class="in">`read`</span> 和 <span class="in">`write`</span> 系统调用转交内核设备实现而不是文件系统。</span>
+<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a>文件名和文件本身是有区别的：相同的底层文件（称为 inode）可以拥有多个名字（称为 links）。每个 link 由都包含一个目录的 entry，它由文件名和对 inode 的引用组成。inode 储存文件的元数据，<span class="in">`fstat`</span> 可以获取一个文件描述符指向的 inode，这个元数据由一个 <span class="in">`struct stat`</span> 组成：</span>
+<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a><span class="pp">#define T_DIR </span><span class="dv">1</span><span class="pp"> </span><span class="co">// Directory</span></span>
+<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a><span class="pp">#define T_FILE </span><span class="dv">2</span><span class="pp"> </span><span class="co">// File</span></span>
+<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a><span class="pp">#define T_DEVICE </span><span class="dv">3</span><span class="pp"> </span><span class="co">// Device</span></span>
+<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> stat <span class="op">{</span></span>
+<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dev<span class="op">;</span> <span class="co">// File system’s disk device</span></span>
+<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a>    uint ino<span class="op">;</span> <span class="co">// Inode number</span></span>
+<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a>    <span class="dt">short</span> type<span class="op">;</span> <span class="co">// Type of file</span></span>
+<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a>    <span class="dt">short</span> nlink<span class="op">;</span> <span class="co">// Number of links to file</span></span>
+<span id="cb10-176"><a href="#cb10-176" aria-hidden="true" tabindex="-1"></a>    uint64 size<span class="op">;</span> <span class="co">// Size of file in bytes</span></span>
+<span id="cb10-177"><a href="#cb10-177" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-179"><a href="#cb10-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-180"><a href="#cb10-180" aria-hidden="true" tabindex="-1"></a><span class="in">`link`</span> 系统调用可以给文件创建新名字：</span>
+<span id="cb10-181"><a href="#cb10-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a>open<span class="op">(</span><span class="st">"a"</span><span class="op">,</span> O_CREATE<span class="op">|</span>O_WRONLY<span class="op">);</span></span>
+<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a>link<span class="op">(</span><span class="st">"a"</span><span class="op">,</span> <span class="st">"b"</span><span class="op">);</span></span>
+<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a><span class="in">`unlink`</span> 可以删除一个名字，如果 link 数（<span class="in">`nlink`</span>）变为零，文件的 inode 和硬盘中储存其内容的空间就会被释放掉。因此</span>
+<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a><span class="in">``` c</span></span>
+<span id="cb10-190"><a href="#cb10-190" aria-hidden="true" tabindex="-1"></a>fd <span class="op">=</span> open<span class="op">(</span><span class="st">"/tmp/xyz"</span><span class="op">,</span> O_CREATE<span class="op">|</span>O_RDWR<span class="op">);</span></span>
+<span id="cb10-191"><a href="#cb10-191" aria-hidden="true" tabindex="-1"></a>unlink<span class="op">(</span><span class="st">"/tmp/xyz"</span><span class="op">);</span></span>
+<span id="cb10-192"><a href="#cb10-192" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-193"><a href="#cb10-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-194"><a href="#cb10-194" aria-hidden="true" tabindex="-1"></a>是一个惯用手段来创建一个在进程关闭 <span class="in">`fd`</span> 或结束时被清理的临时 inode。</span>
+<span id="cb10-195"><a href="#cb10-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-196"><a href="#cb10-196" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Unix provides file utilities callable from the shell as user-level programs, for example </span><span class="in">`mkdir`</span><span class="at">, </span><span class="in">`ln`</span><span class="at">, and </span><span class="in">`rm`</span><span class="at">.</span></span>
+<span id="cb10-197"><a href="#cb10-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-198"><a href="#cb10-198" aria-hidden="true" tabindex="-1"></a>上面这一段没看明白，只稍微看懂了后面讲 <span class="in">`cd`</span> 是内建在 shell 中的，因为 fork 后只会改变子进程的当前工作目录，不会影响父进程（shell）的当前工作目录。</span>
+<span id="cb10-199"><a href="#cb10-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-200"><a href="#cb10-200" aria-hidden="true" tabindex="-1"></a><span class="fu">### Real World</span></span>
+<span id="cb10-201"><a href="#cb10-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-202"><a href="#cb10-202" aria-hidden="true" tabindex="-1"></a>这节讲了 Unix 的历史和设计哲学，这里就不赘述了。</span>
+<span id="cb10-203"><a href="#cb10-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-204"><a href="#cb10-204" aria-hidden="true" tabindex="-1"></a><span class="fu">### 习题</span></span>
+<span id="cb10-205"><a href="#cb10-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-206"><a href="#cb10-206" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Write a program that uses UNIX system calls to "ping-pong" a byte between two processes over a pair of pipes, one for each direction. Measure the program's performance, in exchanges per second.</span></span>
+<span id="cb10-207"><a href="#cb10-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-208"><a href="#cb10-208" aria-hidden="true" tabindex="-1"></a>参见 Lab util。</span>
+<span id="cb10-209"><a href="#cb10-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-210"><a href="#cb10-210" aria-hidden="true" tabindex="-1"></a><span class="fu">## Lecture</span></span>
+<span id="cb10-211"><a href="#cb10-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-212"><a href="#cb10-212" aria-hidden="true" tabindex="-1"></a>感觉看了书基本上课就不用怎么听了……课大致还是按照书的内容讲的，并且把我之前看书的很多疑问解除了。不过不确定到底看书和听课到底哪个在先效果更好，书上的内容毫无疑问是一本道，虽然已将重点突出，但仍有陷入细节之可能。这里只记录一些对我来说有帮助的内容，重复的题材直接跳过。</span>
+<span id="cb10-213"><a href="#cb10-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-214"><a href="#cb10-214" aria-hidden="true" tabindex="-1"></a><span class="fu">### Why hard?</span></span>
+<span id="cb10-215"><a href="#cb10-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-216"><a href="#cb10-216" aria-hidden="true" tabindex="-1"></a>操作系统设计的困难之处在于平衡一系列矛盾的需求：</span>
+<span id="cb10-217"><a href="#cb10-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-218"><a href="#cb10-218" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>高效和易用。越高效意味着越接近底层，但易用又需要尽可能与硬件隔离。</span>
+<span id="cb10-219"><a href="#cb10-219" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>强大的服务和简单的接口。操作系统有强大的功能，同时又不能存在数量庞大、复杂且难以理解的接口。</span>
+<span id="cb10-220"><a href="#cb10-220" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>灵活与安全。灵活意味着给程序员更多的自由，同时又要对自由有所限制，以保证系统的安全。</span>
+<span id="cb10-221"><a href="#cb10-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-222"><a href="#cb10-222" aria-hidden="true" tabindex="-1"></a><span class="fu">### 关于文件描述符</span></span>
+<span id="cb10-223"><a href="#cb10-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-224"><a href="#cb10-224" aria-hidden="true" tabindex="-1"></a>文件描述符本质上对应了内核中的一个表单数据。内核维护了每个运行进程的状态，为每一个运行进程保存一个表单，表单的 key 是文件描述符。这个表单让内核知道，每个文件描述符对应的实际内容是什么。关键的是，每个进程都有自己独立的文件描述符空间。所以如果有两个不同的进程，它们都打开一个文件，它们或许可以得到相同数字的文件描述符，但是因为内核为每个进程都维护了一个独立的文件描述符空间，这里相同数字的文件描述符可能会对应到不同的文件。</span>
+<span id="cb10-225"><a href="#cb10-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-226"><a href="#cb10-226" aria-hidden="true" tabindex="-1"></a><span class="fu">### 编译器如何处理系统调用？</span></span>
+<span id="cb10-227"><a href="#cb10-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-228"><a href="#cb10-228" aria-hidden="true" tabindex="-1"></a>当执行到 <span class="in">`open`</span> 或 <span class="in">`write`</span> 之类系统调用时，RISC-V 会使用 <span class="in">`ecall`</span> 将控制权转交给内核。内核会检查进程内存和寄存器，确定相应的参数。</span>
+<span id="cb10-229"><a href="#cb10-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-230"><a href="#cb10-230" aria-hidden="true" tabindex="-1"></a><span class="fu">### forkexec 的优化</span></span>
+<span id="cb10-231"><a href="#cb10-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-232"><a href="#cb10-232" aria-hidden="true" tabindex="-1"></a>在调用 <span class="in">`exec`</span> 执行指令时，<span class="in">`exec`</span> 会直接替换相应的内存拷贝，不会返回继续执行进程下面的指令。为了避免 shell 进程直接被杀掉，惯常做法是 <span class="in">`fork`</span> 并在子进程中 <span class="in">`exec`</span>。实际上这里有点浪费，因为之后的执行丢弃了拷贝了整个内存的内容，这在大型程序中的影响会比较明显。课程后面会实现一些优化，比如 copy-on-write fork。使用懒拷贝，可以避免 forkexec 中实际的拷贝。</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
