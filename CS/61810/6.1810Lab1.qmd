@@ -1,7 +1,6 @@
 ---
 title: "Lab1 util: Xv6 and Unix utilities"
 order: 2
-lang: cn
 date: 2024-2-24
 date-modified: 2024-3-1
 description: "实验一，实现若干小程序。"

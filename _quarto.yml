@@ -12,6 +12,8 @@ website:
         text: "Home"
       - file: CS/CS.qmd
         text: "CS"
+      - text: "Math"
+        href: "https://tempcontainer.github.io/typnotes/"
       - about.qmd
 
   sidebar:

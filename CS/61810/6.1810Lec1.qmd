@@ -1,7 +1,6 @@
 ---
 title: "Lec1 Introduction and Examples"
 order: 1
-lang: cn
 date: 2024-2-15
 date-modified: last-modified
 description: "操作系统的介绍和例子。"
