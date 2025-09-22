@@ -1,5 +1,29 @@
 ---
-title: "Thought \"Temp\" Container"
+title: "Zhenyi Wang 王祯一"
+about:
+  id: about-spec
+  template: solana
+  image: assets/class.jpg
+  image-shape: rounded
+  links:
+    - icon: github
+      text: GitHub
+      href: https://github.com/TempContainer
+      target: _blank
+    # - icon: mortarboard-fill
+    #   text: Google Scholar
+    #   target: _blank
+    # - icon: linkedin
+    #   text: LinkedIn
+    #   target: _blank
+    # - icon: twitter-x
+    #   text: X
+    - icon: envelope-at-fill
+      text: wangzhny@gmail.com
+      href: mailto:wangzhny@gmail.com
+    - icon: file-earmark-person-fill
+      text: resume
+      target: _blank
 # listing:
 #   contents:
 #     - "*.qmd"
@@ -12,6 +36,65 @@ title: "Thought \"Temp\" Container"
 #   type: table
 #   table-hover: true
 #   fields: [date, title, description, reading-time]
+sidebar: false
+toc: false
+number-sections: false
+code-tools:
+    source: false
+pagetitle: "Zhenyi Wang"
 ---
 
-这个网站用来记录我学习的知识和思考的东西。
+::: {#about-spec}
+
+I am currently a senior undergraduate student at University of Electronic Science and Technology of China (UESTC), pursuing a B.Eng. in Software Engineering.
+
+I am broadly interested in generating vivid, realistic, and interactive visual content at the intersection of computer graphics and machine learning. I am also greatly interested in applying these technologies to a wide range of applications, such as AIGC, embodied AI, VR/XR.
+
+::: {.callout-important appearance="simple"}
+I am applying for PhD programs in Fall 2025. If you are a potential advisor or would like to support my application, please get in touch.
+:::
+:::
+
+<!-- ## Publications
+
+::: {.pub-item}
+![](assets/class.jpg)
+
+::: {.pub-content}
+**A Convex Formulation of Material Points and Rigid Bodies with GPU-Accelerated Async-Coupling for Interactive Simulation**
+
+[Chang Yu](link)\*, **Wenxin Du**\* (equal contributions), [Zeshun Zong](link), [Alejandro Castro](link), Chenfanfu Jiang, Xuchen Han
+
+*IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), 2025* 
+
+[preprint](link) | [code](link) | [video](link)
+:::
+::: -->
+
+## Projects
+
+I regularly document my projects through blog posts. Please visit my [blog](blog.qmd) for more detailed information.
+
+::: {.pub-item}
+![](assets/sph_teaser.png)
+
+::: {.pub-content}
+**3D PCISPH Water Simulation**
+
+A PCISPH water simulation implemented using warp.
+
+[code](https://github.com/TempContainer/simple-fluid)
+:::
+:::
+
+::: {.pub-item}
+![](assets/smoke_teaser.png)
+
+::: {.pub-content}
+**2D Smoke Simulation**
+
+A 2D smoke simulation implemented using warp.
+
+[code](https://github.com/TempContainer/simple-fluid) | [blog](blogs/smoke_sim.qmd)
+:::
+:::

@@ -1,7 +1,0 @@
----
-title: "About"
----
-
-"Beware of he who would deny you access to information, for in his heart he dreams himself your master. "
-
-![](./assets/class.jpg){fig-align="center" width=35%}

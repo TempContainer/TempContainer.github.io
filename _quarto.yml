@@ -3,33 +3,38 @@ project:
   output-dir: docs
   
 website:
-  title: "Thought Container"
+  title: "Zhenyi's Homepage"
   favicon: RI.png
   reader-mode: true
   navbar:
     left:
       - file: index.qmd
+        icon: house-door
         text: "Home"
-      - file: CS/CS.qmd
-        text: "CS"
-      - text: "Math"
-        href: "https://tempcontainer.github.io/typnotes/"
-      - about.qmd
+      - file: blog.qmd
+        icon: vector-pen
+        text: "Blog"
+      # - text: "Math"
+      #   href: "https://tempcontainer.github.io/typnotes/"
+      # - about.qmd
 
   sidebar:
-    - title: "CS"
+    - title: "Posts"
       collapse-level: 2
-      contents:
-        - section: Computer Science
-          file: CS/CS.qmd
-          contents:
-            - section: 步入现当代 C++
-              file: CS/MoveToModernCpp.qmd
-              contents: "CS/ModernCpp/*.qmd"
-            - section: 6.1810 Operating System Engineering 笔记
-              contents: "CS/61810/*.qmd"
-            - section: CS144 Introduction to Computer Networking 笔记
-              contents: "CS/CS144/*.qmd"
+      contents: "blogs/*.qmd"
+    # - title: "CS"
+    #   collapse-level: 2
+    #   contents:
+    #     - section: Computer Science
+    #       file: CS/CS.qmd
+    #       contents:
+    #         - section: 步入现当代 C++
+    #           file: CS/MoveToModernCpp.qmd
+    #           contents: "CS/ModernCpp/*.qmd"
+    #         - section: 6.1810 Operating System Engineering 笔记
+    #           contents: "CS/61810/*.qmd"
+    #         - section: CS144 Introduction to Computer Networking 笔记
+    #           contents: "CS/CS144/*.qmd"
   
   page-footer:
       center: |
@@ -40,7 +45,6 @@ format:
     theme:
       - cosmo
       - custom.scss
-    css: styles.css
     pagetitle: "{{< meta title >}}"
     toc: true
     toc-expand: 2

@@ -1,0 +1,15 @@
+---
+title: "Blog"
+listing:
+  type: default
+  contents: blogs
+  sort: "date desc"
+  categories: true
+  image-align: left
+---
+
+This collection serves as both my personal study notes and a series of tutorials.
+
+Following the Feynman Technique, I strive to explain classic algorithms in the simplest yet most profound terms. To ensure a thorough grasp of the concepts, I will include code implementations for each algorithm whenever possible.
+
+---
