@@ -1,10 +1,31 @@
 [
   {
+    "objectID": "gallery.html",
+    "href": "gallery.html",
+    "title": "Gallery",
+    "section": "",
+    "text": "Video\nFEM Sofy Body with IPC\n\n\n\n\nVideo\nPCISPH water simulation\n\n\n\n\nVideo\n2D smoke simulation\n\n\n\n\nVideo\nMLS MPM sand simulation\n\n\n\n\nVideo\nMLS MPM simulation of chocolate, water and rubber\n\n\n\n\nVideo\npixel simulation game\n\n\n\n\n\npath tracer"
+  },
+  {
     "objectID": "blog.html",
     "href": "blog.html",
     "title": "Blog",
     "section": "",
     "text": "This collection serves as both my personal study notes and a series of tutorials.\nFollowing the Feynman Technique, I strive to explain classic algorithms in the simplest yet most profound terms. To ensure a thorough grasp of the concepts, I will include code implementations for each algorithm whenever possible.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFluid Simulation I: Simulating Smoke Using the Eulerian Method\n\n\n\nphysics-simulation\n\nfluid\n\n\n\n\n\n\n\n\n\n2025-08-25\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Zhenyi Wang 王祯一",
+    "section": "",
+    "text": "GitHub\n  \n  \n    \n     wangzhny@gmail.com\n  \n  \n    \n     resume\n  \n\n      \nI am currently a senior undergraduate student at University of Electronic Science and Technology of China (UESTC), pursuing a B.Eng. in Software Engineering.\nI am broadly interested in generating vivid, realistic, and interactive visual content at the intersection of computer graphics and machine learning. I am also greatly interested in applying these technologies to a wide range of applications, such as AIGC, embodied AI, VR/XR. Here is my research proposal.\n\n\n\n\n\n\nI am applying for PhD programs in Fall 2025. If you are a potential advisor or would like to support my application, please get in touch."
+  },
+  {
+    "objectID": "index.html#projects",
+    "href": "index.html#projects",
+    "title": "Zhenyi Wang 王祯一",
+    "section": "Projects",
+    "text": "Projects\nI regularly document my projects through blog posts. Please visit my blog for more detailed information. For a visual showcase, please check out my gallery.\n\n\n\nFinite Element Soft Body Dynamics with IPC\nA C++ implementation of a FEM soft body with IPC.\ncode\n\n\n\n\n\n3D PCISPH Water Simulation\nA PCISPH water simulation implemented using warp.\ncode\n\n\n\n\n\n2D Smoke Simulation\nA 2D smoke simulation implemented using warp.\ncode | blog\n\n\n\n\n\nMLS-CPIC MPM Sand Simulation\nA 2D and 3D simulation of MPM sand using warp, also with a implementation CPIC to handle rigid contact.\ncode\n\n\n\n\n\nPixel Simulation\nA 2D pixel simulation game inspired by noita. Draw sand, water and static wood and see how they interact.\ncode"
   },
   {
     "objectID": "blogs/smoke_sim.html",
@@ -55,19 +76,5 @@
     "crumbs": [
       "Fluid Simulation I: Simulating Smoke Using the Eulerian Method"
     ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Zhenyi Wang 王祯一",
-    "section": "",
-    "text": "GitHub\n  \n  \n    \n     wangzhny@gmail.com\n  \n  \n    \n     resume\n  \n\n      \nI am currently a senior undergraduate student at University of Electronic Science and Technology of China (UESTC), pursuing a B.Eng. in Software Engineering.\nI am broadly interested in generating vivid, realistic, and interactive visual content at the intersection of computer graphics and machine learning. I am also greatly interested in applying these technologies to a wide range of applications, such as AIGC, embodied AI, VR/XR.\n\n\n\n\n\n\nI am applying for PhD programs in Fall 2025. If you are a potential advisor or would like to support my application, please get in touch."
-  },
-  {
-    "objectID": "index.html#projects",
-    "href": "index.html#projects",
-    "title": "Zhenyi Wang 王祯一",
-    "section": "Projects",
-    "text": "Projects\nI regularly document my projects through blog posts. Please visit my blog for more detailed information.\n\n\n\n3D PCISPH Water Simulation\nA PCISPH water simulation implemented using warp.\ncode\n\n\n\n\n\n2D Smoke Simulation\nA 2D smoke simulation implemented using warp.\ncode | blog"
   }
 ]

@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://TempContainer.github.io/blog.html</loc>
-    <lastmod>2025-09-22T14:33:19.963Z</lastmod>
+    <loc>https://TempContainer.github.io/gallery.html</loc>
+    <lastmod>2025-10-04T14:50:18.026Z</lastmod>
   </url>
   <url>
-    <loc>https://TempContainer.github.io/blogs/smoke_sim.html</loc>
-    <lastmod>2025-09-22T14:33:19.963Z</lastmod>
+    <loc>https://TempContainer.github.io/blog.html</loc>
+    <lastmod>2025-10-04T14:50:18.026Z</lastmod>
   </url>
   <url>
     <loc>https://TempContainer.github.io/index.html</loc>
-    <lastmod>2025-09-22T14:33:19.964Z</lastmod>
+    <lastmod>2025-10-04T14:50:18.026Z</lastmod>
+  </url>
+  <url>
+    <loc>https://TempContainer.github.io/blogs/smoke_sim.html</loc>
+    <lastmod>2025-10-04T14:50:18.026Z</lastmod>
   </url>
 </urlset>
