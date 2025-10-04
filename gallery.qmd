@@ -1,0 +1,17 @@
+---
+title: "Gallery"
+---
+
+![FEM Sofy Body with IPC](assets/gallery/bunny_squash.mp4)
+
+![PCISPH water simulation](assets/gallery/sph.mp4)
+
+![2D smoke simulation](assets/smoke2d.mp4)
+
+![MLS MPM sand simulation](assets/gallery/sand_2d.mp4)
+
+![MLS MPM simulation of chocolate, water and rubber](assets/gallery/naive_mpm.mp4)
+
+![pixel simulation game](assets/gallery/noita.mp4)
+
+![path tracer](assets/gallery/path_tracing.png)

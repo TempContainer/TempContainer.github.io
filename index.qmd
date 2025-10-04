@@ -3,7 +3,7 @@ title: "Zhenyi Wang 王祯一"
 about:
   id: about-spec
   template: solana
-  image: assets/class.jpg
+  image: assets/avatar.png
   image-shape: rounded
   links:
     - icon: github
@@ -23,6 +23,7 @@ about:
       href: mailto:wangzhny@gmail.com
     - icon: file-earmark-person-fill
       text: resume
+      href: assets/resume.pdf
       target: _blank
 # listing:
 #   contents:
@@ -48,7 +49,7 @@ pagetitle: "Zhenyi Wang"
 
 I am currently a senior undergraduate student at University of Electronic Science and Technology of China (UESTC), pursuing a B.Eng. in Software Engineering.
 
-I am broadly interested in generating vivid, realistic, and interactive visual content at the intersection of computer graphics and machine learning. I am also greatly interested in applying these technologies to a wide range of applications, such as AIGC, embodied AI, VR/XR.
+I am broadly interested in generating vivid, realistic, and interactive visual content at the intersection of computer graphics and machine learning. I am also greatly interested in applying these technologies to a wide range of applications, such as AIGC, embodied AI, VR/XR. Here is my [research proposal]().
 
 ::: {.callout-important appearance="simple"}
 I am applying for PhD programs in Fall 2025. If you are a potential advisor or would like to support my application, please get in touch.
@@ -73,7 +74,19 @@ I am applying for PhD programs in Fall 2025. If you are a potential advisor or w
 
 ## Projects
 
-I regularly document my projects through blog posts. Please visit my [blog](blog.qmd) for more detailed information.
+I regularly document my projects through blog posts. Please visit my [blog](blog.qmd) for more detailed information. For a visual showcase, please check out my [gallery](gallery.qmd).
+
+::: {.pub-item}
+![](assets/ipc_teaser.png)
+
+::: {.pub-content}
+**Finite Element Soft Body Dynamics with IPC**
+
+A C++ implementation of a FEM soft body with IPC.
+
+[code](https://github.com/TempContainer/fem-ipc)
+:::
+:::
 
 ::: {.pub-item}
 ![](assets/sph_teaser.png)
@@ -96,5 +109,29 @@ A PCISPH water simulation implemented using warp.
 A 2D smoke simulation implemented using warp.
 
 [code](https://github.com/TempContainer/simple-fluid) | [blog](blogs/smoke_sim.qmd)
+:::
+:::
+
+::: {.pub-item}
+![](assets/sand_teaser.png)
+
+::: {.pub-content}
+**MLS-CPIC MPM Sand Simulation**
+
+A 2D and 3D simulation of MPM sand using warp, also with a implementation CPIC to handle rigid contact.
+
+[code](https://github.com/TempContainer/sand-MPM)
+:::
+:::
+
+::: {.pub-item}
+![](assets/noita_teaser.png)
+
+::: {.pub-content}
+**Pixel Simulation**
+
+A 2D pixel simulation game inspired by _noita_. Draw sand, water and static wood and see how they interact.
+
+[code](https://github.com/TempContainer/ToyPixelSim)
 :::
 :::
