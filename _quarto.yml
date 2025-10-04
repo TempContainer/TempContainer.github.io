@@ -1,6 +1,8 @@
 project:
   type: website
   output-dir: docs
+  resources:
+    - assets/resume.pdf
   
 website:
   title: "Zhenyi's Homepage"
