@@ -23,7 +23,7 @@ about:
       href: mailto:wangzhny@gmail.com
     - icon: file-earmark-person-fill
       text: resume
-      href: assets/resume.pdf
+      href: "assets/resume.pdf"
       target: _blank
 # listing:
 #   contents:
