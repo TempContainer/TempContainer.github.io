@@ -19,7 +19,7 @@ about:
     # - icon: twitter-x
     #   text: X
     - icon: envelope-at-fill
-      text: wangzhny@gmail.com
+      text: wangzhny at gmail dot com
       href: mailto:wangzhny@gmail.com
     - icon: file-earmark-person-fill
       text: resume
@@ -49,10 +49,10 @@ pagetitle: "Zhenyi Wang"
 
 I am currently a senior undergraduate student at University of Electronic Science and Technology of China (UESTC), pursuing a B.Eng. in Software Engineering.
 
-I am broadly interested in generating realistic and interactive visual content at the intersection of computer graphics and machine learning. I am also greatly interested in applying these technologies to a wide range of applications, such as AIGC, embodied AI, games.
+I am broadly interested in generating realistic and interactive visual content at the intersection of physical simulation and machine learning. I am also greatly interested in applying these technics to a wide range of applications, such as AIGC, robotics, games.
 
 ::: {.callout-important appearance="simple"}
-I am applying for PhD programs in Fall 2025. If you are a potential advisor or would like to support my application, please get in touch.
+I am actively seeking a PhD position for Fall 2026. If you are a potential advisor or would like to support my application, please get in touch.
 :::
 :::
 
